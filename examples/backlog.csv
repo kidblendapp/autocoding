@@ -1,0 +1,10 @@
+Issue Key,Summary,Issue Type,Story Points,Original Estimate,Component,Parent Id
+PROJ-101,Implement Login Page,Story,5,,UI,
+PROJ-102,Design Database Schema,Story,8,,Backend,
+PROJ-103,Fix Login Timeout,Bug,,4h,Frontend,
+PROJ-104,API Authentication,Story,13,,Backend,
+PROJ-105,User Profile API,Story,,,Backend,
+PROJ-106,Get User Data,Sub-task,,2h,,PROJ-105
+PROJ-107,Update User Data,Sub-task,,3h,,PROJ-105
+PROJ-108,Setup Infrastructure,Task,,8h,SRE,
+

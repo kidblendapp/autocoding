@@ -1,0 +1,36 @@
+{
+  "projectStartDate": "2024-01-01",
+  "sprintDurationDays": 10,
+  "teams": [
+    {
+      "id": "team-frontend",
+      "name": "Frontend Team",
+      "velocity": 30,
+      "velocityPeriod": "sprint",
+      "members": ["Alice", "Bob", "Charlie"],
+      "matchRules": {
+        "components": ["UI", "Frontend"]
+      }
+    },
+    {
+      "id": "team-backend",
+      "name": "Backend Team",
+      "velocity": 25,
+      "velocityPeriod": "sprint",
+      "members": ["Dave", "Eve"],
+      "matchRules": {
+        "labels": ["backend", "api"]
+      }
+    },
+    {
+      "id": "team-maintenance",
+      "name": "SRE / Maintenance",
+      "capacityPerDayHours": 16,
+      "estimationType": "hours",
+      "matchRules": {
+        "issueTypes": ["Bug", "Task"]
+      }
+    }
+  ]
+}
+

@@ -1,0 +1,32 @@
+---
+description: Development rules and standards for the Gantt Schedule Calculation System
+globs: ["**/*.ts", "**/*.js", "**/*.json"]
+---
+# Gantt Schedule Calculator - Development Rules
+
+## 1. Project Context
+This is a Node.js and TypeScript project focused on scheduling algorithms. It processes data structures (Tasks, Teams) and outputs Timelines.
+
+## 2. Code Style & Architecture
+*   **Language:** TypeScript (Strict mode).
+*   **Paradigm:** Functional preference. Avoid global state. Use pure functions for calculations (e.g., `calculateEndDate(startDate, effort, velocity)`).
+*   **Immutability:** Treat `Task` and `Schedule` objects as immutable. Return new objects instead of mutating existing ones during calculation steps.
+*   **Async/Await:** Use `async/await` for file I/O. Calculation logic should remain synchronous if possible for predictability.
+
+## 3. Naming Conventions
+*   **Interfaces/Types:** PascalCase (e.g., `TeamConfig`, `TaskItem`).
+*   **Functions/Variables:** camelCase (e.g., `calculateVelocity`, `parsedRows`).
+*   **Files:** kebab-case (e.g., `date-utils.ts`, `scheduler-engine.ts`).
+
+## 4. Documentation
+*   **TSDoc:** All exported functions and interfaces MUST have TSDoc comments explaining parameters and return values.
+*   **Complexity:** Algorithms with Big-O > O(n) must be commented with performance implications.
+
+## 5. Testing
+*   **Framework:** Jest or Vitest.
+*   **Requirement:** Every scheduling scenario (Team Points, Subtask Hours, Mixed) must have a corresponding unit test case in `__tests__`.
+*   **Mocking:** Isolate I/O (CSV reading) from Logic (Scheduling).
+
+## 6. Error Handling
+*   Use custom Error classes (e.g., `ConfigurationError`, `DataValidationError`).
+*   Never fail silently. If a task cannot be scheduled (e.g., missing estimate), log a warning and add to an `Unscheduled` bucket, but do not crash the process.

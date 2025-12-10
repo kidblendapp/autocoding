@@ -1,0 +1,244 @@
+name: AI Teammate Enhanced
+
+on:
+  workflow_dispatch:
+    inputs:
+      config_file:
+        description: 'Path to config'
+        required: true
+      encoded_config:
+        description: 'Encoded or JSON Agent Config'
+        required: false
+  
+  repository_dispatch:
+    types: 
+      - ai-teammate-trigger
+      - story-clarification
+      - story-description
+      - story-solution-design
+      - story-development
+      - api-development
+      - core-description
+      - sd-api-description
+      - sd-core-description
+      - code-review
+      - test-generation
+
+permissions:
+  contents: write
+  pull-requests: write
+  actions: read
+  
+jobs:
+  cursor-agent:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: cursor-agent-${{ github.event.client_payload.config_file || inputs.config_file }}
+      cancel-in-progress: false
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Map Event Type to Config
+      id: map-config
+      run: |
+        EVENT_TYPE="${{ github.event.action }}"
+        
+        case "$EVENT_TYPE" in
+          "story-clarification")
+            CONFIG="agents/story_questions.json"
+            ;;
+          "story-description")
+            CONFIG="agents/story_description.json"
+            ;;
+          "story-solution-design")
+            CONFIG="agents/story_solution_design.json"
+            ;;
+          "solution-design")
+            CONFIG="agents/story_solution_design.json"
+            ;;
+          "story-development")
+            CONFIG="agents/story_development.json"
+            ;;
+          "api-development")
+            CONFIG="agents/api_development.json"
+            ;;
+          "core-description")
+            CONFIG="agents/core_description.json"
+            ;;
+          "sd-api-description")
+            CONFIG="agents/sd_api_description.json"
+            ;;
+          "sd-core-description")
+            CONFIG="agents/sd_core_description.json"
+            ;;
+          "code-review")
+            CONFIG="agents/code_review.json"
+            ;;
+          "test-generation")
+            CONFIG="agents/test_cases_generator.json"
+            ;;
+          *)
+            CONFIG="${{ github.event.client_payload.config_file }}"
+            ;;
+        esac
+        
+        echo "config_file=${CONFIG}" >> $GITHUB_OUTPUT
+        echo "Mapped event type '${EVENT_TYPE}' to config: ${CONFIG}"
+
+    - name: Prepare Configuration
+      id: config
+      run: |
+        # Determine config file from either webhook or manual input
+        if [ "${{ github.event_name }}" = "repository_dispatch" ]; then
+          # Use mapped config if available, otherwise use client_payload
+          CONFIG_FILE="${{ steps.map-config.outputs.config_file }}"
+          ENCODED_CONFIG="${{ github.event.client_payload.encoded_config }}"
+          TICKET_KEY="${{ github.event.client_payload.ticket_key }}"
+          JQL_QUERY="${{ github.event.client_payload.jql_query }}"
+        else
+          CONFIG_FILE="${{ inputs.config_file }}"
+          ENCODED_CONFIG="${{ inputs.encoded_config }}"
+          TICKET_KEY=""
+          JQL_QUERY=""
+        fi
+        
+        echo "config_file=${CONFIG_FILE}" >> $GITHUB_OUTPUT
+        echo "encoded_config=${ENCODED_CONFIG}" >> $GITHUB_OUTPUT
+        echo "ticket_key=${TICKET_KEY}" >> $GITHUB_OUTPUT
+        echo "jql_query=${JQL_QUERY}" >> $GITHUB_OUTPUT
+        
+        echo "Configuration: ${CONFIG_FILE}"
+        echo "Ticket: ${TICKET_KEY}"
+        echo "JQL: ${JQL_QUERY}"
+
+    - name: Update Config with Ticket Key
+      if: steps.config.outputs.ticket_key != ''
+      run: |
+        CONFIG_FILE="${{ steps.config.outputs.config_file }}"
+        TICKET_KEY="${{ steps.config.outputs.ticket_key }}"
+        
+        # Update JQL in config to use specific ticket
+        jq --arg key "$TICKET_KEY" '.params.inputJql = "key = \($key)"' \
+          "$CONFIG_FILE" > "${CONFIG_FILE}.tmp"
+        mv "${CONFIG_FILE}.tmp" "$CONFIG_FILE"
+        
+        echo "Updated config with ticket: $TICKET_KEY"
+
+    - name: Update Config with JQL Query
+      if: steps.config.outputs.jql_query != ''
+      run: |
+        CONFIG_FILE="${{ steps.config.outputs.config_file }}"
+        JQL_QUERY="${{ steps.config.outputs.jql_query }}"
+        
+        # Update JQL in config
+        jq --arg jql "$JQL_QUERY" '.params.inputJql = $jql' \
+          "$CONFIG_FILE" > "${CONFIG_FILE}.tmp"
+        mv "${CONFIG_FILE}.tmp" "$CONFIG_FILE"
+        
+        echo "Updated config with JQL: $JQL_QUERY"
+
+    - name: Setup Java Environment
+      uses: ./.github/actions/setup-java-only
+      with:
+        cache-key-suffix: '-cursor'
+
+    - name: Install Cursor CLI
+      run: |
+        echo "Installing Cursor CLI..."
+        curl https://cursor.com/install -fsS | bash
+        
+        echo "Checking installation locations..."
+        ls -la "$HOME/.cursor/" || echo "No .cursor directory"
+        ls -la "$HOME/.cursor/bin/" || echo "No .cursor/bin directory"
+        ls -la "$HOME/.local/bin/" || echo "No .local/bin directory"
+        
+        # Cursor CLI installs to ~/.local/bin, not ~/.cursor/bin
+        echo "$HOME/.local/bin" >> $GITHUB_PATH
+        
+        # Test installation
+        export PATH="$HOME/.local/bin:$PATH"
+        if command -v cursor-agent; then
+          echo "✅ cursor-agent found at: $(command -v cursor-agent)"
+          cursor-agent --version 2>&1 || echo "Version check failed"
+        else
+          echo "❌ cursor-agent not found after installation"
+          echo "Available files in .local/bin:"
+          ls -la "$HOME/.local/bin/" 2>/dev/null || echo "Directory does not exist"
+        fi
+
+    - name: Install DMTools CLI
+      run: |
+        curl -fsSL https://github.com/IstiN/dmtools/releases/latest/download/install.sh | bash
+        echo "$HOME/.dmtools/bin" >> $GITHUB_PATH
+
+    - name: Build and Install DMTools CLI from source
+      run: |
+        dmtools || echo "dmtools version failed"
+        cursor-agent --version || echo "cursor-agent version failed"
+
+    - name: Run AI Teammate
+      env:
+        CURSOR_API_KEY: ${{ secrets.CURSOR_API_KEY }}
+        MODEL: sonnet-4
+        AGENT_DISABLE_WATCHDOG: "1"
+        PATH: "/home/runner/.local/bin:/home/runner/.dmtools/bin:/bin:/usr/bin:$PATH"
+        
+        # Jira Configuration
+        JIRA_EMAIL: ${{ secrets.JIRA_EMAIL }}
+        JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
+        JIRA_BASE_PATH: ${{ vars.JIRA_BASE_PATH }}
+        JIRA_AUTH_TYPE: ${{ vars.JIRA_AUTH_TYPE }}
+        JIRA_CLEAR_CACHE: ${{ vars.JIRA_CLEAR_CACHE }}
+        JIRA_EXTRA_FIELDS: ${{ vars.JIRA_EXTRA_FIELDS }}
+        JIRA_EXTRA_FIELDS_PROJECT: ${{ vars.JIRA_EXTRA_FIELDS_PROJECT }}
+        JIRA_LOGGING_ENABLED: ${{ vars.JIRA_LOGGING_ENABLED }}
+        JIRA_WAIT_BEFORE_PERFORM: ${{ vars.JIRA_WAIT_BEFORE_PERFORM }}
+
+        # Confluence Configuration
+        CONFLUENCE_EMAIL: ${{ secrets.JIRA_EMAIL }}
+        CONFLUENCE_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
+        CONFLUENCE_BASE_PATH: ${{ vars.CONFLUENCE_BASE_PATH }}
+        CONFLUENCE_DEFAULT_SPACE: ${{ vars.CONFLUENCE_DEFAULT_SPACE }}
+        CONFLUENCE_GRAPHQL_PATH: ${{ vars.CONFLUENCE_GRAPHQL_PATH }}
+
+        # DMTools Integration Settings
+        DMTOOLS_INTEGRATIONS: "jira,confluence,figma,ai,cli,file"
+
+        # AI Service Configuration
+        GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        GEMINI_DEFAULT_MODEL: ${{ vars.GEMINI_DEFAULT_MODEL }}
+        PROMPT_CHUNK_TOKEN_LIMIT: ${{ vars.PROMPT_CHUNK_TOKEN_LIMIT }}
+        
+        # Figma Configuration
+        FIGMA_TOKEN: ${{ secrets.FIGMA_TOKEN }}
+        FIGMA_BASE_PATH: ${{ vars.FIGMA_BASE_PATH }}
+        
+        # GitHub Authentication for PR creation
+        PAT_TOKEN: ${{ secrets.PAT_TOKEN }}
+        GH_TOKEN: ${{ secrets.PAT_TOKEN }}
+
+      run: |
+        CONFIG_FILE="${{ steps.config.outputs.config_file }}"
+        ENCODED_CONFIG="${{ steps.config.outputs.encoded_config }}"
+        
+        echo "Using configuration: ${CONFIG_FILE}"
+        
+        if [ -n "${ENCODED_CONFIG}" ]; then
+          echo "Encoded config provided"
+          dmtools run "${CONFIG_FILE}" "${ENCODED_CONFIG}"
+        else
+          echo "No encoded config"
+          dmtools run "${CONFIG_FILE}"
+        fi
+
+    - name: Upload artifacts
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: ai-teammate-results-${{ github.run_number }}
+        path: |
+          outputs/
+          inputs/
+        retention-days: 30

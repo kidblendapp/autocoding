@@ -1,0 +1,22 @@
+{
+    "name": "Test Agent",
+    "params": {
+      "agentParams": {
+        "aiRole": "Test Assistant",
+        "instructions": [
+          "This is a test agent",
+          "Just print hello world"
+        ],
+        "formattingRules": "Use markdown"
+      },
+      "cliCommands": [
+        "echo 'Hello from AI Teammate!'",
+        "mkdir -p outputs",
+        "echo '# Test Result' > outputs/response.md",
+        "echo 'Agent executed successfully' >> outputs/response.md"
+      ],
+      "outputType": "none",
+      "skipAIProcessing": true,
+      "inputJql": ""
+    }
+  }

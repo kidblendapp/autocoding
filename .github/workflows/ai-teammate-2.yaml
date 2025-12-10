@@ -1,11 +1,12 @@
-name: AI Teammate Enhanced
+name: AI Teammate
 
 on:
   workflow_dispatch:
     inputs:
       config_file:
         description: 'Path to config'
-        required: true
+        required: false
+        default: 'agents/test_agent.json'
       encoded_config:
         description: 'Encoded or JSON Agent Config'
         required: false
@@ -14,13 +15,13 @@ on:
     types: 
       - ai-teammate-trigger
       - story-clarification
-      - story-description
-      - story-solution-design
       - story-development
+      - story-description
+      - solution-design
+      - sd-core-description
+      - sd-api-description
       - api-development
       - core-description
-      - sd-api-description
-      - sd-core-description
       - code-review
       - test-generation
 
@@ -33,7 +34,7 @@ jobs:
   cursor-agent:
     runs-on: ubuntu-latest
     concurrency:
-      group: cursor-agent-${{ github.event.client_payload.config_file || inputs.config_file }}
+      group: cursor-agent-${{ github.event.client_payload.config_file || inputs.config_file || 'agents/test_agent.json' }}
       cancel-in-progress: false
     
     steps:
@@ -49,29 +50,26 @@ jobs:
           "story-clarification")
             CONFIG="agents/story_questions.json"
             ;;
+          "story-development")
+            CONFIG="agents/story_development.json"
+            ;;
           "story-description")
             CONFIG="agents/story_description.json"
-            ;;
-          "story-solution-design")
-            CONFIG="agents/story_solution_design.json"
             ;;
           "solution-design")
             CONFIG="agents/story_solution_design.json"
             ;;
-          "story-development")
-            CONFIG="agents/story_development.json"
+          "sd-core-description")
+            CONFIG="agents/sd_core_description.json"
+            ;;
+          "sd-api-description")
+            CONFIG="agents/sd_api_description.json"
             ;;
           "api-development")
             CONFIG="agents/api_development.json"
             ;;
           "core-description")
             CONFIG="agents/core_description.json"
-            ;;
-          "sd-api-description")
-            CONFIG="agents/sd_api_description.json"
-            ;;
-          "sd-core-description")
-            CONFIG="agents/sd_core_description.json"
             ;;
           "code-review")
             CONFIG="agents/code_review.json"
@@ -98,7 +96,11 @@ jobs:
           TICKET_KEY="${{ github.event.client_payload.ticket_key }}"
           JQL_QUERY="${{ github.event.client_payload.jql_query }}"
         else
+          # Use provided config_file or default to agents/test_agent.json
           CONFIG_FILE="${{ inputs.config_file }}"
+          if [ -z "${CONFIG_FILE}" ]; then
+            CONFIG_FILE="agents/test_agent.json"
+          fi
           ENCODED_CONFIG="${{ inputs.encoded_config }}"
           TICKET_KEY=""
           JQL_QUERY=""
@@ -139,10 +141,13 @@ jobs:
         
         echo "Updated config with JQL: $JQL_QUERY"
 
+    # ✅ ИСПРАВЛЕНО: Используем стандартный action
     - name: Setup Java Environment
-      uses: ./.github/actions/setup-java-only
+      uses: actions/setup-java@v4
       with:
-        cache-key-suffix: '-cursor'
+        distribution: 'temurin'
+        java-version: '23'
+        cache: 'maven'
 
     - name: Install Cursor CLI
       run: |
@@ -173,10 +178,18 @@ jobs:
         curl -fsSL https://github.com/IstiN/dmtools/releases/latest/download/install.sh | bash
         echo "$HOME/.dmtools/bin" >> $GITHUB_PATH
 
-    - name: Build and Install DMTools CLI from source
+    - name: Verify DMTools and Cursor Installation
       run: |
-        dmtools || echo "dmtools version failed"
-        cursor-agent --version || echo "cursor-agent version failed"
+        echo "Verifying installations..."
+        export PATH="$HOME/.local/bin:$HOME/.dmtools/bin:$PATH"
+        
+        echo "DMTools version:"
+        dmtools --version || echo "⚠️ dmtools not found"
+        
+        echo "Cursor Agent version:"
+        cursor-agent --version || echo "⚠️ cursor-agent not found"
+        
+        echo "PATH: $PATH"
 
     - name: Run AI Teammate
       env:
@@ -225,6 +238,14 @@ jobs:
         
         echo "Using configuration: ${CONFIG_FILE}"
         
+        # ✅ ДОБАВЛЕНО: Проверка существования config файла
+        if [ ! -f "${CONFIG_FILE}" ]; then
+          echo "❌ Config file not found: ${CONFIG_FILE}"
+          echo "Available files in agents/:"
+          ls -la agents/ || echo "agents/ directory not found"
+          exit 1
+        fi
+        
         if [ -n "${ENCODED_CONFIG}" ]; then
           echo "Encoded config provided"
           dmtools run "${CONFIG_FILE}" "${ENCODED_CONFIG}"
@@ -233,6 +254,7 @@ jobs:
           dmtools run "${CONFIG_FILE}"
         fi
 
+    # ✅ ИСПРАВЛЕНО: Добавлена проверка существования папок
     - name: Upload artifacts
       if: always()
       uses: actions/upload-artifact@v4
@@ -242,3 +264,4 @@ jobs:
           outputs/
           inputs/
         retention-days: 30
+        if-no-files-found: warn

@@ -1,3 +1,4 @@
+dmtools.env
 node_modules/
 dist/
 *.log
@@ -5,3 +6,4 @@ dist/
 dmtools.env
 .DS_Store
 *.tsbuildinfo
+

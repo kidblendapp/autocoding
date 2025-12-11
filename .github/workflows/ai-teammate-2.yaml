@@ -1,4 +1,4 @@
-name: AI Teammate
+name: AI Teammate Enhanced
 
 on:
   workflow_dispatch:
@@ -247,11 +247,31 @@ jobs:
         PAT_TOKEN: ${{ secrets.PAT_TOKEN }}
         GH_TOKEN: ${{ secrets.PAT_TOKEN }}
 
-      run: |
+      run: | 
         CONFIG_FILE="${{ steps.config.outputs.config_file }}"
         ENCODED_CONFIG="${{ steps.config.outputs.encoded_config }}"
         
+        # ✅ CRITICAL: Export PATH to ensure dmtools is available
+        export PATH="$HOME/.local/bin:$HOME/.dmtools/bin:$PATH"
+        
         echo "Using configuration: ${CONFIG_FILE}"
+        
+        # ✅ Verify dmtools is available before proceeding
+        echo "=== Verifying dmtools installation ==="
+        if ! command -v dmtools >/dev/null 2>&1; then
+          echo "❌ dmtools command not found in PATH"
+          echo "Current PATH: $PATH"
+          echo "Checking installation locations:"
+          ls -la "$HOME/.dmtools/bin/" 2>/dev/null || echo "  $HOME/.dmtools/bin/ does not exist"
+          ls -la "$HOME/.local/bin/" 2>/dev/null || echo "  $HOME/.local/bin/ does not exist"
+          echo "Trying to find dmtools:"
+          find "$HOME" -name "dmtools" -type f 2>/dev/null | head -5 || echo "  dmtools not found in $HOME"
+          exit 1
+        fi
+        echo "✅ dmtools found at: $(command -v dmtools)"
+        dmtools --version || echo "⚠️ Version check failed, but continuing..."
+        echo "======================================"
+        echo ""
         
         # ✅ ДОБАВЛЕНО: Проверка существования config файла
         if [ ! -f "${CONFIG_FILE}" ]; then

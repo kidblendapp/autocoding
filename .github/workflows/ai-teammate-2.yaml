@@ -246,6 +246,15 @@ jobs:
           exit 1
         fi
         
+        # For test_agent, disable Jira/Confluence integrations to avoid initialization errors
+        if [[ "${CONFIG_FILE}" == *"test_agent.json"* ]]; then
+          echo "Test agent detected - disabling Jira/Confluence integrations"
+          export DMTOOLS_INTEGRATIONS="cli,file"
+          # Unset Jira/Confluence env vars to prevent initialization
+          unset JIRA_EMAIL JIRA_API_TOKEN JIRA_BASE_PATH JIRA_AUTH_TYPE
+          unset CONFLUENCE_EMAIL CONFLUENCE_API_TOKEN CONFLUENCE_BASE_PATH
+        fi
+        
         # Ensure outputs directory exists
         mkdir -p outputs inputs
         

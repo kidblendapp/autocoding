@@ -231,8 +231,8 @@ jobs:
         CONFLUENCE_DEFAULT_SPACE: ${{ vars.CONFLUENCE_DEFAULT_SPACE }}
         CONFLUENCE_GRAPHQL_PATH: ${{ vars.CONFLUENCE_GRAPHQL_PATH }}
 
-        # DMTools Integration Settings (will be overridden in script for test_agent)
-        DMTOOLS_INTEGRATIONS: "jira,confluence,figma,ai,cli,file"
+        # DMTools Integration Settings (uses computed value from env-prep step)
+        DMTOOLS_INTEGRATIONS: ${{ steps.env-prep.outputs.dmtools_integrations }}
 
         # AI Service Configuration
         GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
@@ -261,10 +261,10 @@ jobs:
           exit 1
         fi
         
-        # For test_agent, override environment variables to disable Jira/Confluence
-        if [[ "${CONFIG_FILE}" == *"test_agent.json"* ]]; then
-          echo "Test agent detected - disabling Jira/Confluence integrations"
-          export DMTOOLS_INTEGRATIONS="cli,file"
+        # For test_agent, unset Jira/Confluence env vars to prevent initialization
+        # DMTOOLS_INTEGRATIONS is already set correctly from env-prep step
+        if [[ "${{ steps.env-prep.outputs.is_test_agent }}" == "true" ]]; then
+          echo "Test agent detected - unsetting Jira/Confluence env vars"
           # Unset Jira/Confluence env vars to prevent initialization
           # Using unset to completely remove them from environment
           unset JIRA_EMAIL JIRA_API_TOKEN JIRA_BASE_PATH JIRA_AUTH_TYPE
@@ -272,7 +272,7 @@ jobs:
           unset JIRA_LOGGING_ENABLED JIRA_WAIT_BEFORE_PERFORM
           unset CONFLUENCE_EMAIL CONFLUENCE_API_TOKEN CONFLUENCE_BASE_PATH
           unset CONFLUENCE_DEFAULT_SPACE CONFLUENCE_GRAPHQL_PATH
-          echo "DMTOOLS_INTEGRATIONS set to: ${DMTOOLS_INTEGRATIONS}"
+          echo "DMTOOLS_INTEGRATIONS: ${DMTOOLS_INTEGRATIONS}"
           echo "Jira/Confluence env vars unset"
         fi
         

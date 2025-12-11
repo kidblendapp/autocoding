@@ -147,7 +147,7 @@ jobs:
       with:
         distribution: 'temurin'
         java-version: '23'
-        cache: 'maven'
+        # Removed cache: 'maven' - repository doesn't have pom.xml (Node.js/TypeScript project)
 
     - name: Install Cursor CLI
       run: |

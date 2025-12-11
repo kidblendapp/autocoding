@@ -1,0 +1,43 @@
+{
+  "workflow": "ai-teammate-2.yaml",
+  "workflowInputs": {
+    "config_file": "agents/test_agent.json",
+    "encoded_config": ""
+  },
+  "maxRetries": 10,
+  "waitTimeout": 600,
+  "pollInterval": 10,
+  "fixStrategy": "auto",
+  "commitMessage": "fix: Auto-fix workflow errors (run {runNumber}) - {errorSummary}",
+  "branch": null,
+  "cursorAgentOptions": {
+    "model": "auto",
+    "force": true,
+    "additionalArgs": []
+  },
+  "errorPatterns": [
+    {
+      "name": "command_not_found",
+      "pattern": "command not found",
+      "context": "This usually indicates a missing tool or PATH issue. Check installation steps and PATH configuration in the workflow file."
+    },
+    {
+      "name": "permission_denied",
+      "pattern": "Permission denied|EACCES|403",
+      "context": "This indicates a permissions issue. Check file permissions, GitHub token permissions, or API access. Verify secrets and variables are correctly configured."
+    },
+    {
+      "name": "syntax_error",
+      "pattern": "syntax error|Parse error|YAMLException",
+      "context": "This indicates a syntax error in configuration files. Check YAML/JSON syntax, indentation, and ensure all required fields are present."
+    },
+    {
+      "name": "timeout",
+      "pattern": "timeout|timed out|exceeded",
+      "context": "This indicates a timeout issue. Consider increasing timeout values in the workflow, optimizing long-running steps, or checking for infinite loops."
+    }
+  ],
+  "skipSteps": [],
+  "logLevel": "normal"
+}
+

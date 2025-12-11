@@ -191,6 +191,21 @@ jobs:
         
         echo "PATH: $PATH"
 
+    - name: Prepare Environment Variables
+      id: env-prep
+      run: |
+        CONFIG_FILE="${{ steps.config.outputs.config_file }}"
+        
+        # Check if this is test_agent
+        if [[ "${CONFIG_FILE}" == *"test_agent.json"* ]]; then
+          echo "is_test_agent=true" >> $GITHUB_OUTPUT
+          echo "dmtools_integrations=cli,file" >> $GITHUB_OUTPUT
+          echo "Test agent detected - will disable Jira/Confluence integrations"
+        else
+          echo "is_test_agent=false" >> $GITHUB_OUTPUT
+          echo "dmtools_integrations=jira,confluence,figma,ai,cli,file" >> $GITHUB_OUTPUT
+        fi
+
     - name: Run AI Teammate
       env:
         CURSOR_API_KEY: ${{ secrets.CURSOR_API_KEY }}
@@ -198,7 +213,7 @@ jobs:
         AGENT_DISABLE_WATCHDOG: "1"
         PATH: "/home/runner/.local/bin:/home/runner/.dmtools/bin:/bin:/usr/bin:$PATH"
         
-        # Jira Configuration
+        # Jira Configuration (will be overridden in script for test_agent)
         JIRA_EMAIL: ${{ secrets.JIRA_EMAIL }}
         JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
         JIRA_BASE_PATH: ${{ vars.JIRA_BASE_PATH }}
@@ -209,14 +224,14 @@ jobs:
         JIRA_LOGGING_ENABLED: ${{ vars.JIRA_LOGGING_ENABLED }}
         JIRA_WAIT_BEFORE_PERFORM: ${{ vars.JIRA_WAIT_BEFORE_PERFORM }}
 
-        # Confluence Configuration
+        # Confluence Configuration (will be overridden in script for test_agent)
         CONFLUENCE_EMAIL: ${{ secrets.JIRA_EMAIL }}
         CONFLUENCE_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
         CONFLUENCE_BASE_PATH: ${{ vars.CONFLUENCE_BASE_PATH }}
         CONFLUENCE_DEFAULT_SPACE: ${{ vars.CONFLUENCE_DEFAULT_SPACE }}
         CONFLUENCE_GRAPHQL_PATH: ${{ vars.CONFLUENCE_GRAPHQL_PATH }}
 
-        # DMTools Integration Settings
+        # DMTools Integration Settings (will be overridden in script for test_agent)
         DMTOOLS_INTEGRATIONS: "jira,confluence,figma,ai,cli,file"
 
         # AI Service Configuration
@@ -246,13 +261,19 @@ jobs:
           exit 1
         fi
         
-        # For test_agent, disable Jira/Confluence integrations to avoid initialization errors
+        # For test_agent, override environment variables to disable Jira/Confluence
         if [[ "${CONFIG_FILE}" == *"test_agent.json"* ]]; then
           echo "Test agent detected - disabling Jira/Confluence integrations"
           export DMTOOLS_INTEGRATIONS="cli,file"
           # Unset Jira/Confluence env vars to prevent initialization
+          # Using unset to completely remove them from environment
           unset JIRA_EMAIL JIRA_API_TOKEN JIRA_BASE_PATH JIRA_AUTH_TYPE
+          unset JIRA_CLEAR_CACHE JIRA_EXTRA_FIELDS JIRA_EXTRA_FIELDS_PROJECT
+          unset JIRA_LOGGING_ENABLED JIRA_WAIT_BEFORE_PERFORM
           unset CONFLUENCE_EMAIL CONFLUENCE_API_TOKEN CONFLUENCE_BASE_PATH
+          unset CONFLUENCE_DEFAULT_SPACE CONFLUENCE_GRAPHQL_PATH
+          echo "DMTOOLS_INTEGRATIONS set to: ${DMTOOLS_INTEGRATIONS}"
+          echo "Jira/Confluence env vars unset"
         fi
         
         # Ensure outputs directory exists

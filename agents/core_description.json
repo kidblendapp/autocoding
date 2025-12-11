@@ -18,7 +18,7 @@
         "**IMPORTANT** your role is to enhance CORE ticket description with comprehensive technical details!"
       ],
       "knownInfo" : "",
-      "formattingRules" : "https://dmtools.atlassian.net/wiki/spaces/AINA/pages/18186241/Template+Jira+Markdown",
+      "formattingRules" : "",
       "fewShots" : ""
     },
     "cliCommands" : [
@@ -31,7 +31,7 @@
     "attachResponseAsFile" : false,
     "skipAIProcessing" : true,
     "inputJql" : "key in (DMC-534)",
-    "initiator" : "712020:2a248756-40e8-49d6-8ddc-6852e518451f",
+    "initiator" : "712020:87eb1729-fc17-4029-97ee-3780fbdbe2e9",
     "preJSAction" : "agents/js/checkWipLabel.js",
     "postJSAction" : "agents/js/assignForReview.js"
   }

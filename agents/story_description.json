@@ -7,7 +7,7 @@
     "agentParams" : {
       "aiRole" : "Experienced Business Analyst",
       "instructions" : [
-        "https://dmtools.atlassian.net/wiki/spaces/AINA/pages/11665485/Template+Story",
+        "https://kidblendapp.atlassian.net/wiki/spaces/AC/pages/786465/JIRA+Template+Story",
         "./agents/instructions/common/response_output.md",
         "./agents/instructions/common/no_development.md",
         "./agents/instructions/common/error_handling.md",
@@ -15,10 +15,11 @@
         "./agents/instructions/common/media_handling.md",
         "./agents/instructions/common/jira_context.md",
         "./agents/instructions/enhancement/no_ticket_reference.md",
+        "if subtasks contain answers to questions, you must include them as an input for the story description",
         "**IMPORTANT** your role just write description of the story based on the confluence page template!"
       ],
       "knownInfo" : "",
-      "formattingRules" : "https://dmtools.atlassian.net/wiki/spaces/AINA/pages/18186241/Template+Jira+Markdown",
+      "formattingRules" : "https://kidblendapp.atlassian.net/wiki/spaces/AC/pages/21921793/JIRA+Markdown+Formatting",
       "fewShots" : ""
     },
     "cliCommands" : [
@@ -30,8 +31,8 @@
     "ticketContextDepth" : 0,
     "attachResponseAsFile" : false,
     "skipAIProcessing" : true,
-    "inputJql" : "key = DMC-532",
-    "initiator" : "712020:2a248756-40e8-49d6-8ddc-6852e518451f",
+    "inputJql" : "type = Story and assignee = 712020:87eb1729-fc17-4029-97ee-3780fbdbe2e9",
+    "initiator" : "712020:87eb1729-fc17-4029-97ee-3780fbdbe2e9",
     "preJSAction" : "agents/js/checkWipLabel.js",
     "postJSAction" : "agents/js/assignForReview.js"
   }

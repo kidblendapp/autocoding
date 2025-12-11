@@ -279,21 +279,53 @@ jobs:
         # Ensure outputs directory exists
         mkdir -p outputs inputs
         
+        # For test_agent, remove inputJql field to prevent Jira queries
+        if [[ "${{ steps.env-prep.outputs.is_test_agent }}" == "true" ]]; then
+          echo "Removing inputJql from test agent config to prevent Jira initialization"
+          # Use temporary file to avoid modifying source if jq fails
+          if jq 'del(.params.inputJql)' "${CONFIG_FILE}" > "${CONFIG_FILE}.tmp" 2>/dev/null; then
+            mv "${CONFIG_FILE}.tmp" "${CONFIG_FILE}"
+            echo "✅ Removed inputJql from config"
+            echo "Updated config:"
+            cat "${CONFIG_FILE}" | jq '.' || cat "${CONFIG_FILE}"
+          else
+            echo "⚠️ Failed to remove inputJql (may not exist or jq error)"
+            rm -f "${CONFIG_FILE}.tmp"
+          fi
+        fi
+        
+        # Debug: Show environment before running
+        echo "=== Environment Debug ==="
+        echo "DMTOOLS_INTEGRATIONS: ${DMTOOLS_INTEGRATIONS}"
+        echo "JIRA_EMAIL: ${JIRA_EMAIL:-<not set>}"
+        echo "JIRA_BASE_PATH: ${JIRA_BASE_PATH:-<not set>}"
+        echo "========================="
+        
         # Run dmtools with error handling (don't exit on error so we can capture it)
+        echo ""
+        echo "=== Running dmtools ==="
         if [ -n "${ENCODED_CONFIG}" ]; then
           echo "Encoded config provided"
-          dmtools run "${CONFIG_FILE}" "${ENCODED_CONFIG}" 2>&1
-          EXIT_CODE=$?
+          dmtools run "${CONFIG_FILE}" "${ENCODED_CONFIG}" 2>&1 | tee /tmp/dmtools-output.log
+          EXIT_CODE=${PIPESTATUS[0]}
         else
           echo "No encoded config"
-          dmtools run "${CONFIG_FILE}" 2>&1
-          EXIT_CODE=$?
+          dmtools run "${CONFIG_FILE}" 2>&1 | tee /tmp/dmtools-output.log
+          EXIT_CODE=${PIPESTATUS[0]}
         fi
+        
+        echo ""
+        echo "=== dmtools finished with exit code: $EXIT_CODE ==="
         
         # Check exit code and provide helpful error message
         if [ $EXIT_CODE -ne 0 ]; then
           echo ""
           echo "❌ dmtools exited with code: $EXIT_CODE"
+          echo ""
+          echo "=== Full dmtools output ==="
+          cat /tmp/dmtools-output.log 2>/dev/null || echo "Could not read output log"
+          echo "=========================="
+          echo ""
           echo "Checking for output files..."
           ls -la outputs/ 2>/dev/null || echo "No outputs/ directory"
           ls -la inputs/ 2>/dev/null || echo "No inputs/ directory"

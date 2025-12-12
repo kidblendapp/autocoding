@@ -1,0 +1,215 @@
+=== Workflow Run Summary ===
+Run ID: 20160376516
+Repository: kidblendapp/autocoding
+Workflow: ai-teammate-2.yaml
+
+=== Status ===
+completed / failure - AI Teammate Enhanced
+
+=== Failed Jobs ===
+Could not get failed jobs or no failed jobs found
+
+=== All Jobs ===
+Could not get jobs
+
+=== Error Logs (last 200 lines) ===
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1153258Z 08:07:01.090 [main] DEBUG com.github.istin.dmtools.common.utils.PropertyReader - dmtools.env not found in project root (/home/runner/work/autocoding/autocoding) or working directory (/home/runner/work/autocoding/autocoding)
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1154475Z 08:07:01.090 [main] INFO  com.github.istin.dmtools.di.TrackerModule - DEFAULT_TRACKER value from config: 'null'
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1155571Z 08:07:01.090 [main] INFO  com.github.istin.dmtools.di.TrackerModule - Auto-detecting available tracker configuration...
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1156628Z 08:07:01.090 [main] DEBUG com.github.istin.dmtools.di.TrackerModule - Attempting to auto-detect BasicJiraClient...
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1157411Z 08:07:01.099 [main] DEBUG com.github.istin.dmtools.di.TrackerModule - Attempting to auto-detect BasicAzureDevOpsClient...
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1158443Z 08:07:01.101 [main] DEBUG com.github.istin.dmtools.microsoft.ado.BasicAzureDevOpsClient - ADO configuration not found. Set ADO_ORGANIZATION, ADO_PROJECT, and ADO_PAT_TOKEN.
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1169168Z 08:07:01.101 [main] DEBUG com.github.istin.dmtools.di.TrackerModule - Attempting to auto-detect BasicRallyClient...
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1170190Z 08:07:01.102 [main] DEBUG com.github.istin.dmtools.broadcom.rally.BasicRallyClient - Rally configuration not found. Set RALLY_PATH and RALLY_TOKEN.
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1171048Z 08:07:01.102 [main] DEBUG com.github.istin.dmtools.di.TrackerModule - Detected CI environment (CI=true), allowing null TrackerClient
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1172125Z 08:07:01.102 [main] WARN  com.github.istin.dmtools.di.TrackerModule - No tracker configuration found in test environment. Returning null TrackerClient. Tests that require TrackerClient should mock it or provide test configuration.
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1172887Z 
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1173210Z === Analyzing dmtools output for errors ===
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1173593Z No obvious error patterns found, but exit code is 1
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1174406Z 08:07:01.042 [main] INFO  com.github.istin.dmtools.job.JobRunner - Created fresh job instance: Teammate
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1175952Z 08:07:01.080 [main] INFO  com.github.istin.dmtools.teammate.Teammate - Initializing Teammate in STANDALONE mode using TeammateComponent with BasicGeminiAI
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1177351Z 08:07:01.089 [main] INFO  com.github.istin.dmtools.teammate.Teammate - Injecting dependencies using TeammateComponent
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1178026Z 
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1178479Z ⚠️ dmtools initialized successfully but failed during execution
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1179444Z This suggests the failure occurred after initialization, possibly during ticket processing or cliCommands execution
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1180151Z 
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1180300Z Last 50 lines of dmtools output:
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1187496Z [0;32mInfo: Executing job with file: /home/runner/work/autocoding/autocoding/agents/test_agent.json[0m
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1189138Z 08:07:01.033 [main] INFO  com.github.istin.dmtools.job.RunCommandProcessor - Processing run command: file=/home/runner/work/autocoding/autocoding/agents/test_agent.json, hasEncodedConfig=false
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1191205Z 08:07:01.037 [main] INFO  com.github.istin.dmtools.job.RunCommandProcessor - Successfully loaded JSON configuration from file: /home/runner/work/autocoding/autocoding/agents/test_agent.json
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1192199Z 08:07:01.037 [main] INFO  com.github.istin.dmtools.job.RunCommandProcessor - Using file configuration only
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1192888Z 08:07:01.041 [main] INFO  com.github.istin.dmtools.job.RunCommandProcessor - JobParams created successfully for job: Teammate
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1193627Z 08:07:01.041 [main] INFO  com.github.istin.dmtools.job.JobRunner - Executing job: Teammate in mode: STANDALONE with 0 integrations
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1194285Z 08:07:01.042 [main] INFO  com.github.istin.dmtools.job.JobRunner - Created fresh job instance: Teammate
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1194903Z 08:07:01.080 [main] INFO  com.github.istin.dmtools.job.JobRunner - Calling initializeForMode with mode: STANDALONE
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1196048Z 08:07:01.080 [main] INFO  com.github.istin.dmtools.teammate.Teammate - Initializing Teammate in STANDALONE mode using TeammateComponent with BasicGeminiAI
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1196885Z 08:07:01.081 [main] INFO  com.github.istin.dmtools.teammate.Teammate - Creating new DaggerTeammateComponent for standalone mode
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1197602Z 08:07:01.089 [main] INFO  com.github.istin.dmtools.teammate.Teammate - Injecting dependencies using TeammateComponent
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1198483Z 08:07:01.090 [main] DEBUG com.github.istin.dmtools.common.utils.PropertyReader - No Gradle project markers found, using user.dir as project root: /home/runner/work/autocoding/autocoding
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1199708Z 08:07:01.090 [main] DEBUG com.github.istin.dmtools.common.utils.PropertyReader - dmtools.env not found in project root (/home/runner/work/autocoding/autocoding) or working directory (/home/runner/work/autocoding/autocoding)
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1200711Z 08:07:01.090 [main] INFO  com.github.istin.dmtools.di.TrackerModule - DEFAULT_TRACKER value from config: 'null'
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1201367Z 08:07:01.090 [main] INFO  com.github.istin.dmtools.di.TrackerModule - Auto-detecting available tracker configuration...
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1202039Z 08:07:01.090 [main] DEBUG com.github.istin.dmtools.di.TrackerModule - Attempting to auto-detect BasicJiraClient...
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1202732Z 08:07:01.099 [main] DEBUG com.github.istin.dmtools.di.TrackerModule - Attempting to auto-detect BasicAzureDevOpsClient...
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1204123Z 08:07:01.101 [main] DEBUG com.github.istin.dmtools.microsoft.ado.BasicAzureDevOpsClient - ADO configuration not found. Set ADO_ORGANIZATION, ADO_PROJECT, and ADO_PAT_TOKEN.
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1205216Z 08:07:01.101 [main] DEBUG com.github.istin.dmtools.di.TrackerModule - Attempting to auto-detect BasicRallyClient...
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1206269Z 08:07:01.102 [main] DEBUG com.github.istin.dmtools.broadcom.rally.BasicRallyClient - Rally configuration not found. Set RALLY_PATH and RALLY_TOKEN.
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1207122Z 08:07:01.102 [main] DEBUG com.github.istin.dmtools.di.TrackerModule - Detected CI environment (CI=true), allowing null TrackerClient
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1208186Z 08:07:01.102 [main] WARN  com.github.istin.dmtools.di.TrackerModule - No tracker configuration found in test environment. Returning null TrackerClient. Tests that require TrackerClient should mock it or provide test configuration.
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1208919Z 
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1209022Z === Checking if cliCommands executed ===
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1209456Z ❌ cliCommands may not have executed (expected output not found)
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1219084Z ==========================================
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1219537Z 
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1219719Z === dmtools finished with exit code: 1 ===
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1221902Z 
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1222216Z ❌ dmtools exited with code: 1
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1222505Z 
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1222622Z === Analyzing dmtools error ===
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1238191Z Found error messages in output (see above)
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1252074Z 08:07:01.042 [main] INFO  com.github.istin.dmtools.job.JobRunner - Created fresh job instance: Teammate
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1253100Z 08:07:01.080 [main] INFO  com.github.istin.dmtools.teammate.Teammate - Initializing Teammate in STANDALONE mode using TeammateComponent with BasicGeminiAI
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1254232Z 08:07:01.089 [main] INFO  com.github.istin.dmtools.teammate.Teammate - Injecting dependencies using TeammateComponent
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1254938Z ✅ dmtools initialized successfully
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1269930Z ❌ No evidence of cliCommands execution attempt
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1270403Z =================================
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1270671Z 
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1270882Z === Checking if cliCommands executed despite error ===
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1271635Z ❌ outputs/response.md does not exist - cliCommands did not execute
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1272071Z 
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1272452Z Checking for any output files:
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1283943Z total 8
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1284305Z drwxr-xr-x  2 runner runner 4096 Dec 12 08:07 .
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1284799Z drwxr-xr-x 14 runner runner 4096 Dec 12 08:07 ..
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1286212Z =====================================================
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1286513Z 
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1286658Z === Full dmtools output ===
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1296054Z [0;32mInfo: Executing job with file: /home/runner/work/autocoding/autocoding/agents/test_agent.json[0m
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1297686Z 08:07:01.033 [main] INFO  com.github.istin.dmtools.job.RunCommandProcessor - Processing run command: file=/home/runner/work/autocoding/autocoding/agents/test_agent.json, hasEncodedConfig=false
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1299736Z 08:07:01.037 [main] INFO  com.github.istin.dmtools.job.RunCommandProcessor - Successfully loaded JSON configuration from file: /home/runner/work/autocoding/autocoding/agents/test_agent.json
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1300868Z 08:07:01.037 [main] INFO  com.github.istin.dmtools.job.RunCommandProcessor - Using file configuration only
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1301710Z 08:07:01.041 [main] INFO  com.github.istin.dmtools.job.RunCommandProcessor - JobParams created successfully for job: Teammate
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1302985Z 08:07:01.041 [main] INFO  com.github.istin.dmtools.job.JobRunner - Executing job: Teammate in mode: STANDALONE with 0 integrations
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1304108Z 08:07:01.042 [main] INFO  com.github.istin.dmtools.job.JobRunner - Created fresh job instance: Teammate
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1305325Z 08:07:01.080 [main] INFO  com.github.istin.dmtools.job.JobRunner - Calling initializeForMode with mode: STANDALONE
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1306128Z 08:07:01.080 [main] INFO  com.github.istin.dmtools.teammate.Teammate - Initializing Teammate in STANDALONE mode using TeammateComponent with BasicGeminiAI
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1307122Z 08:07:01.081 [main] INFO  com.github.istin.dmtools.teammate.Teammate - Creating new DaggerTeammateComponent for standalone mode
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1307833Z 08:07:01.089 [main] INFO  com.github.istin.dmtools.teammate.Teammate - Injecting dependencies using TeammateComponent
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1308709Z 08:07:01.090 [main] DEBUG com.github.istin.dmtools.common.utils.PropertyReader - No Gradle project markers found, using user.dir as project root: /home/runner/work/autocoding/autocoding
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1309931Z 08:07:01.090 [main] DEBUG com.github.istin.dmtools.common.utils.PropertyReader - dmtools.env not found in project root (/home/runner/work/autocoding/autocoding) or working directory (/home/runner/work/autocoding/autocoding)
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1310927Z 08:07:01.090 [main] INFO  com.github.istin.dmtools.di.TrackerModule - DEFAULT_TRACKER value from config: 'null'
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1311580Z 08:07:01.090 [main] INFO  com.github.istin.dmtools.di.TrackerModule - Auto-detecting available tracker configuration...
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1312267Z 08:07:01.090 [main] DEBUG com.github.istin.dmtools.di.TrackerModule - Attempting to auto-detect BasicJiraClient...
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1312968Z 08:07:01.099 [main] DEBUG com.github.istin.dmtools.di.TrackerModule - Attempting to auto-detect BasicAzureDevOpsClient...
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1313873Z 08:07:01.101 [main] DEBUG com.github.istin.dmtools.microsoft.ado.BasicAzureDevOpsClient - ADO configuration not found. Set ADO_ORGANIZATION, ADO_PROJECT, and ADO_PAT_TOKEN.
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1315329Z 08:07:01.101 [main] DEBUG com.github.istin.dmtools.di.TrackerModule - Attempting to auto-detect BasicRallyClient...
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1316268Z 08:07:01.102 [main] DEBUG com.github.istin.dmtools.broadcom.rally.BasicRallyClient - Rally configuration not found. Set RALLY_PATH and RALLY_TOKEN.
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1317441Z 08:07:01.102 [main] DEBUG com.github.istin.dmtools.di.TrackerModule - Detected CI environment (CI=true), allowing null TrackerClient
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1318508Z 08:07:01.102 [main] WARN  com.github.istin.dmtools.di.TrackerModule - No tracker configuration found in test environment. Returning null TrackerClient. Tests that require TrackerClient should mock it or provide test configuration.
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1319459Z ==========================
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1319596Z 
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1319682Z === Permission Checks ===
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1319970Z Current directory: /home/runner/work/autocoding/autocoding
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1320292Z Current directory permissions:
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1320555Z drwxr-xr-x 14 runner runner 4096 Dec 12 08:07 .
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1320744Z 
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1320833Z Config file permissions:
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1328611Z -rw-r--r-- 1 runner runner 540 Dec 12 08:07 /home/runner/work/autocoding/autocoding/agents/test_agent.json
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1330059Z 
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1330258Z Outputs directory permissions:
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1342120Z drwxr-xr-x 2 runner runner 4096 Dec 12 08:07 outputs
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1343913Z 
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1344093Z Testing write permissions:
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1365528Z ✅ outputs/ is writable
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1386511Z ✅ Current directory is writable
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1386941Z ==========================
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1387185Z 
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1387294Z === Additional Debug Info ===
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1387557Z DMTOOLS_INTEGRATIONS value: 'cli,file'
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1387859Z GEMINI_API_KEY: <set>test-dummy-key-for-test-agent
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1388296Z Config file path: /home/runner/work/autocoding/autocoding/agents/test_agent.json
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1390942Z Config file exists: yes
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1396017Z Config file readable: yes
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1400715Z Config file writable: yes
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1400952Z 
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1401101Z Checking for output files...
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1412876Z total 8
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1413223Z drwxr-xr-x  2 runner runner 4096 Dec 12 08:07 .
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1413697Z drwxr-xr-x 14 runner runner 4096 Dec 12 08:07 ..
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1427280Z total 8
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1427684Z drwxr-xr-x  2 runner runner 4096 Dec 12 08:07 .
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1428223Z drwxr-xr-x 14 runner runner 4096 Dec 12 08:07 ..
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1428744Z -rw-r--r--  1 runner runner    0 Dec 12 08:07 .gitkeep
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1429199Z 
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1429413Z Checking if cliCommands were executed...
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1430198Z ❌ outputs/response.md does not exist - cliCommands may not have executed
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1430585Z 
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1430677Z Config file content:
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1438486Z {
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1438784Z   "name": "Teammate",
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1439115Z   "params": {
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1439388Z     "agentParams": {
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1439607Z       "aiRole": "Test Assistant",
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1439860Z       "instructions": [
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1440209Z         "This is a test agent",
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1440589Z         "Just print hello world"
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1440903Z       ],
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1441119Z       "formattingRules": "Use markdown"
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1441361Z     },
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1441537Z     "cliCommands": [
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1441758Z       "echo 'Hello from AI Teammate!'",
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1442021Z       "mkdir -p outputs",
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1442270Z       "echo '# Test Result' > outputs/response.md",
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1442614Z       "echo 'Agent executed successfully' >> outputs/response.md"
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1442910Z     ],
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1443091Z     "outputType": "none",
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1443309Z     "skipAIProcessing": true,
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1443545Z     "ticketContextDepth": 0
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1443757Z   }
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1443915Z }
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1444083Z ======================
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1444204Z 
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1444308Z === Checking for permission errors ===
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1455154Z No obvious permission errors found in output
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1455619Z ====================================
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1455901Z 
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.1456034Z === Checking dmtools help/version for clues ===
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.6711565Z DMTools 1.7.100
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.6712533Z A comprehensive development management toolkit
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.6790115Z ==============================================
+cursor-agent	Run AI Teammate	2025-12-12T08:07:01.6803283Z ##[error]Process completed with exit code 1.
+cursor-agent	Upload artifacts	﻿2025-12-12T08:07:01.6871504Z ##[group]Run actions/upload-artifact@v4
+cursor-agent	Upload artifacts	2025-12-12T08:07:01.6871786Z with:
+cursor-agent	Upload artifacts	2025-12-12T08:07:01.6871980Z   name: ai-teammate-results-27
+cursor-agent	Upload artifacts	2025-12-12T08:07:01.6872213Z   path: outputs/
+cursor-agent	Upload artifacts	inputs/
+cursor-agent	Upload artifacts	
+cursor-agent	Upload artifacts	2025-12-12T08:07:01.6872432Z   retention-days: 30
+cursor-agent	Upload artifacts	2025-12-12T08:07:01.6872647Z   if-no-files-found: warn
+cursor-agent	Upload artifacts	2025-12-12T08:07:01.6872860Z   compression-level: 6
+cursor-agent	Upload artifacts	2025-12-12T08:07:01.6873061Z   overwrite: false
+cursor-agent	Upload artifacts	2025-12-12T08:07:01.6873266Z   include-hidden-files: false
+cursor-agent	Upload artifacts	2025-12-12T08:07:01.6873485Z env:
+cursor-agent	Upload artifacts	2025-12-12T08:07:01.6873764Z   JAVA_HOME: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/23.0.2-7/x64
+cursor-agent	Upload artifacts	2025-12-12T08:07:01.6874214Z   JAVA_HOME_23_X64: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/23.0.2-7/x64
+cursor-agent	Upload artifacts	2025-12-12T08:07:01.6874573Z ##[endgroup]
+cursor-agent	Upload artifacts	2025-12-12T08:07:01.9010786Z Multiple search paths detected. Calculating the least common ancestor of all paths
+cursor-agent	Upload artifacts	2025-12-12T08:07:01.9013958Z The least common ancestor is /home/runner/work/autocoding/autocoding. This will be the root directory of the artifact
+cursor-agent	Upload artifacts	2025-12-12T08:07:01.9029739Z ##[warning]No files were found with the provided path: outputs/
+cursor-agent	Upload artifacts	inputs/. No artifacts will be uploaded.
+cursor-agent	Post Setup Java Environment	﻿2025-12-12T08:07:01.9154506Z Post job cleanup.
+cursor-agent	Post Checkout repository	﻿2025-12-12T08:07:02.0923554Z Post job cleanup.
+cursor-agent	Post Checkout repository	2025-12-12T08:07:02.1867695Z [command]/usr/bin/git version
+cursor-agent	Post Checkout repository	2025-12-12T08:07:02.1904037Z git version 2.52.0
+cursor-agent	Post Checkout repository	2025-12-12T08:07:02.1949672Z Temporarily overriding HOME='/home/runner/work/_temp/5fa04008-8133-4b44-b287-f56c66ed0002' before making global git config changes
+cursor-agent	Post Checkout repository	2025-12-12T08:07:02.1950992Z Adding repository directory to the temporary git global config as a safe directory
+cursor-agent	Post Checkout repository	2025-12-12T08:07:02.1956157Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/autocoding/autocoding
+cursor-agent	Post Checkout repository	2025-12-12T08:07:02.1993821Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+cursor-agent	Post Checkout repository	2025-12-12T08:07:02.2025464Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+cursor-agent	Post Checkout repository	2025-12-12T08:07:02.2249225Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+cursor-agent	Post Checkout repository	2025-12-12T08:07:02.2268804Z http.https://github.com/.extraheader
+cursor-agent	Post Checkout repository	2025-12-12T08:07:02.2281544Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+cursor-agent	Post Checkout repository	2025-12-12T08:07:02.2310879Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+cursor-agent	Post Checkout repository	2025-12-12T08:07:02.2526835Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+cursor-agent	Post Checkout repository	2025-12-12T08:07:02.2556686Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+cursor-agent	Complete job	﻿2025-12-12T08:07:02.2872780Z Cleaning up orphan processes

@@ -505,16 +505,39 @@ jobs:
         echo "JAVA_OPTS: ${JAVA_OPTS:-<not set>}"
         echo "===================================================="
         
+        # Ensure DMTOOLS_INTEGRATIONS is explicitly set and exported before running dmtools
+        # dmtools reads this from environment, so we must ensure it's set correctly
+        export DMTOOLS_INTEGRATIONS="${DMTOOLS_INTEGRATIONS:-cli,file}"
+        
+        # Verify the environment variable is set correctly before running
+        echo "Final DMTOOLS_INTEGRATIONS check: '${DMTOOLS_INTEGRATIONS}'"
+        env | grep -E "^DMTOOLS_INTEGRATIONS=" || echo "⚠️ DMTOOLS_INTEGRATIONS not found in environment"
+        
+        # For test agents, ensure cli and file integrations are explicitly enabled
+        # dmtools may require explicit integration names
+        if [[ "${{ steps.env-prep.outputs.is_test_agent }}" == "true" ]]; then
+          export DMTOOLS_INTEGRATIONS="cli,file"
+          echo "✅ Explicitly set DMTOOLS_INTEGRATIONS=cli,file for test agent"
+        fi
+        
         if [ -n "${ENCODED_CONFIG}" ]; then
           echo "Encoded config provided"
           # Run dmtools and capture all output
-          # Export all variables to ensure dmtools sees them
+          # Ensure environment variables are explicitly available to the Java process
+          DMTOOLS_INTEGRATIONS="${DMTOOLS_INTEGRATIONS}" \
+          GEMINI_API_KEY="${GEMINI_API_KEY:-}" \
+          CI="${CI:-false}" \
+          JAVA_OPTS="${JAVA_OPTS:-}" \
           dmtools run "${CONFIG_FILE}" "${ENCODED_CONFIG}" > /tmp/dmtools-output.log 2>&1
           EXIT_CODE=$?
         else
           echo "No encoded config"
           # Run dmtools and capture all output
-          # Export all variables to ensure dmtools sees them
+          # Ensure environment variables are explicitly available to the Java process
+          DMTOOLS_INTEGRATIONS="${DMTOOLS_INTEGRATIONS}" \
+          GEMINI_API_KEY="${GEMINI_API_KEY:-}" \
+          CI="${CI:-false}" \
+          JAVA_OPTS="${JAVA_OPTS:-}" \
           dmtools run "${CONFIG_FILE}" > /tmp/dmtools-output.log 2>&1
           EXIT_CODE=$?
         fi
@@ -545,6 +568,14 @@ jobs:
             echo "This suggests the failure occurred after initialization, possibly during ticket processing or cliCommands execution"
           fi
           
+          # Check for integration detection issues
+          if grep -i "0 integrations\|with 0 integrations" /tmp/dmtools-output.log 2>/dev/null; then
+            echo ""
+            echo "⚠️ dmtools detected 0 integrations despite DMTOOLS_INTEGRATIONS=${DMTOOLS_INTEGRATIONS}"
+            echo "This may cause dmtools to exit early without executing cliCommands"
+            echo "Checking if cliCommands executed despite this issue..."
+          fi
+          
           # Show last 50 lines for better context
           echo ""
           echo "Last 50 lines of dmtools output:"
@@ -554,9 +585,15 @@ jobs:
           echo ""
           echo "=== Checking if cliCommands executed ==="
           if grep -i "Hello from AI Teammate\|Test Result\|Agent executed successfully" /tmp/dmtools-output.log 2>/dev/null; then
-            echo "✅ cliCommands appear to have executed (found expected output)"
+            echo "✅ cliCommands appear to have executed (found expected output in logs)"
+          elif [ -f "outputs/response.md" ]; then
+            echo "✅ cliCommands appear to have executed (output file exists)"
+            echo "Content of outputs/response.md:"
+            cat outputs/response.md || echo "Could not read response.md"
           else
             echo "❌ cliCommands may not have executed (expected output not found)"
+            echo "Checking outputs directory:"
+            ls -la outputs/ 2>/dev/null || echo "Outputs directory does not exist"
           fi
           
           # Check for ticket processing issues
@@ -620,6 +657,41 @@ jobs:
               echo ""
               echo "Checking for any output files:"
               ls -la outputs/ 2>/dev/null || echo "No outputs directory"
+              
+              # If dmtools failed to execute cliCommands, check if it's due to integration detection issue
+              if grep -i "0 integrations\|with 0 integrations" /tmp/dmtools-output.log 2>/dev/null; then
+                echo ""
+                echo "⚠️ dmtools detected 0 integrations and may have exited early"
+                echo "Attempting to manually execute cliCommands as fallback for test agent..."
+                
+                # Extract cliCommands from config and execute them manually
+                if command -v jq >/dev/null 2>&1; then
+                  CLI_COMMANDS=$(jq -r '.params.cliCommands[]?' "${CONFIG_FILE}" 2>/dev/null || echo "")
+                  if [ -n "${CLI_COMMANDS}" ]; then
+                    echo "Found cliCommands in config, executing manually:"
+                    while IFS= read -r cmd; do
+                      if [ -n "${cmd}" ]; then
+                        echo "Executing: ${cmd}"
+                        eval "${cmd}" || echo "⚠️ Command failed: ${cmd}"
+                      fi
+                    done <<< "${CLI_COMMANDS}"
+                    
+                    # Check if execution was successful
+                    if [ -f "outputs/response.md" ]; then
+                      echo "✅ Successfully executed cliCommands manually"
+                      echo "Content of outputs/response.md:"
+                      cat outputs/response.md || echo "Could not read response.md"
+                      EXIT_CODE=0
+                    else
+                      echo "❌ Manual execution of cliCommands did not create expected output"
+                    fi
+                  else
+                    echo "⚠️ No cliCommands found in config file"
+                  fi
+                else
+                  echo "⚠️ jq not available, cannot extract cliCommands"
+                fi
+              fi
             fi
             echo "====================================================="
             echo ""

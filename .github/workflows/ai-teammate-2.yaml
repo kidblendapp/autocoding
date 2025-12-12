@@ -286,6 +286,9 @@ jobs:
           exit 1
         fi
         
+        # ✅ Ensure config file is writable (fix permission issues)
+        chmod 644 "${CONFIG_FILE}" || echo "⚠️ Could not change config file permissions (may be read-only)"
+        
         # For test_agent, unset Jira/Confluence env vars to prevent initialization
         if [[ "${{ steps.env-prep.outputs.is_test_agent }}" == "true" ]]; then
           echo "Test agent detected - unsetting Jira/Confluence env vars"
@@ -299,23 +302,37 @@ jobs:
           echo "Jira/Confluence env vars unset"
         fi
         
-        # Ensure outputs directory exists and is writable
+        # ✅ Ensure outputs directory exists and is writable with proper permissions
         mkdir -p outputs inputs
         chmod 755 outputs inputs || true
+        # Ensure current directory is writable
+        chmod 755 . || true
         echo "Created outputs and inputs directories"
+        echo "Directory permissions:"
+        ls -ld outputs inputs . || true
         
         # For test_agent, remove inputJql field to prevent Jira queries
         if [[ "${{ steps.env-prep.outputs.is_test_agent }}" == "true" ]]; then
           echo "Removing inputJql from test agent config to prevent Jira initialization"
-          # Use temporary file to avoid modifying source if jq fails
-          if jq 'del(.params.inputJql)' "${CONFIG_FILE}" > "${CONFIG_FILE}.tmp" 2>/dev/null; then
-            mv "${CONFIG_FILE}.tmp" "${CONFIG_FILE}"
-            echo "✅ Removed inputJql from config"
+          # Try to modify in place first, fall back to temp file if needed
+          TEMP_CONFIG="${CONFIG_FILE}.tmp"
+          if jq 'del(.params.inputJql)' "${CONFIG_FILE}" > "${TEMP_CONFIG}" 2>/dev/null; then
+            # Try to replace original file
+            if mv "${TEMP_CONFIG}" "${CONFIG_FILE}" 2>/dev/null; then
+              chmod 644 "${CONFIG_FILE}" || true
+              echo "✅ Removed inputJql from config (modified in place)"
+            else
+              # If mv fails, use temp file and update CONFIG_FILE to absolute path
+              echo "⚠️ Could not replace original file, using temp file"
+              CONFIG_FILE="$(realpath "${TEMP_CONFIG}" 2>/dev/null || echo "${TEMP_CONFIG}")"
+              chmod 644 "${CONFIG_FILE}" || true
+              echo "Using config file: ${CONFIG_FILE}"
+            fi
             echo "Updated config:"
             cat "${CONFIG_FILE}" | jq '.' || cat "${CONFIG_FILE}"
           else
             echo "⚠️ Failed to remove inputJql (may not exist or jq error)"
-            rm -f "${CONFIG_FILE}.tmp"
+            rm -f "${TEMP_CONFIG}"
           fi
           
           # Ensure GEMINI_API_KEY is set (even if empty) for test agent to prevent validation errors
@@ -323,6 +340,35 @@ jobs:
           export GEMINI_API_KEY="${GEMINI_API_KEY:-}"
           echo "GEMINI_API_KEY is set (may be empty for test agent)"
         fi
+        
+        # ✅ Ensure CONFIG_FILE is absolute path for dmtools
+        CONFIG_FILE="$(realpath "${CONFIG_FILE}" 2>/dev/null || echo "${CONFIG_FILE}")"
+        echo "Final config file path: ${CONFIG_FILE}"
+        
+        # ✅ Final permission and accessibility checks before running dmtools
+        echo ""
+        echo "=== Pre-flight checks ==="
+        if [ ! -f "${CONFIG_FILE}" ]; then
+          echo "❌ Config file does not exist: ${CONFIG_FILE}"
+          exit 1
+        fi
+        if [ ! -r "${CONFIG_FILE}" ]; then
+          echo "❌ Config file is not readable: ${CONFIG_FILE}"
+          exit 1
+        fi
+        echo "✅ Config file exists and is readable"
+        
+        if [ ! -d "outputs" ]; then
+          echo "❌ Outputs directory does not exist"
+          exit 1
+        fi
+        if [ ! -w "outputs" ]; then
+          echo "❌ Outputs directory is not writable"
+          chmod 755 outputs || exit 1
+        fi
+        echo "✅ Outputs directory exists and is writable"
+        echo "=========================="
+        echo ""
         
         # Validate config file JSON syntax before running
         echo "Validating config file JSON syntax..."
@@ -348,12 +394,19 @@ jobs:
         echo "Config file: ${CONFIG_FILE}"
         echo "DMTOOLS_INTEGRATIONS: ${DMTOOLS_INTEGRATIONS}"
         echo "GEMINI_API_KEY: ${GEMINI_API_KEY:+<set>}${GEMINI_API_KEY:-<not set>}"
+        echo "Working directory: $(pwd)"
+        echo "Directory permissions:"
+        ls -ld . outputs inputs 2>/dev/null || true
+        
+        # ✅ Ensure we have write permissions in current directory
+        touch .write-test 2>/dev/null && rm -f .write-test && echo "✅ Current directory is writable" || echo "⚠️ Current directory may not be writable"
         
         # Run with explicit environment variables to ensure dmtools sees them
         # Capture both stdout and stderr, and also save exit code
         if [ -n "${ENCODED_CONFIG}" ]; then
           echo "Encoded config provided"
           set +e  # Don't exit on error, we'll handle it manually
+          # Capture both stdout and stderr to log files and console
           env DMTOOLS_INTEGRATIONS="${DMTOOLS_INTEGRATIONS}" \
               GEMINI_API_KEY="${GEMINI_API_KEY:-}" \
             dmtools run "${CONFIG_FILE}" "${ENCODED_CONFIG}" 2>&1 | tee /tmp/dmtools-output.log
@@ -362,6 +415,7 @@ jobs:
         else
           echo "No encoded config"
           set +e  # Don't exit on error, we'll handle it manually
+          # Capture both stdout and stderr to log files and console
           env DMTOOLS_INTEGRATIONS="${DMTOOLS_INTEGRATIONS}" \
               GEMINI_API_KEY="${GEMINI_API_KEY:-}" \
             dmtools run "${CONFIG_FILE}" 2>&1 | tee /tmp/dmtools-output.log
@@ -381,11 +435,30 @@ jobs:
           cat /tmp/dmtools-output.log 2>/dev/null || echo "Could not read output log"
           echo "=========================="
           echo ""
+          echo "=== Permission Checks ==="
+          echo "Current directory: $(pwd)"
+          echo "Current directory permissions:"
+          ls -ld . 2>/dev/null || echo "Could not check current directory"
+          echo ""
+          echo "Config file permissions:"
+          ls -l "${CONFIG_FILE}" 2>/dev/null || echo "Could not check config file"
+          echo ""
+          echo "Outputs directory permissions:"
+          ls -ld outputs 2>/dev/null || echo "Outputs directory does not exist"
+          echo ""
+          echo "Testing write permissions:"
+          touch outputs/.write-test 2>/dev/null && rm -f outputs/.write-test && echo "✅ outputs/ is writable" || echo "❌ outputs/ is NOT writable"
+          touch .write-test 2>/dev/null && rm -f .write-test && echo "✅ Current directory is writable" || echo "❌ Current directory is NOT writable"
+          echo "=========================="
+          echo ""
           echo "=== Additional Debug Info ==="
           echo "DMTOOLS_INTEGRATIONS value: '${DMTOOLS_INTEGRATIONS}'"
           echo "GEMINI_API_KEY: ${GEMINI_API_KEY:+<set>}${GEMINI_API_KEY:-<not set>}"
           echo "Config file path: ${CONFIG_FILE}"
           echo "Config file exists: $([ -f "${CONFIG_FILE}" ] && echo 'yes' || echo 'no')"
+          echo "Config file readable: $([ -r "${CONFIG_FILE}" ] && echo 'yes' || echo 'no')"
+          echo "Config file writable: $([ -w "${CONFIG_FILE}" ] && echo 'yes' || echo 'no')"
+          echo ""
           echo "Checking for output files..."
           ls -la outputs/ 2>/dev/null || echo "No outputs/ directory"
           ls -la inputs/ 2>/dev/null || echo "No inputs/ directory"
@@ -401,6 +474,16 @@ jobs:
           echo "Config file content:"
           cat "${CONFIG_FILE}" || echo "Could not read config file"
           echo "======================"
+          
+          # Check for permission-related errors in output
+          echo ""
+          echo "=== Checking for permission errors ==="
+          if grep -i "permission\|denied\|access\|read-only\|cannot write\|cannot create" /tmp/dmtools-output.log 2>/dev/null; then
+            echo "⚠️ Permission-related errors detected in dmtools output"
+          else
+            echo "No obvious permission errors found in output"
+          fi
+          echo "===================================="
           
           # Try to get more verbose output if available
           echo ""

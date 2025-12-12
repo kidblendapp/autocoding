@@ -403,25 +403,48 @@ jobs:
         
         # Run with explicit environment variables to ensure dmtools sees them
         # Capture both stdout and stderr, and also save exit code
+        # Use a reliable method: run command, capture output to file, then display it
+        set +e  # Don't exit on error, we'll handle it manually
+        
+        # Add Java debugging if needed
+        export JAVA_OPTS="${JAVA_OPTS} -Djava.util.logging.config.file=/dev/null"
+        
         if [ -n "${ENCODED_CONFIG}" ]; then
           echo "Encoded config provided"
-          set +e  # Don't exit on error, we'll handle it manually
-          # Capture both stdout and stderr to log files and console
+          # Run dmtools and capture all output
           env DMTOOLS_INTEGRATIONS="${DMTOOLS_INTEGRATIONS}" \
               GEMINI_API_KEY="${GEMINI_API_KEY:-}" \
-            dmtools run "${CONFIG_FILE}" "${ENCODED_CONFIG}" 2>&1 | tee /tmp/dmtools-output.log
-          EXIT_CODE=${PIPESTATUS[0]}
-          set -e  # Re-enable exit on error
+              JAVA_OPTS="${JAVA_OPTS}" \
+            dmtools run "${CONFIG_FILE}" "${ENCODED_CONFIG}" > /tmp/dmtools-output.log 2>&1
+          EXIT_CODE=$?
         else
           echo "No encoded config"
-          set +e  # Don't exit on error, we'll handle it manually
-          # Capture both stdout and stderr to log files and console
+          # Run dmtools and capture all output
           env DMTOOLS_INTEGRATIONS="${DMTOOLS_INTEGRATIONS}" \
               GEMINI_API_KEY="${GEMINI_API_KEY:-}" \
-            dmtools run "${CONFIG_FILE}" 2>&1 | tee /tmp/dmtools-output.log
-          EXIT_CODE=${PIPESTATUS[0]}
-          set -e  # Re-enable exit on error
+              JAVA_OPTS="${JAVA_OPTS}" \
+            dmtools run "${CONFIG_FILE}" > /tmp/dmtools-output.log 2>&1
+          EXIT_CODE=$?
         fi
+        
+        # Display the output
+        cat /tmp/dmtools-output.log
+        
+        # Check for common error patterns in the output
+        if [ $EXIT_CODE -ne 0 ]; then
+          echo ""
+          echo "=== Analyzing dmtools output for errors ==="
+          if grep -i "exception\|error\|failed\|cannot\|unable" /tmp/dmtools-output.log 2>/dev/null; then
+            echo "Found error patterns in output (see above)"
+          else
+            echo "No obvious error patterns found, but exit code is $EXIT_CODE"
+            echo "Last 20 lines of output:"
+            tail -20 /tmp/dmtools-output.log 2>/dev/null || echo "Could not read output log"
+          fi
+          echo "=========================================="
+        fi
+        
+        set -e  # Re-enable exit on error
         
         echo ""
         echo "=== dmtools finished with exit code: $EXIT_CODE ==="

@@ -319,10 +319,15 @@ jobs:
           TEMP_CONFIG="${CONFIG_FILE}.tmp"
           
           # Remove inputJql to prevent dmtools from trying to query tickets
-          if jq 'del(.params.inputJql)' "${CONFIG_FILE}" > "${TEMP_CONFIG}" 2>/dev/null; then
+          # Also ensure no ticket-related fields are present that might trigger ticket processing
+          if jq 'del(.params.inputJql) | del(.params.ticketKey) | del(.params.jqlQuery)' "${CONFIG_FILE}" > "${TEMP_CONFIG}" 2>/dev/null; then
             if mv "${TEMP_CONFIG}" "${CONFIG_FILE}" 2>/dev/null; then
               chmod 644 "${CONFIG_FILE}" || true
-              echo "✅ Removed inputJql from config to skip ticket processing"
+              echo "✅ Removed inputJql and ticket-related fields from config to skip ticket processing"
+              # Verify removal was successful
+              if jq -e '.params.inputJql' "${CONFIG_FILE}" > /dev/null 2>&1; then
+                echo "⚠️ Warning: inputJql still exists in config after removal attempt"
+              fi
             else
               CONFIG_FILE="$(realpath "${TEMP_CONFIG}" 2>/dev/null || echo "${TEMP_CONFIG}")"
               chmod 644 "${CONFIG_FILE}" || true
@@ -359,9 +364,25 @@ jobs:
           echo "Final test agent config:"
           cat "${CONFIG_FILE}" | jq '.' || cat "${CONFIG_FILE}"
           
+          # Validate that inputJql was successfully removed
+          if jq -e '.params.inputJql' "${CONFIG_FILE}" > /dev/null 2>&1; then
+            echo "⚠️ Warning: inputJql still exists in config, attempting to set to empty string"
+            TEMP_CONFIG="${CONFIG_FILE}.tmp"
+            if jq '.params.inputJql = ""' "${CONFIG_FILE}" > "${TEMP_CONFIG}" 2>/dev/null; then
+              mv "${TEMP_CONFIG}" "${CONFIG_FILE}" 2>/dev/null || CONFIG_FILE="${TEMP_CONFIG}"
+              chmod 644 "${CONFIG_FILE}" || true
+            fi
+          fi
+          
           # Ensure GEMINI_API_KEY is set (even if empty) for test agent to prevent validation errors
-          export GEMINI_API_KEY="${GEMINI_API_KEY:-}"
-          echo "GEMINI_API_KEY is set (may be empty for test agent)"
+          # dmtools may require GEMINI_API_KEY even when skipAIProcessing=true
+          if [ -z "${GEMINI_API_KEY}" ]; then
+            export GEMINI_API_KEY="test-dummy-key-for-test-agent"
+            echo "⚠️ GEMINI_API_KEY not set, using dummy value for test agent"
+          else
+            export GEMINI_API_KEY="${GEMINI_API_KEY}"
+            echo "GEMINI_API_KEY is set"
+          fi
         fi
         
         # ✅ Ensure CONFIG_FILE is absolute path for dmtools
@@ -445,6 +466,13 @@ jobs:
           echo "Set CI=true for test agent to allow null TrackerClient"
         fi
         
+        # Ensure GEMINI_API_KEY is set before running dmtools
+        # dmtools may require this even when skipAIProcessing=true
+        if [ -z "${GEMINI_API_KEY}" ] && [[ "${{ steps.env-prep.outputs.is_test_agent }}" == "true" ]]; then
+          export GEMINI_API_KEY="test-dummy-key-for-test-agent"
+          echo "⚠️ GEMINI_API_KEY not set, using dummy value for test agent"
+        fi
+        
         if [ -n "${ENCODED_CONFIG}" ]; then
           echo "Encoded config provided"
           # Run dmtools and capture all output
@@ -475,11 +503,22 @@ jobs:
           echo ""
           echo "=== Analyzing dmtools output for errors ==="
           
-          # Check for specific error patterns
-          if grep -i "exception\|error\|failed\|cannot\|unable" /tmp/dmtools-output.log 2>/dev/null; then
+          # Check for specific error patterns including permission errors
+          if grep -iE "exception|error|failed|cannot|unable|permission|denied|access|read-only|cannot write|cannot create|authentication|authorization" /tmp/dmtools-output.log 2>/dev/null; then
             echo "Found error patterns in output (see above)"
+            echo ""
+            echo "=== Extracted error messages ==="
+            grep -iE "exception|error|failed|cannot|unable|permission|denied|access" /tmp/dmtools-output.log 2>/dev/null | head -20
+            echo "================================="
           else
             echo "No obvious error patterns found, but exit code is $EXIT_CODE"
+          fi
+          
+          # Check if dmtools completed initialization but failed during execution
+          if grep -i "Initializing Teammate\|Created fresh job instance\|Injecting dependencies" /tmp/dmtools-output.log 2>/dev/null; then
+            echo ""
+            echo "⚠️ dmtools initialized successfully but failed during execution"
+            echo "This suggests the failure occurred after initialization, possibly during ticket processing or cliCommands execution"
           fi
           
           # Show last 50 lines for better context

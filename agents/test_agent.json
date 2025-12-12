@@ -17,7 +17,6 @@
       ],
       "outputType": "none",
       "skipAIProcessing": true,
-      "inputJql": "key = TEST-NEVER-MATCHES-99999",
       "ticketContextDepth": 0
     }
   }

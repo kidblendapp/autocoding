@@ -16,7 +16,6 @@
         "echo 'Agent executed successfully' >> outputs/response.md"
       ],
       "outputType": "none",
-      "skipAIProcessing": true,
-      "inputJql": ""
+      "skipAIProcessing": true
     }
   }

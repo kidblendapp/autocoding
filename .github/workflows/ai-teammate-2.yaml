@@ -406,8 +406,13 @@ jobs:
         # Use a reliable method: run command, capture output to file, then display it
         set +e  # Don't exit on error, we'll handle it manually
         
-        # Add Java debugging if needed
-        export JAVA_OPTS="${JAVA_OPTS} -Djava.util.logging.config.file=/dev/null"
+        # Add Java debugging if needed (but don't suppress errors for test agents)
+        if [[ "${{ steps.env-prep.outputs.is_test_agent }}" != "true" ]]; then
+          export JAVA_OPTS="${JAVA_OPTS} -Djava.util.logging.config.file=/dev/null"
+        else
+          # For test agents, enable verbose logging to debug issues
+          export JAVA_OPTS="${JAVA_OPTS} -Djava.util.logging.ConsoleHandler.level=ALL"
+        fi
         
         if [ -n "${ENCODED_CONFIG}" ]; then
           echo "Encoded config provided"

@@ -23,6 +23,47 @@ This script automatically retries failed GitHub Actions workflows and uses curso
 4. **Git** - For committing and pushing changes
 5. **Authenticated GitHub CLI** - Run `gh auth login` if not already authenticated
 
+### Authentication Setup
+
+#### Cursor API Key (Required for cursor-agent)
+
+The script requires `CURSOR_API_KEY` environment variable to be set for cursor-agent authentication.
+
+**Option 1: Set environment variable (Recommended)**
+```bash
+# For current session
+export CURSOR_API_KEY='your-api-key-here'
+
+# For permanent setup, add to ~/.bashrc or ~/.zshrc
+echo 'export CURSOR_API_KEY="your-api-key-here"' >> ~/.bashrc
+source ~/.bashrc
+```
+
+**Option 2: Interactive login**
+```bash
+cursor-agent login
+```
+
+**Getting your Cursor API Key:**
+- Open Cursor IDE
+- Go to Settings → Account → API Keys
+- Create a new API key or copy an existing one
+
+#### Git Credentials (WSL Users)
+
+If you're using WSL, the script automatically configures Git to use the `store` credential helper, which saves credentials in `~/.git-credentials`. 
+
+**Manual setup (if needed):**
+```bash
+# Configure Git to save credentials
+git config --global credential.helper store
+
+# On first push, you'll be prompted for username and token
+# Credentials will be saved automatically for future pushes
+```
+
+**Note:** The script automatically detects WSL and configures this for you, but you can set it manually if needed.
+
 ## Quick Start
 
 > **New to this script?** See [QUICKSTART.md](QUICKSTART.md) for detailed setup instructions and troubleshooting.

@@ -167,6 +167,37 @@ install_cursor_agent() {
     return 1
 }
 
+# Setup Git credential helper for WSL
+setup_git_credentials() {
+    # Check if we're in WSL
+    if [[ -n "${WSL_DISTRO_NAME:-}" ]] || grep -qEi "(Microsoft|WSL)" /proc/version 2>/dev/null; then
+        log_info "Detected WSL environment, configuring Git credential helper..."
+        
+        # Check current credential helper
+        local current_helper
+        current_helper=$(git config --get credential.helper 2>/dev/null || echo "")
+        
+        # If using manager or credential-manager-core, it won't work in WSL
+        if [[ "${current_helper}" == *"manager"* ]] || [[ "${current_helper}" == *"credential-manager-core"* ]]; then
+            log_warn "Current credential helper '${current_helper}' is not compatible with WSL"
+            log_info "Configuring Git to use 'store' credential helper for WSL..."
+            
+            # Use 'store' which saves credentials in ~/.git-credentials (works in WSL)
+            git config --global credential.helper store
+            
+            log_info "Git credential helper configured. Credentials will be saved to ~/.git-credentials"
+            log_info "On first push, you'll be prompted for credentials once, then they'll be saved."
+        elif [[ -z "${current_helper}" ]]; then
+            log_info "No credential helper configured, setting up 'store' for WSL..."
+            git config --global credential.helper store
+        else
+            log_debug "Git credential helper already configured: ${current_helper}"
+        fi
+    else
+        log_debug "Not in WSL, skipping Git credential helper setup"
+    fi
+}
+
 # Check prerequisites
 check_prerequisites() {
     log_info "Checking prerequisites..."
@@ -174,6 +205,9 @@ check_prerequisites() {
     local missing=()
     local errors=()
     local warnings=()
+    
+    # Setup Git credentials for WSL if needed
+    setup_git_credentials
     
     # Check for required commands
     if ! command -v gh >/dev/null 2>&1; then
@@ -671,6 +705,29 @@ apply_fixes() {
             log_error "Installation: curl https://cursor.com/install -fsS | bash"
             return 1
         fi
+    fi
+    
+    # Check for CURSOR_API_KEY
+    if [ -z "${CURSOR_API_KEY:-}" ]; then
+        log_warn "CURSOR_API_KEY environment variable is not set"
+        log_warn "cursor-agent requires authentication. Options:"
+        log_warn "  1. Set CURSOR_API_KEY environment variable:"
+        log_warn "     export CURSOR_API_KEY='your-api-key-here'"
+        log_warn "  2. Or run 'cursor-agent login' to authenticate interactively"
+        log_warn ""
+        log_warn "Attempting to continue, but cursor-agent may fail without authentication..."
+        
+        # Try to check if cursor-agent is already authenticated
+        if cursor-agent --version >/dev/null 2>&1; then
+            log_info "cursor-agent appears to be working, continuing..."
+        else
+            log_error "cursor-agent authentication check failed"
+            log_error "Please set CURSOR_API_KEY or run 'cursor-agent login'"
+            return 1
+        fi
+    else
+        log_debug "CURSOR_API_KEY is set (length: ${#CURSOR_API_KEY})"
+        export CURSOR_API_KEY
     fi
     
     # Build cursor-agent command arguments array

@@ -254,6 +254,9 @@ jobs:
         # ✅ CRITICAL: Export PATH to ensure dmtools is available
         export PATH="$HOME/.local/bin:$HOME/.dmtools/bin:$PATH"
         
+        # ✅ CRITICAL: Explicitly export DMTOOLS_INTEGRATIONS to ensure it's available to dmtools
+        export DMTOOLS_INTEGRATIONS="${{ steps.env-prep.outputs.dmtools_integrations }}"
+        
         echo "Using configuration: ${CONFIG_FILE}"
         
         # ✅ Verify dmtools is available before proceeding
@@ -273,7 +276,7 @@ jobs:
         echo "======================================"
         echo ""
         
-        # ✅ ДОБАВЛЕНО: Проверка существования config файла
+        # ✅ Check config file exists
         if [ ! -f "${CONFIG_FILE}" ]; then
           echo "❌ Config file not found: ${CONFIG_FILE}"
           echo "Available files in agents/:"
@@ -282,11 +285,9 @@ jobs:
         fi
         
         # For test_agent, unset Jira/Confluence env vars to prevent initialization
-        # DMTOOLS_INTEGRATIONS is already set correctly from env-prep step
         if [[ "${{ steps.env-prep.outputs.is_test_agent }}" == "true" ]]; then
           echo "Test agent detected - unsetting Jira/Confluence env vars"
           # Unset Jira/Confluence env vars to prevent initialization
-          # Using unset to completely remove them from environment
           unset JIRA_EMAIL JIRA_API_TOKEN JIRA_BASE_PATH JIRA_AUTH_TYPE
           unset JIRA_CLEAR_CACHE JIRA_EXTRA_FIELDS JIRA_EXTRA_FIELDS_PROJECT
           unset JIRA_LOGGING_ENABLED JIRA_WAIT_BEFORE_PERFORM
@@ -319,18 +320,22 @@ jobs:
         echo "DMTOOLS_INTEGRATIONS: ${DMTOOLS_INTEGRATIONS}"
         echo "JIRA_EMAIL: ${JIRA_EMAIL:-<not set>}"
         echo "JIRA_BASE_PATH: ${JIRA_BASE_PATH:-<not set>}"
+        echo "PATH: $PATH"
         echo "========================="
         
-        # Run dmtools with error handling (don't exit on error so we can capture it)
+        # Run dmtools with improved error handling
         echo ""
         echo "=== Running dmtools ==="
+        # Run with explicit environment variable to ensure dmtools sees it
         if [ -n "${ENCODED_CONFIG}" ]; then
           echo "Encoded config provided"
-          dmtools run "${CONFIG_FILE}" "${ENCODED_CONFIG}" 2>&1 | tee /tmp/dmtools-output.log
+          env DMTOOLS_INTEGRATIONS="${DMTOOLS_INTEGRATIONS}" \
+            dmtools run "${CONFIG_FILE}" "${ENCODED_CONFIG}" 2>&1 | tee /tmp/dmtools-output.log
           EXIT_CODE=${PIPESTATUS[0]}
         else
           echo "No encoded config"
-          dmtools run "${CONFIG_FILE}" 2>&1 | tee /tmp/dmtools-output.log
+          env DMTOOLS_INTEGRATIONS="${DMTOOLS_INTEGRATIONS}" \
+            dmtools run "${CONFIG_FILE}" 2>&1 | tee /tmp/dmtools-output.log
           EXIT_CODE=${PIPESTATUS[0]}
         fi
         
@@ -346,12 +351,17 @@ jobs:
           cat /tmp/dmtools-output.log 2>/dev/null || echo "Could not read output log"
           echo "=========================="
           echo ""
+          echo "=== Additional Debug Info ==="
+          echo "DMTOOLS_INTEGRATIONS value: '${DMTOOLS_INTEGRATIONS}'"
+          echo "Config file path: ${CONFIG_FILE}"
+          echo "Config file exists: $([ -f "${CONFIG_FILE}" ] && echo 'yes' || echo 'no')"
           echo "Checking for output files..."
           ls -la outputs/ 2>/dev/null || echo "No outputs/ directory"
           ls -la inputs/ 2>/dev/null || echo "No inputs/ directory"
           echo ""
           echo "Config file content:"
           cat "${CONFIG_FILE}" || echo "Could not read config file"
+          echo "======================"
           exit $EXIT_CODE
         else
           echo "✅ dmtools completed successfully"

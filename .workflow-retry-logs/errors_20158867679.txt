@@ -1,0 +1,646 @@
+cursor-agent	Set up job	﻿2025-12-12T06:52:55.2186721Z Current runner version: '2.329.0'
+cursor-agent	Set up job	2025-12-12T06:52:55.2223483Z ##[group]Runner Image Provisioner
+cursor-agent	Set up job	2025-12-12T06:52:55.2224911Z Hosted Compute Agent
+cursor-agent	Set up job	2025-12-12T06:52:55.2226141Z Version: 20251202.455
+cursor-agent	Set up job	2025-12-12T06:52:55.2227301Z Commit: 6c10caca4910e198df60de23adf20ad317c474e3
+cursor-agent	Set up job	2025-12-12T06:52:55.2228617Z Build Date: 2025-12-02T15:56:59Z
+cursor-agent	Set up job	2025-12-12T06:52:55.2229979Z Worker ID: {9d0dd4fb-a770-4507-88b9-dca9b8b29a97}
+cursor-agent	Set up job	2025-12-12T06:52:55.2231303Z ##[endgroup]
+cursor-agent	Set up job	2025-12-12T06:52:55.2232317Z ##[group]Operating System
+cursor-agent	Set up job	2025-12-12T06:52:55.2233705Z Ubuntu
+cursor-agent	Set up job	2025-12-12T06:52:55.2234711Z 24.04.3
+cursor-agent	Set up job	2025-12-12T06:52:55.2236556Z LTS
+cursor-agent	Set up job	2025-12-12T06:52:55.2237561Z ##[endgroup]
+cursor-agent	Set up job	2025-12-12T06:52:55.2238603Z ##[group]Runner Image
+cursor-agent	Set up job	2025-12-12T06:52:55.2239747Z Image: ubuntu-24.04
+cursor-agent	Set up job	2025-12-12T06:52:55.2240773Z Version: 20251208.163.1
+cursor-agent	Set up job	2025-12-12T06:52:55.2243070Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20251208.163/images/ubuntu/Ubuntu2404-Readme.md
+cursor-agent	Set up job	2025-12-12T06:52:55.2245873Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20251208.163
+cursor-agent	Set up job	2025-12-12T06:52:55.2247459Z ##[endgroup]
+cursor-agent	Set up job	2025-12-12T06:52:55.2249019Z ##[group]GITHUB_TOKEN Permissions
+cursor-agent	Set up job	2025-12-12T06:52:55.2251532Z Actions: read
+cursor-agent	Set up job	2025-12-12T06:52:55.2252345Z Contents: write
+cursor-agent	Set up job	2025-12-12T06:52:55.2253204Z Metadata: read
+cursor-agent	Set up job	2025-12-12T06:52:55.2253848Z PullRequests: write
+cursor-agent	Set up job	2025-12-12T06:52:55.2254598Z ##[endgroup]
+cursor-agent	Set up job	2025-12-12T06:52:55.2256774Z Secret source: Actions
+cursor-agent	Set up job	2025-12-12T06:52:55.2258008Z Prepare workflow directory
+cursor-agent	Set up job	2025-12-12T06:52:55.2631180Z Prepare all required actions
+cursor-agent	Set up job	2025-12-12T06:52:55.2686319Z Getting action download info
+cursor-agent	Set up job	2025-12-12T06:52:55.6019501Z Download action repository 'actions/checkout@v4' (SHA:34e114876b0b11c390a56381ad16ebd13914f8d5)
+cursor-agent	Set up job	2025-12-12T06:52:55.6981395Z Download action repository 'actions/setup-java@v4' (SHA:c1e323688fd81a25caa38c78aa6df2d33d3e20d9)
+cursor-agent	Set up job	2025-12-12T06:52:56.2803573Z Download action repository 'actions/upload-artifact@v4' (SHA:ea165f8d65b6e75b540449e92b4886f43607fa02)
+cursor-agent	Set up job	2025-12-12T06:52:56.4776144Z Complete job name: cursor-agent
+cursor-agent	Checkout repository	﻿2025-12-12T06:52:56.5507192Z ##[group]Run actions/checkout@v4
+cursor-agent	Checkout repository	2025-12-12T06:52:56.5508144Z with:
+cursor-agent	Checkout repository	2025-12-12T06:52:56.5508614Z   repository: kidblendapp/autocoding
+cursor-agent	Checkout repository	2025-12-12T06:52:56.5509347Z   token: ***
+cursor-agent	Checkout repository	2025-12-12T06:52:56.5509789Z   ssh-strict: true
+cursor-agent	Checkout repository	2025-12-12T06:52:56.5510234Z   ssh-user: git
+cursor-agent	Checkout repository	2025-12-12T06:52:56.5510684Z   persist-credentials: true
+cursor-agent	Checkout repository	2025-12-12T06:52:56.5511180Z   clean: true
+cursor-agent	Checkout repository	2025-12-12T06:52:56.5511637Z   sparse-checkout-cone-mode: true
+cursor-agent	Checkout repository	2025-12-12T06:52:56.5512186Z   fetch-depth: 1
+cursor-agent	Checkout repository	2025-12-12T06:52:56.5512884Z   fetch-tags: false
+cursor-agent	Checkout repository	2025-12-12T06:52:56.5513378Z   show-progress: true
+cursor-agent	Checkout repository	2025-12-12T06:52:56.5513847Z   lfs: false
+cursor-agent	Checkout repository	2025-12-12T06:52:56.5514293Z   submodules: false
+cursor-agent	Checkout repository	2025-12-12T06:52:56.5514748Z   set-safe-directory: true
+cursor-agent	Checkout repository	2025-12-12T06:52:56.5515523Z ##[endgroup]
+cursor-agent	Checkout repository	2025-12-12T06:52:56.6596074Z Syncing repository: kidblendapp/autocoding
+cursor-agent	Checkout repository	2025-12-12T06:52:56.6598124Z ##[group]Getting Git version info
+cursor-agent	Checkout repository	2025-12-12T06:52:56.6598937Z Working directory is '/home/runner/work/autocoding/autocoding'
+cursor-agent	Checkout repository	2025-12-12T06:52:56.6600077Z [command]/usr/bin/git version
+cursor-agent	Checkout repository	2025-12-12T06:52:56.6698227Z git version 2.52.0
+cursor-agent	Checkout repository	2025-12-12T06:52:56.6725685Z ##[endgroup]
+cursor-agent	Checkout repository	2025-12-12T06:52:56.6742457Z Temporarily overriding HOME='/home/runner/work/_temp/fab89a62-4187-4d90-8358-304243c8ced4' before making global git config changes
+cursor-agent	Checkout repository	2025-12-12T06:52:56.6745148Z Adding repository directory to the temporary git global config as a safe directory
+cursor-agent	Checkout repository	2025-12-12T06:52:56.6757380Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/autocoding/autocoding
+cursor-agent	Checkout repository	2025-12-12T06:52:56.6807893Z Deleting the contents of '/home/runner/work/autocoding/autocoding'
+cursor-agent	Checkout repository	2025-12-12T06:52:56.6811827Z ##[group]Initializing the repository
+cursor-agent	Checkout repository	2025-12-12T06:52:56.6816991Z [command]/usr/bin/git init /home/runner/work/autocoding/autocoding
+cursor-agent	Checkout repository	2025-12-12T06:52:56.6933198Z hint: Using 'master' as the name for the initial branch. This default branch name
+cursor-agent	Checkout repository	2025-12-12T06:52:56.6934534Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+cursor-agent	Checkout repository	2025-12-12T06:52:56.6936518Z hint: to use in all of your new repositories, which will suppress this warning,
+cursor-agent	Checkout repository	2025-12-12T06:52:56.6937816Z hint: call:
+cursor-agent	Checkout repository	2025-12-12T06:52:56.6938700Z hint:
+cursor-agent	Checkout repository	2025-12-12T06:52:56.6939495Z hint: 	git config --global init.defaultBranch <name>
+cursor-agent	Checkout repository	2025-12-12T06:52:56.6940238Z hint:
+cursor-agent	Checkout repository	2025-12-12T06:52:56.6940849Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+cursor-agent	Checkout repository	2025-12-12T06:52:56.6941765Z hint: 'development'. The just-created branch can be renamed via this command:
+cursor-agent	Checkout repository	2025-12-12T06:52:56.6942691Z hint:
+cursor-agent	Checkout repository	2025-12-12T06:52:56.6943189Z hint: 	git branch -m <name>
+cursor-agent	Checkout repository	2025-12-12T06:52:56.6943695Z hint:
+cursor-agent	Checkout repository	2025-12-12T06:52:56.6944612Z hint: Disable this message with "git config set advice.defaultBranchName false"
+cursor-agent	Checkout repository	2025-12-12T06:52:56.6945915Z Initialized empty Git repository in /home/runner/work/autocoding/autocoding/.git/
+cursor-agent	Checkout repository	2025-12-12T06:52:56.6950563Z [command]/usr/bin/git remote add origin https://github.com/kidblendapp/autocoding
+cursor-agent	Checkout repository	2025-12-12T06:52:56.6986229Z ##[endgroup]
+cursor-agent	Checkout repository	2025-12-12T06:52:56.6987069Z ##[group]Disabling automatic garbage collection
+cursor-agent	Checkout repository	2025-12-12T06:52:56.6990155Z [command]/usr/bin/git config --local gc.auto 0
+cursor-agent	Checkout repository	2025-12-12T06:52:56.7019081Z ##[endgroup]
+cursor-agent	Checkout repository	2025-12-12T06:52:56.7020200Z ##[group]Setting up auth
+cursor-agent	Checkout repository	2025-12-12T06:52:56.7025772Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+cursor-agent	Checkout repository	2025-12-12T06:52:56.7055944Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+cursor-agent	Checkout repository	2025-12-12T06:52:56.7439485Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+cursor-agent	Checkout repository	2025-12-12T06:52:56.7469180Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+cursor-agent	Checkout repository	2025-12-12T06:52:56.7684817Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+cursor-agent	Checkout repository	2025-12-12T06:52:56.7714514Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+cursor-agent	Checkout repository	2025-12-12T06:52:56.7940631Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+cursor-agent	Checkout repository	2025-12-12T06:52:56.7973293Z ##[endgroup]
+cursor-agent	Checkout repository	2025-12-12T06:52:56.7974509Z ##[group]Fetching the repository
+cursor-agent	Checkout repository	2025-12-12T06:52:56.7981759Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +3c0667debb4527574d6d9d94079f8d626f472672:refs/remotes/origin/main
+cursor-agent	Checkout repository	2025-12-12T06:52:57.1028470Z From https://github.com/kidblendapp/autocoding
+cursor-agent	Checkout repository	2025-12-12T06:52:57.1029969Z  * [new ref]         3c0667debb4527574d6d9d94079f8d626f472672 -> origin/main
+cursor-agent	Checkout repository	2025-12-12T06:52:57.1062392Z ##[endgroup]
+cursor-agent	Checkout repository	2025-12-12T06:52:57.1065686Z ##[group]Determining the checkout info
+cursor-agent	Checkout repository	2025-12-12T06:52:57.1067003Z ##[endgroup]
+cursor-agent	Checkout repository	2025-12-12T06:52:57.1070079Z [command]/usr/bin/git sparse-checkout disable
+cursor-agent	Checkout repository	2025-12-12T06:52:57.1114689Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+cursor-agent	Checkout repository	2025-12-12T06:52:57.1140773Z ##[group]Checking out the ref
+cursor-agent	Checkout repository	2025-12-12T06:52:57.1144584Z [command]/usr/bin/git checkout --progress --force -B main refs/remotes/origin/main
+cursor-agent	Checkout repository	2025-12-12T06:52:57.1260427Z Switched to a new branch 'main'
+cursor-agent	Checkout repository	2025-12-12T06:52:57.1262028Z branch 'main' set up to track 'origin/main'.
+cursor-agent	Checkout repository	2025-12-12T06:52:57.1269900Z ##[endgroup]
+cursor-agent	Checkout repository	2025-12-12T06:52:57.1306281Z [command]/usr/bin/git log -1 --format=%H
+cursor-agent	Checkout repository	2025-12-12T06:52:57.1327055Z 3c0667debb4527574d6d9d94079f8d626f472672
+cursor-agent	Map Event Type to Config	﻿2025-12-12T06:52:57.1535548Z ##[group]Run EVENT_TYPE=""
+cursor-agent	Map Event Type to Config	2025-12-12T06:52:57.1536238Z [36;1mEVENT_TYPE=""[0m
+cursor-agent	Map Event Type to Config	2025-12-12T06:52:57.1536750Z [36;1m[0m
+cursor-agent	Map Event Type to Config	2025-12-12T06:52:57.1537188Z [36;1mcase "$EVENT_TYPE" in[0m
+cursor-agent	Map Event Type to Config	2025-12-12T06:52:57.1537728Z [36;1m  "story-clarification")[0m
+cursor-agent	Map Event Type to Config	2025-12-12T06:52:57.1538334Z [36;1m    CONFIG="agents/story_questions.json"[0m
+cursor-agent	Map Event Type to Config	2025-12-12T06:52:57.1539169Z [36;1m    ;;[0m
+cursor-agent	Map Event Type to Config	2025-12-12T06:52:57.1539657Z [36;1m  "story-development")[0m
+cursor-agent	Map Event Type to Config	2025-12-12T06:52:57.1540278Z [36;1m    CONFIG="agents/story_development.json"[0m
+cursor-agent	Map Event Type to Config	2025-12-12T06:52:57.1540871Z [36;1m    ;;[0m
+cursor-agent	Map Event Type to Config	2025-12-12T06:52:57.1541324Z [36;1m  "story-description")[0m
+cursor-agent	Map Event Type to Config	2025-12-12T06:52:57.1541929Z [36;1m    CONFIG="agents/story_description.json"[0m
+cursor-agent	Map Event Type to Config	2025-12-12T06:52:57.1542753Z [36;1m    ;;[0m
+cursor-agent	Map Event Type to Config	2025-12-12T06:52:57.1543263Z [36;1m  "solution-design")[0m
+cursor-agent	Map Event Type to Config	2025-12-12T06:52:57.1543844Z [36;1m    CONFIG="agents/story_solution_design.json"[0m
+cursor-agent	Map Event Type to Config	2025-12-12T06:52:57.1544435Z [36;1m    ;;[0m
+cursor-agent	Map Event Type to Config	2025-12-12T06:52:57.1544889Z [36;1m  "sd-core-description")[0m
+cursor-agent	Map Event Type to Config	2025-12-12T06:52:57.1545527Z [36;1m    CONFIG="agents/sd_core_description.json"[0m
+cursor-agent	Map Event Type to Config	2025-12-12T06:52:57.1546119Z [36;1m    ;;[0m
+cursor-agent	Map Event Type to Config	2025-12-12T06:52:57.1546572Z [36;1m  "sd-api-description")[0m
+cursor-agent	Map Event Type to Config	2025-12-12T06:52:57.1547150Z [36;1m    CONFIG="agents/sd_api_description.json"[0m
+cursor-agent	Map Event Type to Config	2025-12-12T06:52:57.1547722Z [36;1m    ;;[0m
+cursor-agent	Map Event Type to Config	2025-12-12T06:52:57.1548169Z [36;1m  "api-development")[0m
+cursor-agent	Map Event Type to Config	2025-12-12T06:52:57.1548727Z [36;1m    CONFIG="agents/api_development.json"[0m
+cursor-agent	Map Event Type to Config	2025-12-12T06:52:57.1549287Z [36;1m    ;;[0m
+cursor-agent	Map Event Type to Config	2025-12-12T06:52:57.1549745Z [36;1m  "core-description")[0m
+cursor-agent	Map Event Type to Config	2025-12-12T06:52:57.1550325Z [36;1m    CONFIG="agents/core_description.json"[0m
+cursor-agent	Map Event Type to Config	2025-12-12T06:52:57.1550915Z [36;1m    ;;[0m
+cursor-agent	Map Event Type to Config	2025-12-12T06:52:57.1551364Z [36;1m  "code-review")[0m
+cursor-agent	Map Event Type to Config	2025-12-12T06:52:57.1551886Z [36;1m    CONFIG="agents/code_review.json"[0m
+cursor-agent	Map Event Type to Config	2025-12-12T06:52:57.1552441Z [36;1m    ;;[0m
+cursor-agent	Map Event Type to Config	2025-12-12T06:52:57.1552989Z [36;1m  "test-generation")[0m
+cursor-agent	Map Event Type to Config	2025-12-12T06:52:57.1553549Z [36;1m    CONFIG="agents/test_cases_generator.json"[0m
+cursor-agent	Map Event Type to Config	2025-12-12T06:52:57.1554138Z [36;1m    ;;[0m
+cursor-agent	Map Event Type to Config	2025-12-12T06:52:57.1554557Z [36;1m  *)[0m
+cursor-agent	Map Event Type to Config	2025-12-12T06:52:57.1554980Z [36;1m    CONFIG=""[0m
+cursor-agent	Map Event Type to Config	2025-12-12T06:52:57.1555433Z [36;1m    ;;[0m
+cursor-agent	Map Event Type to Config	2025-12-12T06:52:57.1555847Z [36;1mesac[0m
+cursor-agent	Map Event Type to Config	2025-12-12T06:52:57.1556258Z [36;1m[0m
+cursor-agent	Map Event Type to Config	2025-12-12T06:52:57.1556746Z [36;1mecho "config_file=${CONFIG}" >> $GITHUB_OUTPUT[0m
+cursor-agent	Map Event Type to Config	2025-12-12T06:52:57.1557525Z [36;1mecho "Mapped event type '${EVENT_TYPE}' to config: ${CONFIG}"[0m
+cursor-agent	Map Event Type to Config	2025-12-12T06:52:57.1593893Z shell: /usr/bin/bash -e {0}
+cursor-agent	Map Event Type to Config	2025-12-12T06:52:57.1594469Z ##[endgroup]
+cursor-agent	Map Event Type to Config	2025-12-12T06:52:57.1668811Z Mapped event type '' to config: 
+cursor-agent	Prepare Configuration	﻿2025-12-12T06:52:57.1726586Z ##[group]Run # Determine config file from either webhook or manual input
+cursor-agent	Prepare Configuration	2025-12-12T06:52:57.1727610Z [36;1m# Determine config file from either webhook or manual input[0m
+cursor-agent	Prepare Configuration	2025-12-12T06:52:57.1728442Z [36;1mif [ "workflow_dispatch" = "repository_dispatch" ]; then[0m
+cursor-agent	Prepare Configuration	2025-12-12T06:52:57.1729265Z [36;1m  # Use mapped config if available, otherwise use client_payload[0m
+cursor-agent	Prepare Configuration	2025-12-12T06:52:57.1729971Z [36;1m  CONFIG_FILE=""[0m
+cursor-agent	Prepare Configuration	2025-12-12T06:52:57.1730483Z [36;1m  ENCODED_CONFIG=""[0m
+cursor-agent	Prepare Configuration	2025-12-12T06:52:57.1730997Z [36;1m  TICKET_KEY=""[0m
+cursor-agent	Prepare Configuration	2025-12-12T06:52:57.1731551Z [36;1m  JQL_QUERY=""[0m
+cursor-agent	Prepare Configuration	2025-12-12T06:52:57.1732012Z [36;1melse[0m
+cursor-agent	Prepare Configuration	2025-12-12T06:52:57.1732829Z [36;1m  # Use provided config_file or default to agents/test_agent.json[0m
+cursor-agent	Prepare Configuration	2025-12-12T06:52:57.1733620Z [36;1m  CONFIG_FILE="agents/test_agent.json"[0m
+cursor-agent	Prepare Configuration	2025-12-12T06:52:57.1734238Z [36;1m  if [ -z "${CONFIG_FILE}" ]; then[0m
+cursor-agent	Prepare Configuration	2025-12-12T06:52:57.1734830Z [36;1m    CONFIG_FILE="agents/test_agent.json"[0m
+cursor-agent	Prepare Configuration	2025-12-12T06:52:57.1735404Z [36;1m  fi[0m
+cursor-agent	Prepare Configuration	2025-12-12T06:52:57.1735897Z [36;1m  ENCODED_CONFIG=""[0m
+cursor-agent	Prepare Configuration	2025-12-12T06:52:57.1736418Z [36;1m  TICKET_KEY=""[0m
+cursor-agent	Prepare Configuration	2025-12-12T06:52:57.1736912Z [36;1m  JQL_QUERY=""[0m
+cursor-agent	Prepare Configuration	2025-12-12T06:52:57.1737378Z [36;1mfi[0m
+cursor-agent	Prepare Configuration	2025-12-12T06:52:57.1737788Z [36;1m[0m
+cursor-agent	Prepare Configuration	2025-12-12T06:52:57.1738321Z [36;1mecho "config_file=${CONFIG_FILE}" >> $GITHUB_OUTPUT[0m
+cursor-agent	Prepare Configuration	2025-12-12T06:52:57.1739087Z [36;1mecho "encoded_config=${ENCODED_CONFIG}" >> $GITHUB_OUTPUT[0m
+cursor-agent	Prepare Configuration	2025-12-12T06:52:57.1739831Z [36;1mecho "ticket_key=${TICKET_KEY}" >> $GITHUB_OUTPUT[0m
+cursor-agent	Prepare Configuration	2025-12-12T06:52:57.1740538Z [36;1mecho "jql_query=${JQL_QUERY}" >> $GITHUB_OUTPUT[0m
+cursor-agent	Prepare Configuration	2025-12-12T06:52:57.1741139Z [36;1m[0m
+cursor-agent	Prepare Configuration	2025-12-12T06:52:57.1801126Z [36;1mecho "Configuration: ${CONFIG_FILE}"[0m
+cursor-agent	Prepare Configuration	2025-12-12T06:52:57.1802125Z [36;1mecho "Ticket: ${TICKET_KEY}"[0m
+cursor-agent	Prepare Configuration	2025-12-12T06:52:57.1802971Z [36;1mecho "JQL: ${JQL_QUERY}"[0m
+cursor-agent	Prepare Configuration	2025-12-12T06:52:57.1834603Z shell: /usr/bin/bash -e {0}
+cursor-agent	Prepare Configuration	2025-12-12T06:52:57.1835151Z ##[endgroup]
+cursor-agent	Prepare Configuration	2025-12-12T06:52:57.1889722Z Configuration: agents/test_agent.json
+cursor-agent	Prepare Configuration	2025-12-12T06:52:57.1890771Z Ticket: 
+cursor-agent	Prepare Configuration	2025-12-12T06:52:57.1891466Z JQL: 
+cursor-agent	Setup Java Environment	﻿2025-12-12T06:52:57.2041282Z ##[group]Run actions/setup-java@v4
+cursor-agent	Setup Java Environment	2025-12-12T06:52:57.2041860Z with:
+cursor-agent	Setup Java Environment	2025-12-12T06:52:57.2042282Z   distribution: temurin
+cursor-agent	Setup Java Environment	2025-12-12T06:52:57.2043029Z   java-version: 23
+cursor-agent	Setup Java Environment	2025-12-12T06:52:57.2043486Z   java-package: jdk
+cursor-agent	Setup Java Environment	2025-12-12T06:52:57.2043932Z   check-latest: false
+cursor-agent	Setup Java Environment	2025-12-12T06:52:57.2044397Z   server-id: github
+cursor-agent	Setup Java Environment	2025-12-12T06:52:57.2044870Z   server-username: GITHUB_ACTOR
+cursor-agent	Setup Java Environment	2025-12-12T06:52:57.2045406Z   server-password: GITHUB_TOKEN
+cursor-agent	Setup Java Environment	2025-12-12T06:52:57.2045938Z   overwrite-settings: true
+cursor-agent	Setup Java Environment	2025-12-12T06:52:57.2046444Z   job-status: success
+cursor-agent	Setup Java Environment	2025-12-12T06:52:57.2047066Z   token: ***
+cursor-agent	Setup Java Environment	2025-12-12T06:52:57.2047518Z ##[endgroup]
+cursor-agent	Setup Java Environment	2025-12-12T06:52:57.4142758Z ##[group]Installed distributions
+cursor-agent	Setup Java Environment	2025-12-12T06:52:57.4387578Z Trying to resolve the latest version from remote
+cursor-agent	Setup Java Environment	2025-12-12T06:52:58.0797716Z Resolved latest version as 23.0.2+7
+cursor-agent	Setup Java Environment	2025-12-12T06:52:58.0800789Z Trying to download...
+cursor-agent	Setup Java Environment	2025-12-12T06:52:58.0805229Z Downloading Java 23.0.2+7 (Temurin-Hotspot) from https://github.com/adoptium/temurin23-binaries/releases/download/jdk-23.0.2%2B7/OpenJDK23U-jdk_x64_linux_hotspot_23.0.2_7.tar.gz ...
+cursor-agent	Setup Java Environment	2025-12-12T06:52:59.3246457Z Extracting Java archive...
+cursor-agent	Setup Java Environment	2025-12-12T06:52:59.3354422Z [command]/usr/bin/tar xz --warning=no-unknown-keyword --overwrite -C /home/runner/work/_temp/761d53f9-a272-4675-bd05-80156783023d -f /home/runner/work/_temp/c1aa9b3d-e278-4fa6-b284-7b480cd98a52
+cursor-agent	Setup Java Environment	2025-12-12T06:53:02.0966402Z Java 23.0.2+7 was downloaded
+cursor-agent	Setup Java Environment	2025-12-12T06:53:02.0966946Z Setting Java 23.0.2+7 as the default
+cursor-agent	Setup Java Environment	2025-12-12T06:53:02.0979487Z Creating toolchains.xml for JDK version 23 from temurin
+cursor-agent	Setup Java Environment	2025-12-12T06:53:02.1057428Z Writing to /home/runner/.m2/toolchains.xml
+cursor-agent	Setup Java Environment	2025-12-12T06:53:02.1058280Z 
+cursor-agent	Setup Java Environment	2025-12-12T06:53:02.1058787Z Java configuration:
+cursor-agent	Setup Java Environment	2025-12-12T06:53:02.1060061Z   Distribution: temurin
+cursor-agent	Setup Java Environment	2025-12-12T06:53:02.1061023Z   Version: 23.0.2+7
+cursor-agent	Setup Java Environment	2025-12-12T06:53:02.1061880Z   Path: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/23.0.2-7/x64
+cursor-agent	Setup Java Environment	2025-12-12T06:53:02.1062432Z 
+cursor-agent	Setup Java Environment	2025-12-12T06:53:02.1063245Z ##[endgroup]
+cursor-agent	Setup Java Environment	2025-12-12T06:53:02.1080356Z Creating settings.xml with server-id: github
+cursor-agent	Setup Java Environment	2025-12-12T06:53:02.1080810Z Writing to /home/runner/.m2/settings.xml
+cursor-agent	Install Cursor CLI	﻿2025-12-12T06:53:02.1211855Z ##[group]Run echo "Installing Cursor CLI..."
+cursor-agent	Install Cursor CLI	2025-12-12T06:53:02.1212291Z [36;1mecho "Installing Cursor CLI..."[0m
+cursor-agent	Install Cursor CLI	2025-12-12T06:53:02.1212962Z [36;1mcurl https://cursor.com/install -fsS | bash[0m
+cursor-agent	Install Cursor CLI	2025-12-12T06:53:02.1213313Z [36;1m[0m
+cursor-agent	Install Cursor CLI	2025-12-12T06:53:02.1213574Z [36;1mecho "Checking installation locations..."[0m
+cursor-agent	Install Cursor CLI	2025-12-12T06:53:02.1213965Z [36;1mls -la "$HOME/.cursor/" || echo "No .cursor directory"[0m
+cursor-agent	Install Cursor CLI	2025-12-12T06:53:02.1214410Z [36;1mls -la "$HOME/.cursor/bin/" || echo "No .cursor/bin directory"[0m
+cursor-agent	Install Cursor CLI	2025-12-12T06:53:02.1214869Z [36;1mls -la "$HOME/.local/bin/" || echo "No .local/bin directory"[0m
+cursor-agent	Install Cursor CLI	2025-12-12T06:53:02.1215228Z [36;1m[0m
+cursor-agent	Install Cursor CLI	2025-12-12T06:53:02.1215525Z [36;1m# Cursor CLI installs to ~/.local/bin, not ~/.cursor/bin[0m
+cursor-agent	Install Cursor CLI	2025-12-12T06:53:02.1215909Z [36;1mecho "$HOME/.local/bin" >> $GITHUB_PATH[0m
+cursor-agent	Install Cursor CLI	2025-12-12T06:53:02.1216212Z [36;1m[0m
+cursor-agent	Install Cursor CLI	2025-12-12T06:53:02.1216441Z [36;1m# Test installation[0m
+cursor-agent	Install Cursor CLI	2025-12-12T06:53:02.1216748Z [36;1mexport PATH="$HOME/.local/bin:$PATH"[0m
+cursor-agent	Install Cursor CLI	2025-12-12T06:53:02.1217135Z [36;1mif command -v cursor-agent; then[0m
+cursor-agent	Install Cursor CLI	2025-12-12T06:53:02.1217536Z [36;1m  echo "✅ cursor-agent found at: $(command -v cursor-agent)"[0m
+cursor-agent	Install Cursor CLI	2025-12-12T06:53:02.1217997Z [36;1m  cursor-agent --version 2>&1 || echo "Version check failed"[0m
+cursor-agent	Install Cursor CLI	2025-12-12T06:53:02.1218382Z [36;1melse[0m
+cursor-agent	Install Cursor CLI	2025-12-12T06:53:02.1218669Z [36;1m  echo "❌ cursor-agent not found after installation"[0m
+cursor-agent	Install Cursor CLI	2025-12-12T06:53:02.1219036Z [36;1m  echo "Available files in .local/bin:"[0m
+cursor-agent	Install Cursor CLI	2025-12-12T06:53:02.1219680Z [36;1m  ls -la "$HOME/.local/bin/" 2>/dev/null || echo "Directory does not exist"[0m
+cursor-agent	Install Cursor CLI	2025-12-12T06:53:02.1220067Z [36;1mfi[0m
+cursor-agent	Install Cursor CLI	2025-12-12T06:53:02.1256185Z shell: /usr/bin/bash -e {0}
+cursor-agent	Install Cursor CLI	2025-12-12T06:53:02.1256483Z env:
+cursor-agent	Install Cursor CLI	2025-12-12T06:53:02.1256841Z   JAVA_HOME: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/23.0.2-7/x64
+cursor-agent	Install Cursor CLI	2025-12-12T06:53:02.1257362Z   JAVA_HOME_23_X64: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/23.0.2-7/x64
+cursor-agent	Install Cursor CLI	2025-12-12T06:53:02.1257747Z ##[endgroup]
+cursor-agent	Install Cursor CLI	2025-12-12T06:53:02.1312917Z Installing Cursor CLI...
+cursor-agent	Install Cursor CLI	2025-12-12T06:53:02.3381087Z 
+cursor-agent	Install Cursor CLI	2025-12-12T06:53:02.3381762Z [1mCursor Agent Installer[0m
+cursor-agent	Install Cursor CLI	2025-12-12T06:53:02.3383325Z 
+cursor-agent	Install Cursor CLI	2025-12-12T06:53:02.3385229Z [0;34m▸[0m Detecting system architecture...
+cursor-agent	Install Cursor CLI	2025-12-12T06:53:02.3414415Z [1A[2K[0;32m✓[0m Detected linux/x64
+cursor-agent	Install Cursor CLI	2025-12-12T06:53:02.3415101Z [0;34m▸[0m Creating installation directory...
+cursor-agent	Install Cursor CLI	2025-12-12T06:53:02.3443116Z [1A[2K[0;32m✓[0m Directory created
+cursor-agent	Install Cursor CLI	2025-12-12T06:53:02.3443844Z [0;34m▸[0m Downloading Cursor Agent package...
+cursor-agent	Install Cursor CLI	2025-12-12T06:53:02.3445086Z [2m  Download URL: https://downloads.cursor.com/lab/2025.11.25-d5b3271/linux/x64/agent-cli-package.tar.gz[0m
+cursor-agent	Install Cursor CLI	2025-12-12T06:53:02.5775614Z #=#=#                                                                          
+cursor-agent	Install Cursor CLI	2025-12-12T06:53:02.5776172Z 
+cursor-agent	Install Cursor CLI	2025-12-12T06:53:02.6821304Z ##                                                                         3.5%
+cursor-agent	Install Cursor CLI	2025-12-12T06:53:02.9377834Z ##                                                                         4.1%
+cursor-agent	Install Cursor CLI	2025-12-12T06:53:03.1466488Z ################                                                          22.3%
+cursor-agent	Install Cursor CLI	2025-12-12T06:53:03.3445644Z ############################                                              40.2%
+cursor-agent	Install Cursor CLI	2025-12-12T06:53:03.5655421Z #########################################                                 58.2%
+cursor-agent	Install Cursor CLI	2025-12-12T06:53:03.8352380Z ######################################################                    76.0%
+cursor-agent	Install Cursor CLI	2025-12-12T06:53:03.9230650Z ###################################################################       93.9%
+cursor-agent	Install Cursor CLI	2025-12-12T06:53:03.9231282Z ######################################################################## 100.0%
+cursor-agent	Install Cursor CLI	2025-12-12T06:53:03.9288598Z [1A[2K[1A[2K[1A[2K[1A[2K[0;32m✓[0m Package downloaded and extracted
+cursor-agent	Install Cursor CLI	2025-12-12T06:53:03.9289103Z [0;34m▸[0m Finalizing installation...
+cursor-agent	Install Cursor CLI	2025-12-12T06:53:03.9317151Z [1A[2K[0;32m✓[0m Package installed successfully
+cursor-agent	Install Cursor CLI	2025-12-12T06:53:03.9317880Z [0;34m▸[0m Creating bin directory...
+cursor-agent	Install Cursor CLI	2025-12-12T06:53:03.9331150Z [1A[2K[0;32m✓[0m Bin directory ready
+cursor-agent	Install Cursor CLI	2025-12-12T06:53:03.9332154Z [0;34m▸[0m Creating symlink to cursor-agent executable...
+cursor-agent	Install Cursor CLI	2025-12-12T06:53:03.9353463Z [1A[2K[0;32m✓[0m Symlink created
+cursor-agent	Install Cursor CLI	2025-12-12T06:53:03.9353790Z 
+cursor-agent	Install Cursor CLI	2025-12-12T06:53:03.9354533Z [1m[0;32m✨ Installation Complete! [0m
+cursor-agent	Install Cursor CLI	2025-12-12T06:53:03.9354951Z 
+cursor-agent	Install Cursor CLI	2025-12-12T06:53:03.9354963Z 
+cursor-agent	Install Cursor CLI	2025-12-12T06:53:03.9371313Z [1mNext Steps[0m
+cursor-agent	Install Cursor CLI	2025-12-12T06:53:03.9371550Z 
+cursor-agent	Install Cursor CLI	2025-12-12T06:53:03.9371822Z [1m1.[0m Add ~/.local/bin to your PATH:
+cursor-agent	Install Cursor CLI	2025-12-12T06:53:03.9373293Z    [2mFor bash:[0m
+cursor-agent	Install Cursor CLI	2025-12-12T06:53:03.9373905Z    [1m[0;34mecho 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc[0m
+cursor-agent	Install Cursor CLI	2025-12-12T06:53:03.9374538Z    [1m[0;34msource ~/.bashrc[0m
+cursor-agent	Install Cursor CLI	2025-12-12T06:53:03.9374812Z 
+cursor-agent	Install Cursor CLI	2025-12-12T06:53:03.9378932Z [1m2.[0m Start using Cursor Agent:
+cursor-agent	Install Cursor CLI	2025-12-12T06:53:03.9379430Z    [1mcursor-agent[0m
+cursor-agent	Install Cursor CLI	2025-12-12T06:53:03.9379660Z 
+cursor-agent	Install Cursor CLI	2025-12-12T06:53:03.9379681Z 
+cursor-agent	Install Cursor CLI	2025-12-12T06:53:03.9380702Z [1m[0;36mHappy coding! 🚀[0m
+cursor-agent	Install Cursor CLI	2025-12-12T06:53:03.9381029Z 
+cursor-agent	Install Cursor CLI	2025-12-12T06:53:03.9393839Z Checking installation locations...
+cursor-agent	Install Cursor CLI	2025-12-12T06:53:03.9404807Z ls: cannot access '/home/runner/.cursor/': No such file or directory
+cursor-agent	Install Cursor CLI	2025-12-12T06:53:03.9406807Z No .cursor directory
+cursor-agent	Install Cursor CLI	2025-12-12T06:53:03.9417098Z ls: cannot access '/home/runner/.cursor/bin/': No such file or directory
+cursor-agent	Install Cursor CLI	2025-12-12T06:53:03.9419012Z No .cursor/bin directory
+cursor-agent	Install Cursor CLI	2025-12-12T06:53:03.9431459Z total 12
+cursor-agent	Install Cursor CLI	2025-12-12T06:53:03.9431835Z drwxr-xr-x 2 runner runner 4096 Dec 12 06:53 .
+cursor-agent	Install Cursor CLI	2025-12-12T06:53:03.9432765Z drwxr-xr-x 4 runner runner 4096 Dec 12 06:53 ..
+cursor-agent	Install Cursor CLI	2025-12-12T06:53:03.9433748Z lrwxrwxrwx 1 runner runner   79 Dec 12 06:53 cursor-agent -> /home/runner/.local/share/cursor-agent/versions/2025.11.25-d5b3271/cursor-agent
+cursor-agent	Install Cursor CLI	2025-12-12T06:53:03.9435431Z /home/runner/.local/bin/cursor-agent
+cursor-agent	Install Cursor CLI	2025-12-12T06:53:03.9441984Z ✅ cursor-agent found at: /home/runner/.local/bin/cursor-agent
+cursor-agent	Install Cursor CLI	2025-12-12T06:53:04.2989340Z 2025.11.25-d5b3271
+cursor-agent	Install DMTools CLI	﻿2025-12-12T06:53:04.3124503Z ##[group]Run curl -fsSL https://github.com/IstiN/dmtools/releases/latest/download/install.sh | bash
+cursor-agent	Install DMTools CLI	2025-12-12T06:53:04.3125231Z [36;1mcurl -fsSL https://github.com/IstiN/dmtools/releases/latest/download/install.sh | bash[0m
+cursor-agent	Install DMTools CLI	2025-12-12T06:53:04.3125710Z [36;1mecho "$HOME/.dmtools/bin" >> $GITHUB_PATH[0m
+cursor-agent	Install DMTools CLI	2025-12-12T06:53:04.3158153Z shell: /usr/bin/bash -e {0}
+cursor-agent	Install DMTools CLI	2025-12-12T06:53:04.3158391Z env:
+cursor-agent	Install DMTools CLI	2025-12-12T06:53:04.3158677Z   JAVA_HOME: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/23.0.2-7/x64
+cursor-agent	Install DMTools CLI	2025-12-12T06:53:04.3159134Z   JAVA_HOME_23_X64: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/23.0.2-7/x64
+cursor-agent	Install DMTools CLI	2025-12-12T06:53:04.3159495Z ##[endgroup]
+cursor-agent	Install DMTools CLI	2025-12-12T06:53:04.6214853Z [0;32m🚀 Installing DMTools CLI...[0m
+cursor-agent	Install DMTools CLI	2025-12-12T06:53:04.6215239Z [0;34mChecking Java installation...[0m
+cursor-agent	Install DMTools CLI	2025-12-12T06:53:04.6524303Z [0;32mJava version detected: 23.0.2[0m
+cursor-agent	Install DMTools CLI	2025-12-12T06:53:04.6527390Z [0;34mFetching latest release information...[0m
+cursor-agent	Install DMTools CLI	2025-12-12T06:53:04.8206055Z [0;32mLatest version: v1.7.100[0m
+cursor-agent	Install DMTools CLI	2025-12-12T06:53:04.8206564Z [0;34mCreating installation directory...[0m
+cursor-agent	Install DMTools CLI	2025-12-12T06:53:04.8231016Z [0;34mDownloading DMTools JAR...[0m
+cursor-agent	Install DMTools CLI	2025-12-12T06:53:06.0599207Z [0;34mDownloading DMTools shell script...[0m
+cursor-agent	Install DMTools CLI	2025-12-12T06:53:06.4371236Z [0;34mUpdating shell configuration...[0m
+cursor-agent	Install DMTools CLI	2025-12-12T06:53:06.4880632Z [0;32mUpdated /home/runner/.bashrc[0m
+cursor-agent	Install DMTools CLI	2025-12-12T06:53:06.4948894Z [0;32mUpdated /home/runner/.bash_profile[0m
+cursor-agent	Install DMTools CLI	2025-12-12T06:53:06.4969948Z [0;32mUpdated /home/runner/.profile[0m
+cursor-agent	Install DMTools CLI	2025-12-12T06:53:06.4970509Z [0;34mVerifying installation...[0m
+cursor-agent	Install DMTools CLI	2025-12-12T06:53:07.4788286Z [0;32mDMTools CLI installed successfully![0m
+cursor-agent	Install DMTools CLI	2025-12-12T06:53:07.4788728Z 
+cursor-agent	Install DMTools CLI	2025-12-12T06:53:07.4789078Z [0;32m🎉 DMTools CLI installation completed![0m
+cursor-agent	Install DMTools CLI	2025-12-12T06:53:07.4789421Z 
+cursor-agent	Install DMTools CLI	2025-12-12T06:53:07.4789555Z To get started:
+cursor-agent	Install DMTools CLI	2025-12-12T06:53:07.4790033Z   1. Restart your shell or run: source ~/.zshrc (or ~/.bashrc)
+cursor-agent	Install DMTools CLI	2025-12-12T06:53:07.4790558Z   2. Run: dmtools list
+cursor-agent	Install DMTools CLI	2025-12-12T06:53:07.4790996Z   3. Set up your integrations with environment variables:
+cursor-agent	Install DMTools CLI	2025-12-12T06:53:07.4791612Z      export DMTOOLS_INTEGRATIONS=jira,confluence,figma
+cursor-agent	Install DMTools CLI	2025-12-12T06:53:07.4792085Z      export JIRA_EMAIL=your-email@domain.com
+cursor-agent	Install DMTools CLI	2025-12-12T06:53:07.4792412Z      export JIRA_API_TOKEN=your-jira-api-token
+cursor-agent	Install DMTools CLI	2025-12-12T06:53:07.4793065Z      export JIRA_BASE_PATH=https://your-domain.atlassian.net
+cursor-agent	Install DMTools CLI	2025-12-12T06:53:07.4793340Z 
+cursor-agent	Install DMTools CLI	2025-12-12T06:53:07.4793434Z System Requirements:
+cursor-agent	Install DMTools CLI	2025-12-12T06:53:07.5095844Z   ✓ Java 23.0.2 detected
+cursor-agent	Install DMTools CLI	2025-12-12T06:53:07.5096151Z 
+cursor-agent	Install DMTools CLI	2025-12-12T06:53:07.5096451Z For more information, visit: https://github.com/IstiN/dmtools
+cursor-agent	Verify DMTools and Cursor Installation	﻿2025-12-12T06:53:07.5125649Z ##[group]Run echo "Verifying installations..."
+cursor-agent	Verify DMTools and Cursor Installation	2025-12-12T06:53:07.5126028Z [36;1mecho "Verifying installations..."[0m
+cursor-agent	Verify DMTools and Cursor Installation	2025-12-12T06:53:07.5126374Z [36;1mexport PATH="$HOME/.local/bin:$HOME/.dmtools/bin:$PATH"[0m
+cursor-agent	Verify DMTools and Cursor Installation	2025-12-12T06:53:07.5126689Z [36;1m[0m
+cursor-agent	Verify DMTools and Cursor Installation	2025-12-12T06:53:07.5126870Z [36;1mecho "DMTools version:"[0m
+cursor-agent	Verify DMTools and Cursor Installation	2025-12-12T06:53:07.5127170Z [36;1mdmtools --version || echo "⚠️ dmtools not found"[0m
+cursor-agent	Verify DMTools and Cursor Installation	2025-12-12T06:53:07.5127461Z [36;1m[0m
+cursor-agent	Verify DMTools and Cursor Installation	2025-12-12T06:53:07.5127636Z [36;1mecho "Cursor Agent version:"[0m
+cursor-agent	Verify DMTools and Cursor Installation	2025-12-12T06:53:07.5127981Z [36;1mcursor-agent --version || echo "⚠️ cursor-agent not found"[0m
+cursor-agent	Verify DMTools and Cursor Installation	2025-12-12T06:53:07.5128300Z [36;1m[0m
+cursor-agent	Verify DMTools and Cursor Installation	2025-12-12T06:53:07.5128479Z [36;1mecho "PATH: $PATH"[0m
+cursor-agent	Verify DMTools and Cursor Installation	2025-12-12T06:53:07.5161214Z shell: /usr/bin/bash -e {0}
+cursor-agent	Verify DMTools and Cursor Installation	2025-12-12T06:53:07.5161444Z env:
+cursor-agent	Verify DMTools and Cursor Installation	2025-12-12T06:53:07.5161728Z   JAVA_HOME: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/23.0.2-7/x64
+cursor-agent	Verify DMTools and Cursor Installation	2025-12-12T06:53:07.5162203Z   JAVA_HOME_23_X64: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/23.0.2-7/x64
+cursor-agent	Verify DMTools and Cursor Installation	2025-12-12T06:53:07.5163078Z ##[endgroup]
+cursor-agent	Verify DMTools and Cursor Installation	2025-12-12T06:53:07.5214343Z Verifying installations...
+cursor-agent	Verify DMTools and Cursor Installation	2025-12-12T06:53:07.5214751Z DMTools version:
+cursor-agent	Verify DMTools and Cursor Installation	2025-12-12T06:53:08.0533536Z DMTools 1.7.100
+cursor-agent	Verify DMTools and Cursor Installation	2025-12-12T06:53:08.0534135Z A comprehensive development management toolkit
+cursor-agent	Verify DMTools and Cursor Installation	2025-12-12T06:53:08.0619409Z Cursor Agent version:
+cursor-agent	Verify DMTools and Cursor Installation	2025-12-12T06:53:08.4161042Z 2025.11.25-d5b3271
+cursor-agent	Verify DMTools and Cursor Installation	2025-12-12T06:53:08.4260605Z PATH: /home/runner/.local/bin:/home/runner/.dmtools/bin:/home/runner/.dmtools/bin:/home/runner/.local/bin:/opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/23.0.2-7/x64/bin:/snap/bin:/home/runner/.local/bin:/opt/pipx_bin:/home/runner/.cargo/bin:/home/runner/.config/composer/vendor/bin:/usr/local/.ghcup/bin:/home/runner/.dotnet/tools:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin
+cursor-agent	Prepare Environment Variables	﻿2025-12-12T06:53:08.4288499Z ##[group]Run CONFIG_FILE="agents/test_agent.json"
+cursor-agent	Prepare Environment Variables	2025-12-12T06:53:08.4288895Z [36;1mCONFIG_FILE="agents/test_agent.json"[0m
+cursor-agent	Prepare Environment Variables	2025-12-12T06:53:08.4289174Z [36;1m[0m
+cursor-agent	Prepare Environment Variables	2025-12-12T06:53:08.4289360Z [36;1m# Check if this is test_agent[0m
+cursor-agent	Prepare Environment Variables	2025-12-12T06:53:08.4289657Z [36;1mif [[ "${CONFIG_FILE}" == *"test_agent.json"* ]]; then[0m
+cursor-agent	Prepare Environment Variables	2025-12-12T06:53:08.4290018Z [36;1m  echo "is_test_agent=true" >> $GITHUB_OUTPUT[0m
+cursor-agent	Prepare Environment Variables	2025-12-12T06:53:08.4290361Z [36;1m  echo "dmtools_integrations=cli,file" >> $GITHUB_OUTPUT[0m
+cursor-agent	Prepare Environment Variables	2025-12-12T06:53:08.4290781Z [36;1m  echo "Test agent detected - will disable Jira/Confluence integrations"[0m
+cursor-agent	Prepare Environment Variables	2025-12-12T06:53:08.4291130Z [36;1melse[0m
+cursor-agent	Prepare Environment Variables	2025-12-12T06:53:08.4291348Z [36;1m  echo "is_test_agent=false" >> $GITHUB_OUTPUT[0m
+cursor-agent	Prepare Environment Variables	2025-12-12T06:53:08.4291771Z [36;1m  echo "dmtools_integrations=jira,confluence,figma,ai,cli,file" >> $GITHUB_OUTPUT[0m
+cursor-agent	Prepare Environment Variables	2025-12-12T06:53:08.4292150Z [36;1mfi[0m
+cursor-agent	Prepare Environment Variables	2025-12-12T06:53:08.4326365Z shell: /usr/bin/bash -e {0}
+cursor-agent	Prepare Environment Variables	2025-12-12T06:53:08.4326614Z env:
+cursor-agent	Prepare Environment Variables	2025-12-12T06:53:08.4326940Z   JAVA_HOME: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/23.0.2-7/x64
+cursor-agent	Prepare Environment Variables	2025-12-12T06:53:08.4327424Z   JAVA_HOME_23_X64: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/23.0.2-7/x64
+cursor-agent	Prepare Environment Variables	2025-12-12T06:53:08.4327770Z ##[endgroup]
+cursor-agent	Prepare Environment Variables	2025-12-12T06:53:08.4380639Z Test agent detected - will disable Jira/Confluence integrations
+cursor-agent	Run AI Teammate	﻿2025-12-12T06:53:08.4417182Z ##[group]Run CONFIG_FILE="agents/test_agent.json"
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4417615Z [36;1mCONFIG_FILE="agents/test_agent.json"[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4417899Z [36;1mENCODED_CONFIG=""[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4418121Z [36;1m[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4418389Z [36;1m# ✅ CRITICAL: Export PATH to ensure dmtools is available[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4418799Z [36;1mexport PATH="$HOME/.local/bin:$HOME/.dmtools/bin:$PATH"[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4419104Z [36;1m[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4419324Z [36;1mecho "Using configuration: ${CONFIG_FILE}"[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4419602Z [36;1m[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4419830Z [36;1m# ✅ Verify dmtools is available before proceeding[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4420179Z [36;1mecho "=== Verifying dmtools installation ==="[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4420527Z [36;1mif ! command -v dmtools >/dev/null 2>&1; then[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4420859Z [36;1m  echo "❌ dmtools command not found in PATH"[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4421146Z [36;1m  echo "Current PATH: $PATH"[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4421463Z [36;1m  echo "Checking installation locations:"[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4421869Z [36;1m  ls -la "$HOME/.dmtools/bin/" 2>/dev/null || echo "  $HOME/.dmtools/bin/ does not exist"[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4422371Z [36;1m  ls -la "$HOME/.local/bin/" 2>/dev/null || echo "  $HOME/.local/bin/ does not exist"[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4422984Z [36;1m  echo "Trying to find dmtools:"[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4423404Z [36;1m  find "$HOME" -name "dmtools" -type f 2>/dev/null | head -5 || echo "  dmtools not found in $HOME"[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4423803Z [36;1m  exit 1[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4423984Z [36;1mfi[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4424211Z [36;1mecho "✅ dmtools found at: $(command -v dmtools)"[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4424611Z [36;1mdmtools --version || echo "⚠️ Version check failed, but continuing..."[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4425176Z [36;1mecho "======================================"[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4425444Z [36;1mecho ""[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4425621Z [36;1m[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4425826Z [36;1m# ✅ ДОБАВЛЕНО: Проверка существования config файла[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4426122Z [36;1mif [ ! -f "${CONFIG_FILE}" ]; then[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4426420Z [36;1m  echo "❌ Config file not found: ${CONFIG_FILE}"[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4426724Z [36;1m  echo "Available files in agents/:"[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4427043Z [36;1m  ls -la agents/ || echo "agents/ directory not found"[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4427336Z [36;1m  exit 1[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4427514Z [36;1mfi[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4427682Z [36;1m[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4427978Z [36;1m# For test_agent, unset Jira/Confluence env vars to prevent initialization[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4428451Z [36;1m# DMTOOLS_INTEGRATIONS is already set correctly from env-prep step[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4428824Z [36;1mif [[ "true" == "true" ]]; then[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4429158Z [36;1m  echo "Test agent detected - unsetting Jira/Confluence env vars"[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4429582Z [36;1m  # Unset Jira/Confluence env vars to prevent initialization[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4429989Z [36;1m  # Using unset to completely remove them from environment[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4430381Z [36;1m  unset JIRA_EMAIL JIRA_API_TOKEN JIRA_BASE_PATH JIRA_AUTH_TYPE[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4430815Z [36;1m  unset JIRA_CLEAR_CACHE JIRA_EXTRA_FIELDS JIRA_EXTRA_FIELDS_PROJECT[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4431217Z [36;1m  unset JIRA_LOGGING_ENABLED JIRA_WAIT_BEFORE_PERFORM[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4431613Z [36;1m  unset CONFLUENCE_EMAIL CONFLUENCE_API_TOKEN CONFLUENCE_BASE_PATH[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4432037Z [36;1m  unset CONFLUENCE_DEFAULT_SPACE CONFLUENCE_GRAPHQL_PATH[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4432416Z [36;1m  echo "DMTOOLS_INTEGRATIONS: ${DMTOOLS_INTEGRATIONS}"[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4432934Z [36;1m  echo "Jira/Confluence env vars unset"[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4433201Z [36;1mfi[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4433367Z [36;1m[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4433560Z [36;1m# Ensure outputs directory exists[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4433826Z [36;1mmkdir -p outputs inputs[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4434222Z [36;1m[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4434477Z [36;1m# For test_agent, remove inputJql field to prevent Jira queries[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4434816Z [36;1mif [[ "true" == "true" ]]; then[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4435198Z [36;1m  echo "Removing inputJql from test agent config to prevent Jira initialization"[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4435665Z [36;1m  # Use temporary file to avoid modifying source if jq fails[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4436118Z [36;1m  if jq 'del(.params.inputJql)' "${CONFIG_FILE}" > "${CONFIG_FILE}.tmp" 2>/dev/null; then[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4436536Z [36;1m    mv "${CONFIG_FILE}.tmp" "${CONFIG_FILE}"[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4436843Z [36;1m    echo "✅ Removed inputJql from config"[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4437129Z [36;1m    echo "Updated config:"[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4437425Z [36;1m    cat "${CONFIG_FILE}" | jq '.' || cat "${CONFIG_FILE}"[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4437714Z [36;1m  else[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4437986Z [36;1m    echo "⚠️ Failed to remove inputJql (may not exist or jq error)"[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4438340Z [36;1m    rm -f "${CONFIG_FILE}.tmp"[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4438575Z [36;1m  fi[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4438751Z [36;1mfi[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4438912Z [36;1m[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4439111Z [36;1m# Debug: Show environment before running[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4439396Z [36;1mecho "=== Environment Debug ==="[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4439713Z [36;1mecho "DMTOOLS_INTEGRATIONS: ${DMTOOLS_INTEGRATIONS}"[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4440053Z [36;1mecho "JIRA_EMAIL: ${JIRA_EMAIL:-<not set>}"[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4440388Z [36;1mecho "JIRA_BASE_PATH: ${JIRA_BASE_PATH:-<not set>}"[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4440692Z [36;1mecho "========================="[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4440924Z [36;1m[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4441338Z [36;1m# Run dmtools with error handling (don't exit on error so we can capture it)[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4441705Z [36;1mecho ""[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4441909Z [36;1mecho "=== Running dmtools ==="[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4442169Z [36;1mif [ -n "${ENCODED_CONFIG}" ]; then[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4442449Z [36;1m  echo "Encoded config provided"[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4443074Z [36;1m  dmtools run "${CONFIG_FILE}" "${ENCODED_CONFIG}" 2>&1 | tee /tmp/dmtools-output.log[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4443475Z [36;1m  EXIT_CODE=${PIPESTATUS[0]}[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4443838Z [36;1melse[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4444034Z [36;1m  echo "No encoded config"[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4444349Z [36;1m  dmtools run "${CONFIG_FILE}" 2>&1 | tee /tmp/dmtools-output.log[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4444872Z [36;1m  EXIT_CODE=${PIPESTATUS[0]}[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4445191Z [36;1mfi[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4445380Z [36;1m[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4445546Z [36;1mecho ""[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4445900Z [36;1mecho "=== dmtools finished with exit code: $EXIT_CODE ==="[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4446272Z [36;1m[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4446580Z [36;1m# Check exit code and provide helpful error message[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4446967Z [36;1mif [ $EXIT_CODE -ne 0 ]; then[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4447375Z [36;1m  echo ""[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4447649Z [36;1m  echo "❌ dmtools exited with code: $EXIT_CODE"[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4448005Z [36;1m  echo ""[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4448224Z [36;1m  echo "=== Full dmtools output ==="[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4448617Z [36;1m  cat /tmp/dmtools-output.log 2>/dev/null || echo "Could not read output log"[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4449014Z [36;1m  echo "=========================="[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4449264Z [36;1m  echo ""[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4449487Z [36;1m  echo "Checking for output files..."[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4449831Z [36;1m  ls -la outputs/ 2>/dev/null || echo "No outputs/ directory"[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4450212Z [36;1m  ls -la inputs/ 2>/dev/null || echo "No inputs/ directory"[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4450518Z [36;1m  echo ""[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4450714Z [36;1m  echo "Config file content:"[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4451023Z [36;1m  cat "${CONFIG_FILE}" || echo "Could not read config file"[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4451484Z [36;1m  exit $EXIT_CODE[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4451693Z [36;1melse[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4451903Z [36;1m  echo "✅ dmtools completed successfully"[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4452184Z [36;1m  echo "Output files:"[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4452754Z [36;1m  ls -la outputs/ 2>/dev/null || echo "No outputs created"[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4453085Z [36;1mfi[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4481568Z shell: /usr/bin/bash -e {0}
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4481803Z env:
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4482103Z   JAVA_HOME: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/23.0.2-7/x64
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4482735Z   JAVA_HOME_23_X64: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/23.0.2-7/x64
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4483576Z   CURSOR_API_KEY: ***
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4483805Z   MODEL: sonnet-4
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4484005Z   AGENT_DISABLE_WATCHDOG: 1
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4484346Z   PATH: /home/runner/.local/bin:/home/runner/.dmtools/bin:/bin:/usr/bin:$PATH
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4484734Z   JIRA_EMAIL: ***
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4485628Z   JIRA_API_TOKEN: ***
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4485902Z   JIRA_BASE_PATH: https://kidblendapp.atlassian.net/jira
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4486213Z   JIRA_AUTH_TYPE: Basic
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4486415Z   JIRA_CLEAR_CACHE: 
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4486748Z   JIRA_EXTRA_FIELDS: Diagrams, "Story point estimate","Target start", "Target end"
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4487141Z   JIRA_EXTRA_FIELDS_PROJECT: AP
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4487373Z   JIRA_LOGGING_ENABLED: 
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4487580Z   JIRA_WAIT_BEFORE_PERFORM: 
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4487832Z   CONFLUENCE_EMAIL: ***
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4488747Z   CONFLUENCE_API_TOKEN: ***
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4489051Z   CONFLUENCE_BASE_PATH: https://kidblendapp.atlassian.net/wiki
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4489396Z   CONFLUENCE_DEFAULT_SPACE: AC
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4489783Z   CONFLUENCE_GRAPHQL_PATH: 
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4490007Z   DMTOOLS_INTEGRATIONS: cli,file
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4490226Z   GEMINI_API_KEY: 
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4490420Z   GEMINI_DEFAULT_MODEL: 
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4490636Z   PROMPT_CHUNK_TOKEN_LIMIT: 
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4490852Z   FIGMA_TOKEN: 
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4491034Z   FIGMA_BASE_PATH: 
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4491563Z   PAT_TOKEN: ***
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4492023Z   GH_TOKEN: ***
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4492203Z ##[endgroup]
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4539769Z Using configuration: agents/test_agent.json
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4540302Z === Verifying dmtools installation ===
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4546359Z ✅ dmtools found at: /home/runner/.dmtools/bin/dmtools
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.0048683Z DMTools 1.7.100
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.0049558Z A comprehensive development management toolkit
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.0239221Z ======================================
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.0239584Z 
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.0240502Z Test agent detected - unsetting Jira/Confluence env vars
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.0241096Z DMTOOLS_INTEGRATIONS: cli,file
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.0241504Z Jira/Confluence env vars unset
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.0257841Z Removing inputJql from test agent config to prevent Jira initialization
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.0299805Z ✅ Removed inputJql from config
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.0300190Z Updated config:
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.0323908Z {
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.0324214Z   "name": "Test Agent",
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.0324442Z   "params": {
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.0324643Z     "agentParams": {
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.0346487Z       "aiRole": "Test Assistant",
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.0346913Z       "instructions": [
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.0347262Z         "This is a test agent",
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.0347664Z         "Just print hello world"
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.0348015Z       ],
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.0348386Z       "formattingRules": "Use markdown"
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.0348781Z     },
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.0349054Z     "cliCommands": [
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.0349401Z       "echo 'Hello from AI Teammate!'",
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.0349835Z       "mkdir -p outputs",
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.0350231Z       "echo '# Test Result' > outputs/response.md",
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.0350785Z       "echo 'Agent executed successfully' >> outputs/response.md"
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.0351277Z     ],
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.0351764Z     "outputType": "none",
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.0352007Z     "skipAIProcessing": true
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.0352225Z   }
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.0352377Z }
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.0352822Z === Environment Debug ===
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.0353119Z DMTOOLS_INTEGRATIONS: cli,file
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.0353354Z JIRA_EMAIL: <not set>
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.0353560Z JIRA_BASE_PATH: <not set>
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.0353754Z =========================
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.0353882Z 
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.0353959Z === Running dmtools ===
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.0354159Z No encoded config
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.0379475Z [0;32mInfo: Executing job with file: agents/test_agent.json[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.5709542Z 06:53:09.569 [main] INFO  com.github.istin.dmtools.job.RunCommandProcessor - Processing run command: file=agents/test_agent.json, hasEncodedConfig=false
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.5736971Z 06:53:09.573 [main] INFO  com.github.istin.dmtools.job.RunCommandProcessor - Successfully loaded JSON configuration from file: agents/test_agent.json
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.5740168Z 06:53:09.573 [main] INFO  com.github.istin.dmtools.job.RunCommandProcessor - Using file configuration only
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.5775515Z 06:53:09.577 [main] INFO  com.github.istin.dmtools.job.RunCommandProcessor - JobParams created successfully for job: Test Agent
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.5779607Z 06:53:09.577 [main] INFO  com.github.istin.dmtools.job.JobRunner - Executing job: Test Agent in mode: STANDALONE with 0 integrations
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.5974072Z 
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.5975116Z === dmtools finished with exit code: 1 ===
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.5975500Z 
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.5975931Z ❌ dmtools exited with code: 1
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.5976195Z 
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.5976347Z === Full dmtools output ===
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.5988844Z [0;32mInfo: Executing job with file: agents/test_agent.json[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.5990020Z 06:53:09.569 [main] INFO  com.github.istin.dmtools.job.RunCommandProcessor - Processing run command: file=agents/test_agent.json, hasEncodedConfig=false
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.5991663Z 06:53:09.573 [main] INFO  com.github.istin.dmtools.job.RunCommandProcessor - Successfully loaded JSON configuration from file: agents/test_agent.json
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.5993196Z 06:53:09.573 [main] INFO  com.github.istin.dmtools.job.RunCommandProcessor - Using file configuration only
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.5994473Z 06:53:09.577 [main] INFO  com.github.istin.dmtools.job.RunCommandProcessor - JobParams created successfully for job: Test Agent
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.5995830Z 06:53:09.577 [main] INFO  com.github.istin.dmtools.job.JobRunner - Executing job: Test Agent in mode: STANDALONE with 0 integrations
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.5996692Z ==========================
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.5996915Z 
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.5997070Z Checking for output files...
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.6011547Z total 8
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.6011916Z drwxr-xr-x  2 runner runner 4096 Dec 12 06:53 .
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.6012424Z drwxr-xr-x 13 runner runner 4096 Dec 12 06:53 ..
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.6027376Z total 8
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.6027828Z drwxr-xr-x  2 runner runner 4096 Dec 12 06:53 .
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.6028391Z drwxr-xr-x 13 runner runner 4096 Dec 12 06:53 ..
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.6031304Z 
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.6031713Z Config file content:
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.6038982Z {
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.6039295Z   "name": "Test Agent",
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.6039656Z   "params": {
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.6039979Z     "agentParams": {
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.6040350Z       "aiRole": "Test Assistant",
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.6040727Z       "instructions": [
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.6041075Z         "This is a test agent",
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.6041468Z         "Just print hello world"
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.6041829Z       ],
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.6042136Z       "formattingRules": "Use markdown"
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.6042723Z     },
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.6043003Z     "cliCommands": [
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.6043356Z       "echo 'Hello from AI Teammate!'",
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.6043768Z       "mkdir -p outputs",
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.6044158Z       "echo '# Test Result' > outputs/response.md",
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.6044962Z       "echo 'Agent executed successfully' >> outputs/response.md"
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.6045436Z     ],
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.6045719Z     "outputType": "none",
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.6046081Z     "skipAIProcessing": true
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.6046438Z   }
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.6046735Z }
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.6056080Z ##[error]Process completed with exit code 1.
+cursor-agent	Upload artifacts	﻿2025-12-12T06:53:09.6126067Z ##[group]Run actions/upload-artifact@v4
+cursor-agent	Upload artifacts	2025-12-12T06:53:09.6126344Z with:
+cursor-agent	Upload artifacts	2025-12-12T06:53:09.6126539Z   name: ai-teammate-results-15
+cursor-agent	Upload artifacts	2025-12-12T06:53:09.6126797Z   path: outputs/
+cursor-agent	Upload artifacts	inputs/
+cursor-agent	Upload artifacts	
+cursor-agent	Upload artifacts	2025-12-12T06:53:09.6127014Z   retention-days: 30
+cursor-agent	Upload artifacts	2025-12-12T06:53:09.6127213Z   if-no-files-found: warn
+cursor-agent	Upload artifacts	2025-12-12T06:53:09.6127425Z   compression-level: 6
+cursor-agent	Upload artifacts	2025-12-12T06:53:09.6127633Z   overwrite: false
+cursor-agent	Upload artifacts	2025-12-12T06:53:09.6127827Z   include-hidden-files: false
+cursor-agent	Upload artifacts	2025-12-12T06:53:09.6128035Z env:
+cursor-agent	Upload artifacts	2025-12-12T06:53:09.6128296Z   JAVA_HOME: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/23.0.2-7/x64
+cursor-agent	Upload artifacts	2025-12-12T06:53:09.6128737Z   JAVA_HOME_23_X64: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/23.0.2-7/x64
+cursor-agent	Upload artifacts	2025-12-12T06:53:09.6129073Z ##[endgroup]
+cursor-agent	Upload artifacts	2025-12-12T06:53:09.8265968Z Multiple search paths detected. Calculating the least common ancestor of all paths
+cursor-agent	Upload artifacts	2025-12-12T06:53:09.8269979Z The least common ancestor is /home/runner/work/autocoding/autocoding. This will be the root directory of the artifact
+cursor-agent	Upload artifacts	2025-12-12T06:53:09.8283533Z ##[warning]No files were found with the provided path: outputs/
+cursor-agent	Upload artifacts	inputs/. No artifacts will be uploaded.
+cursor-agent	Post Setup Java Environment	﻿2025-12-12T06:53:09.8384154Z Post job cleanup.
+cursor-agent	Post Checkout repository	﻿2025-12-12T06:53:10.0128827Z Post job cleanup.
+cursor-agent	Post Checkout repository	2025-12-12T06:53:10.1143212Z [command]/usr/bin/git version
+cursor-agent	Post Checkout repository	2025-12-12T06:53:10.1185083Z git version 2.52.0
+cursor-agent	Post Checkout repository	2025-12-12T06:53:10.1230330Z Temporarily overriding HOME='/home/runner/work/_temp/94f0ad18-6258-4fde-8ffa-24421e4b2024' before making global git config changes
+cursor-agent	Post Checkout repository	2025-12-12T06:53:10.1231945Z Adding repository directory to the temporary git global config as a safe directory
+cursor-agent	Post Checkout repository	2025-12-12T06:53:10.1237105Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/autocoding/autocoding
+cursor-agent	Post Checkout repository	2025-12-12T06:53:10.1275631Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+cursor-agent	Post Checkout repository	2025-12-12T06:53:10.1309989Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+cursor-agent	Post Checkout repository	2025-12-12T06:53:10.1560162Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+cursor-agent	Post Checkout repository	2025-12-12T06:53:10.1584638Z http.https://github.com/.extraheader
+cursor-agent	Post Checkout repository	2025-12-12T06:53:10.1598315Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+cursor-agent	Post Checkout repository	2025-12-12T06:53:10.1631465Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+cursor-agent	Post Checkout repository	2025-12-12T06:53:10.1872502Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+cursor-agent	Post Checkout repository	2025-12-12T06:53:10.1906589Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+cursor-agent	Complete job	﻿2025-12-12T06:53:10.2261529Z Cleaning up orphan processes

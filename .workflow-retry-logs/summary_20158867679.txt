@@ -1,0 +1,215 @@
+=== Workflow Run Summary ===
+Run ID: 20158867679
+Repository: kidblendapp/autocoding
+Workflow: ai-teammate-2.yaml
+
+=== Status ===
+completed / failure - AI Teammate Enhanced
+
+=== Failed Jobs ===
+Could not get failed jobs or no failed jobs found
+
+=== All Jobs ===
+Could not get jobs
+
+=== Error Logs (last 200 lines) ===
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4440053Z [36;1mecho "JIRA_EMAIL: ${JIRA_EMAIL:-<not set>}"[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4440388Z [36;1mecho "JIRA_BASE_PATH: ${JIRA_BASE_PATH:-<not set>}"[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4440692Z [36;1mecho "========================="[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4440924Z [36;1m[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4441338Z [36;1m# Run dmtools with error handling (don't exit on error so we can capture it)[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4441705Z [36;1mecho ""[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4441909Z [36;1mecho "=== Running dmtools ==="[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4442169Z [36;1mif [ -n "${ENCODED_CONFIG}" ]; then[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4442449Z [36;1m  echo "Encoded config provided"[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4443074Z [36;1m  dmtools run "${CONFIG_FILE}" "${ENCODED_CONFIG}" 2>&1 | tee /tmp/dmtools-output.log[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4443475Z [36;1m  EXIT_CODE=${PIPESTATUS[0]}[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4443838Z [36;1melse[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4444034Z [36;1m  echo "No encoded config"[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4444349Z [36;1m  dmtools run "${CONFIG_FILE}" 2>&1 | tee /tmp/dmtools-output.log[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4444872Z [36;1m  EXIT_CODE=${PIPESTATUS[0]}[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4445191Z [36;1mfi[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4445380Z [36;1m[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4445546Z [36;1mecho ""[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4445900Z [36;1mecho "=== dmtools finished with exit code: $EXIT_CODE ==="[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4446272Z [36;1m[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4446580Z [36;1m# Check exit code and provide helpful error message[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4446967Z [36;1mif [ $EXIT_CODE -ne 0 ]; then[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4447375Z [36;1m  echo ""[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4447649Z [36;1m  echo "❌ dmtools exited with code: $EXIT_CODE"[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4448005Z [36;1m  echo ""[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4448224Z [36;1m  echo "=== Full dmtools output ==="[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4448617Z [36;1m  cat /tmp/dmtools-output.log 2>/dev/null || echo "Could not read output log"[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4449014Z [36;1m  echo "=========================="[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4449264Z [36;1m  echo ""[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4449487Z [36;1m  echo "Checking for output files..."[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4449831Z [36;1m  ls -la outputs/ 2>/dev/null || echo "No outputs/ directory"[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4450212Z [36;1m  ls -la inputs/ 2>/dev/null || echo "No inputs/ directory"[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4450518Z [36;1m  echo ""[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4450714Z [36;1m  echo "Config file content:"[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4451023Z [36;1m  cat "${CONFIG_FILE}" || echo "Could not read config file"[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4451484Z [36;1m  exit $EXIT_CODE[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4451693Z [36;1melse[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4451903Z [36;1m  echo "✅ dmtools completed successfully"[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4452184Z [36;1m  echo "Output files:"[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4452754Z [36;1m  ls -la outputs/ 2>/dev/null || echo "No outputs created"[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4453085Z [36;1mfi[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4481568Z shell: /usr/bin/bash -e {0}
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4481803Z env:
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4482103Z   JAVA_HOME: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/23.0.2-7/x64
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4482735Z   JAVA_HOME_23_X64: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/23.0.2-7/x64
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4483576Z   CURSOR_API_KEY: ***
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4483805Z   MODEL: sonnet-4
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4484005Z   AGENT_DISABLE_WATCHDOG: 1
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4484346Z   PATH: /home/runner/.local/bin:/home/runner/.dmtools/bin:/bin:/usr/bin:$PATH
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4484734Z   JIRA_EMAIL: ***
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4485628Z   JIRA_API_TOKEN: ***
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4485902Z   JIRA_BASE_PATH: https://kidblendapp.atlassian.net/jira
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4486213Z   JIRA_AUTH_TYPE: Basic
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4486415Z   JIRA_CLEAR_CACHE: 
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4486748Z   JIRA_EXTRA_FIELDS: Diagrams, "Story point estimate","Target start", "Target end"
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4487141Z   JIRA_EXTRA_FIELDS_PROJECT: AP
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4487373Z   JIRA_LOGGING_ENABLED: 
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4487580Z   JIRA_WAIT_BEFORE_PERFORM: 
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4487832Z   CONFLUENCE_EMAIL: ***
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4488747Z   CONFLUENCE_API_TOKEN: ***
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4489051Z   CONFLUENCE_BASE_PATH: https://kidblendapp.atlassian.net/wiki
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4489396Z   CONFLUENCE_DEFAULT_SPACE: AC
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4489783Z   CONFLUENCE_GRAPHQL_PATH: 
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4490007Z   DMTOOLS_INTEGRATIONS: cli,file
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4490226Z   GEMINI_API_KEY: 
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4490420Z   GEMINI_DEFAULT_MODEL: 
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4490636Z   PROMPT_CHUNK_TOKEN_LIMIT: 
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4490852Z   FIGMA_TOKEN: 
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4491034Z   FIGMA_BASE_PATH: 
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4491563Z   PAT_TOKEN: ***
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4492023Z   GH_TOKEN: ***
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4492203Z ##[endgroup]
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4539769Z Using configuration: agents/test_agent.json
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4540302Z === Verifying dmtools installation ===
+cursor-agent	Run AI Teammate	2025-12-12T06:53:08.4546359Z ✅ dmtools found at: /home/runner/.dmtools/bin/dmtools
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.0048683Z DMTools 1.7.100
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.0049558Z A comprehensive development management toolkit
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.0239221Z ======================================
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.0239584Z 
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.0240502Z Test agent detected - unsetting Jira/Confluence env vars
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.0241096Z DMTOOLS_INTEGRATIONS: cli,file
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.0241504Z Jira/Confluence env vars unset
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.0257841Z Removing inputJql from test agent config to prevent Jira initialization
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.0299805Z ✅ Removed inputJql from config
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.0300190Z Updated config:
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.0323908Z {
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.0324214Z   "name": "Test Agent",
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.0324442Z   "params": {
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.0324643Z     "agentParams": {
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.0346487Z       "aiRole": "Test Assistant",
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.0346913Z       "instructions": [
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.0347262Z         "This is a test agent",
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.0347664Z         "Just print hello world"
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.0348015Z       ],
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.0348386Z       "formattingRules": "Use markdown"
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.0348781Z     },
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.0349054Z     "cliCommands": [
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.0349401Z       "echo 'Hello from AI Teammate!'",
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.0349835Z       "mkdir -p outputs",
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.0350231Z       "echo '# Test Result' > outputs/response.md",
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.0350785Z       "echo 'Agent executed successfully' >> outputs/response.md"
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.0351277Z     ],
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.0351764Z     "outputType": "none",
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.0352007Z     "skipAIProcessing": true
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.0352225Z   }
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.0352377Z }
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.0352822Z === Environment Debug ===
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.0353119Z DMTOOLS_INTEGRATIONS: cli,file
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.0353354Z JIRA_EMAIL: <not set>
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.0353560Z JIRA_BASE_PATH: <not set>
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.0353754Z =========================
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.0353882Z 
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.0353959Z === Running dmtools ===
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.0354159Z No encoded config
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.0379475Z [0;32mInfo: Executing job with file: agents/test_agent.json[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.5709542Z 06:53:09.569 [main] INFO  com.github.istin.dmtools.job.RunCommandProcessor - Processing run command: file=agents/test_agent.json, hasEncodedConfig=false
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.5736971Z 06:53:09.573 [main] INFO  com.github.istin.dmtools.job.RunCommandProcessor - Successfully loaded JSON configuration from file: agents/test_agent.json
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.5740168Z 06:53:09.573 [main] INFO  com.github.istin.dmtools.job.RunCommandProcessor - Using file configuration only
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.5775515Z 06:53:09.577 [main] INFO  com.github.istin.dmtools.job.RunCommandProcessor - JobParams created successfully for job: Test Agent
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.5779607Z 06:53:09.577 [main] INFO  com.github.istin.dmtools.job.JobRunner - Executing job: Test Agent in mode: STANDALONE with 0 integrations
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.5974072Z 
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.5975116Z === dmtools finished with exit code: 1 ===
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.5975500Z 
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.5975931Z ❌ dmtools exited with code: 1
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.5976195Z 
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.5976347Z === Full dmtools output ===
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.5988844Z [0;32mInfo: Executing job with file: agents/test_agent.json[0m
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.5990020Z 06:53:09.569 [main] INFO  com.github.istin.dmtools.job.RunCommandProcessor - Processing run command: file=agents/test_agent.json, hasEncodedConfig=false
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.5991663Z 06:53:09.573 [main] INFO  com.github.istin.dmtools.job.RunCommandProcessor - Successfully loaded JSON configuration from file: agents/test_agent.json
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.5993196Z 06:53:09.573 [main] INFO  com.github.istin.dmtools.job.RunCommandProcessor - Using file configuration only
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.5994473Z 06:53:09.577 [main] INFO  com.github.istin.dmtools.job.RunCommandProcessor - JobParams created successfully for job: Test Agent
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.5995830Z 06:53:09.577 [main] INFO  com.github.istin.dmtools.job.JobRunner - Executing job: Test Agent in mode: STANDALONE with 0 integrations
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.5996692Z ==========================
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.5996915Z 
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.5997070Z Checking for output files...
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.6011547Z total 8
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.6011916Z drwxr-xr-x  2 runner runner 4096 Dec 12 06:53 .
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.6012424Z drwxr-xr-x 13 runner runner 4096 Dec 12 06:53 ..
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.6027376Z total 8
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.6027828Z drwxr-xr-x  2 runner runner 4096 Dec 12 06:53 .
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.6028391Z drwxr-xr-x 13 runner runner 4096 Dec 12 06:53 ..
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.6031304Z 
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.6031713Z Config file content:
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.6038982Z {
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.6039295Z   "name": "Test Agent",
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.6039656Z   "params": {
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.6039979Z     "agentParams": {
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.6040350Z       "aiRole": "Test Assistant",
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.6040727Z       "instructions": [
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.6041075Z         "This is a test agent",
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.6041468Z         "Just print hello world"
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.6041829Z       ],
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.6042136Z       "formattingRules": "Use markdown"
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.6042723Z     },
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.6043003Z     "cliCommands": [
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.6043356Z       "echo 'Hello from AI Teammate!'",
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.6043768Z       "mkdir -p outputs",
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.6044158Z       "echo '# Test Result' > outputs/response.md",
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.6044962Z       "echo 'Agent executed successfully' >> outputs/response.md"
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.6045436Z     ],
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.6045719Z     "outputType": "none",
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.6046081Z     "skipAIProcessing": true
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.6046438Z   }
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.6046735Z }
+cursor-agent	Run AI Teammate	2025-12-12T06:53:09.6056080Z ##[error]Process completed with exit code 1.
+cursor-agent	Upload artifacts	﻿2025-12-12T06:53:09.6126067Z ##[group]Run actions/upload-artifact@v4
+cursor-agent	Upload artifacts	2025-12-12T06:53:09.6126344Z with:
+cursor-agent	Upload artifacts	2025-12-12T06:53:09.6126539Z   name: ai-teammate-results-15
+cursor-agent	Upload artifacts	2025-12-12T06:53:09.6126797Z   path: outputs/
+cursor-agent	Upload artifacts	inputs/
+cursor-agent	Upload artifacts	
+cursor-agent	Upload artifacts	2025-12-12T06:53:09.6127014Z   retention-days: 30
+cursor-agent	Upload artifacts	2025-12-12T06:53:09.6127213Z   if-no-files-found: warn
+cursor-agent	Upload artifacts	2025-12-12T06:53:09.6127425Z   compression-level: 6
+cursor-agent	Upload artifacts	2025-12-12T06:53:09.6127633Z   overwrite: false
+cursor-agent	Upload artifacts	2025-12-12T06:53:09.6127827Z   include-hidden-files: false
+cursor-agent	Upload artifacts	2025-12-12T06:53:09.6128035Z env:
+cursor-agent	Upload artifacts	2025-12-12T06:53:09.6128296Z   JAVA_HOME: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/23.0.2-7/x64
+cursor-agent	Upload artifacts	2025-12-12T06:53:09.6128737Z   JAVA_HOME_23_X64: /opt/hostedtoolcache/Java_Temurin-Hotspot_jdk/23.0.2-7/x64
+cursor-agent	Upload artifacts	2025-12-12T06:53:09.6129073Z ##[endgroup]
+cursor-agent	Upload artifacts	2025-12-12T06:53:09.8265968Z Multiple search paths detected. Calculating the least common ancestor of all paths
+cursor-agent	Upload artifacts	2025-12-12T06:53:09.8269979Z The least common ancestor is /home/runner/work/autocoding/autocoding. This will be the root directory of the artifact
+cursor-agent	Upload artifacts	2025-12-12T06:53:09.8283533Z ##[warning]No files were found with the provided path: outputs/
+cursor-agent	Upload artifacts	inputs/. No artifacts will be uploaded.
+cursor-agent	Post Setup Java Environment	﻿2025-12-12T06:53:09.8384154Z Post job cleanup.
+cursor-agent	Post Checkout repository	﻿2025-12-12T06:53:10.0128827Z Post job cleanup.
+cursor-agent	Post Checkout repository	2025-12-12T06:53:10.1143212Z [command]/usr/bin/git version
+cursor-agent	Post Checkout repository	2025-12-12T06:53:10.1185083Z git version 2.52.0
+cursor-agent	Post Checkout repository	2025-12-12T06:53:10.1230330Z Temporarily overriding HOME='/home/runner/work/_temp/94f0ad18-6258-4fde-8ffa-24421e4b2024' before making global git config changes
+cursor-agent	Post Checkout repository	2025-12-12T06:53:10.1231945Z Adding repository directory to the temporary git global config as a safe directory
+cursor-agent	Post Checkout repository	2025-12-12T06:53:10.1237105Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/autocoding/autocoding
+cursor-agent	Post Checkout repository	2025-12-12T06:53:10.1275631Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+cursor-agent	Post Checkout repository	2025-12-12T06:53:10.1309989Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+cursor-agent	Post Checkout repository	2025-12-12T06:53:10.1560162Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+cursor-agent	Post Checkout repository	2025-12-12T06:53:10.1584638Z http.https://github.com/.extraheader
+cursor-agent	Post Checkout repository	2025-12-12T06:53:10.1598315Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+cursor-agent	Post Checkout repository	2025-12-12T06:53:10.1631465Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+cursor-agent	Post Checkout repository	2025-12-12T06:53:10.1872502Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+cursor-agent	Post Checkout repository	2025-12-12T06:53:10.1906589Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+cursor-agent	Complete job	﻿2025-12-12T06:53:10.2261529Z Cleaning up orphan processes

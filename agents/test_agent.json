@@ -16,6 +16,8 @@
         "echo 'Agent executed successfully' >> outputs/response.md"
       ],
       "outputType": "none",
-      "skipAIProcessing": true
+      "skipAIProcessing": true,
+      "inputJql": "key = TEST-NEVER-MATCHES-99999",
+      "ticketContextDepth": 0
     }
   }

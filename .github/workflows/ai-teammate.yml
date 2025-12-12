@@ -68,7 +68,7 @@ jobs:
 
       - name: Run AI Teammate
         env:
-          DEFAULT_LLM: "Cursor"
+          DEFAULT_LLM: "dial"
           CURSOR_DEFAULT_MODEL: "auto"
           CURSOR_API_KEY: ${{ secrets.CURSOR_API_KEY }}
           MODEL: "auto"

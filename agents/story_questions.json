@@ -28,7 +28,7 @@
     "ticketContextDepth" : 0,
     "attachResponseAsFile" : false,
     "skipAIProcessing" : true,
-    "inputJql" : "key = AP-2",
+    "inputJql" : "project = AP and key = AP-2",
     "initiator" : "712020:87eb1729-fc17-4029-97ee-3780fbdbe2e9",
     "preJSAction" : "agents/js/checkWipLabel.js",
     "postJSAction" : "agents/js/createQuestionsAndAssignForReview.js"

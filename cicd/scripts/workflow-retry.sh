@@ -625,32 +625,97 @@ apply_fixes() {
     
     log_debug "Fix prompt: ${prompt}"
     
-    # Build cursor-agent command
-    local cursor_cmd="./cicd/scripts/run-cursor-agent.sh"
-    if [ "${CURSOR_FORCE}" == "true" ]; then
-        cursor_cmd="${cursor_cmd} --force"
+    # Use absolute path to the script
+    local cursor_script="${SCRIPT_DIR}/run-cursor-agent.sh"
+    
+    # Check if script exists
+    if [ ! -f "${cursor_script}" ]; then
+        log_error "Cursor agent script not found: ${cursor_script}"
+        return 1
     fi
-    if [ -n "${CURSOR_MODEL}" ] && [ "${CURSOR_MODEL}" != "null" ]; then
-        cursor_cmd="${cursor_cmd} --model ${CURSOR_MODEL}"
+    
+    # Fix line endings if needed (convert CRLF to LF) and ensure executable
+    if command -v dos2unix >/dev/null 2>&1; then
+        dos2unix "${cursor_script}" >/dev/null 2>&1 || true
+    elif command -v sed >/dev/null 2>&1; then
+        # Remove carriage returns using sed
+        sed -i 's/\r$//' "${cursor_script}" 2>/dev/null || \
+        sed -i '' 's/\r$//' "${cursor_script}" 2>/dev/null || true
+    fi
+    
+    # Ensure script is executable
+    chmod +x "${cursor_script}" 2>/dev/null || true
+    
+    # Verify cursor-agent is available (the script will check too, but fail early here)
+    if ! command -v cursor-agent >/dev/null 2>&1; then
+        # Try to find it in common locations
+        local cursor_agent_path=""
+        local possible_paths=(
+            "$HOME/.local/bin/cursor-agent"
+            "$HOME/.cursor/bin/cursor-agent"
+            "/usr/local/bin/cursor-agent"
+        )
+        
+        for path in "${possible_paths[@]}"; do
+            if [ -f "${path}" ] && [ -x "${path}" ]; then
+                cursor_agent_path="${path}"
+                export PATH="$(dirname "${path}"):${PATH}"
+                log_info "Found cursor-agent at: ${path}, added to PATH"
+                break
+            fi
+        done
+        
+        if [ -z "${cursor_agent_path}" ]; then
+            log_error "cursor-agent not found in PATH"
+            log_error "Please install cursor-agent or add it to your PATH"
+            log_error "Installation: curl https://cursor.com/install -fsS | bash"
+            return 1
+        fi
+    fi
+    
+    # Build cursor-agent command arguments array
+    local cursor_args=()
+    if [ "${CURSOR_FORCE}" == "true" ]; then
+        cursor_args+=("--force")
+    fi
+    if [ -n "${CURSOR_MODEL}" ] && [ "${CURSOR_MODEL}" != "null" ] && [ "${CURSOR_MODEL}" != "auto" ]; then
+        cursor_args+=("--model" "${CURSOR_MODEL}")
     fi
     if [ -n "${CURSOR_ADDITIONAL_ARGS}" ] && [ "${CURSOR_ADDITIONAL_ARGS}" != "null" ]; then
-        cursor_cmd="${cursor_cmd} ${CURSOR_ADDITIONAL_ARGS}"
+        # Split additional args into array
+        while IFS= read -r arg; do
+            if [ -n "${arg}" ]; then
+                cursor_args+=("${arg}")
+            fi
+        done < <(echo "${CURSOR_ADDITIONAL_ARGS}" | tr ' ' '\n')
     fi
     
-    cursor_cmd="${cursor_cmd} \"${prompt}\""
+    # Add prompt as last argument
+    cursor_args+=("${prompt}")
     
-    log_debug "Executing: ${cursor_cmd}"
+    log_debug "Executing: ${cursor_script} ${cursor_args[*]}"
     
     cd "${PROJECT_ROOT}"
     
     local fix_output="${LOG_DIR}/fix_${run_number}.log"
-    if eval "${cursor_cmd}" > "${fix_output}" 2>&1; then
+    
+    # Execute the script with proper error handling
+    if bash "${cursor_script}" "${cursor_args[@]}" > "${fix_output}" 2>&1; then
         log_success "Fixes applied successfully"
         return 0
     else
         local exit_code=$?
         log_error "Failed to apply fixes (exit code: ${exit_code})"
         log_error "Fix output saved to: ${fix_output}"
+        
+        # Show last few lines of output for debugging
+        if [ -f "${fix_output}" ] && [ -s "${fix_output}" ]; then
+            log_error "Last 20 lines of fix output:"
+            tail -20 "${fix_output}" | while IFS= read -r line; do
+                log_error "  ${line}"
+            done
+        fi
+        
         return 1
     fi
 }

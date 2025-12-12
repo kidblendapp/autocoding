@@ -235,6 +235,8 @@ jobs:
         DMTOOLS_INTEGRATIONS: ${{ steps.env-prep.outputs.dmtools_integrations }}
 
         # AI Service Configuration
+        # Note: GEMINI_API_KEY may be required even when skipAIProcessing=true
+        # For test agents, we'll set it to empty string in the script if needed
         GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         GEMINI_DEFAULT_MODEL: ${{ vars.GEMINI_DEFAULT_MODEL }}
         PROMPT_CHUNK_TOKEN_LIMIT: ${{ vars.PROMPT_CHUNK_TOKEN_LIMIT }}
@@ -297,8 +299,10 @@ jobs:
           echo "Jira/Confluence env vars unset"
         fi
         
-        # Ensure outputs directory exists
+        # Ensure outputs directory exists and is writable
         mkdir -p outputs inputs
+        chmod 755 outputs inputs || true
+        echo "Created outputs and inputs directories"
         
         # For test_agent, remove inputJql field to prevent Jira queries
         if [[ "${{ steps.env-prep.outputs.is_test_agent }}" == "true" ]]; then
@@ -313,7 +317,22 @@ jobs:
             echo "⚠️ Failed to remove inputJql (may not exist or jq error)"
             rm -f "${CONFIG_FILE}.tmp"
           fi
+          
+          # Ensure GEMINI_API_KEY is set (even if empty) for test agent to prevent validation errors
+          # Some dmtools components may require this env var to be present
+          export GEMINI_API_KEY="${GEMINI_API_KEY:-}"
+          echo "GEMINI_API_KEY is set (may be empty for test agent)"
         fi
+        
+        # Validate config file JSON syntax before running
+        echo "Validating config file JSON syntax..."
+        if ! jq empty "${CONFIG_FILE}" 2>/dev/null; then
+          echo "❌ Config file has invalid JSON syntax"
+          echo "Config file content:"
+          cat "${CONFIG_FILE}"
+          exit 1
+        fi
+        echo "✅ Config file JSON is valid"
         
         # Debug: Show environment before running
         echo "=== Environment Debug ==="
@@ -326,17 +345,28 @@ jobs:
         # Run dmtools with improved error handling
         echo ""
         echo "=== Running dmtools ==="
-        # Run with explicit environment variable to ensure dmtools sees it
+        echo "Config file: ${CONFIG_FILE}"
+        echo "DMTOOLS_INTEGRATIONS: ${DMTOOLS_INTEGRATIONS}"
+        echo "GEMINI_API_KEY: ${GEMINI_API_KEY:+<set>}${GEMINI_API_KEY:-<not set>}"
+        
+        # Run with explicit environment variables to ensure dmtools sees them
+        # Capture both stdout and stderr, and also save exit code
         if [ -n "${ENCODED_CONFIG}" ]; then
           echo "Encoded config provided"
+          set +e  # Don't exit on error, we'll handle it manually
           env DMTOOLS_INTEGRATIONS="${DMTOOLS_INTEGRATIONS}" \
+              GEMINI_API_KEY="${GEMINI_API_KEY:-}" \
             dmtools run "${CONFIG_FILE}" "${ENCODED_CONFIG}" 2>&1 | tee /tmp/dmtools-output.log
           EXIT_CODE=${PIPESTATUS[0]}
+          set -e  # Re-enable exit on error
         else
           echo "No encoded config"
+          set +e  # Don't exit on error, we'll handle it manually
           env DMTOOLS_INTEGRATIONS="${DMTOOLS_INTEGRATIONS}" \
+              GEMINI_API_KEY="${GEMINI_API_KEY:-}" \
             dmtools run "${CONFIG_FILE}" 2>&1 | tee /tmp/dmtools-output.log
           EXIT_CODE=${PIPESTATUS[0]}
+          set -e  # Re-enable exit on error
         fi
         
         echo ""
@@ -353,15 +383,31 @@ jobs:
           echo ""
           echo "=== Additional Debug Info ==="
           echo "DMTOOLS_INTEGRATIONS value: '${DMTOOLS_INTEGRATIONS}'"
+          echo "GEMINI_API_KEY: ${GEMINI_API_KEY:+<set>}${GEMINI_API_KEY:-<not set>}"
           echo "Config file path: ${CONFIG_FILE}"
           echo "Config file exists: $([ -f "${CONFIG_FILE}" ] && echo 'yes' || echo 'no')"
           echo "Checking for output files..."
           ls -la outputs/ 2>/dev/null || echo "No outputs/ directory"
           ls -la inputs/ 2>/dev/null || echo "No inputs/ directory"
           echo ""
+          echo "Checking if cliCommands were executed..."
+          if [ -f "outputs/response.md" ]; then
+            echo "✅ outputs/response.md exists:"
+            cat outputs/response.md || echo "Could not read response.md"
+          else
+            echo "❌ outputs/response.md does not exist - cliCommands may not have executed"
+          fi
+          echo ""
           echo "Config file content:"
           cat "${CONFIG_FILE}" || echo "Could not read config file"
           echo "======================"
+          
+          # Try to get more verbose output if available
+          echo ""
+          echo "=== Checking dmtools help/version for clues ==="
+          dmtools --version 2>&1 || true
+          echo "=============================================="
+          
           exit $EXIT_CODE
         else
           echo "✅ dmtools completed successfully"

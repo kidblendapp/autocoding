@@ -27,9 +27,10 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Setup Java Environment
-        uses: ./.github/actions/setup-java-only
+        uses: actions/setup-java@v4
         with:
-          cache-key-suffix: '-cursor'
+          distribution: 'temurin'
+          java-version: '23'
 
       - name: Install Cursor CLI
         run: |

@@ -89,8 +89,9 @@ jobs:
           DMTOOLS_INTEGRATIONS: "jira,confluence,figma,ai,cli,file"
 
           # AI Service Configuration
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          DEFAULT_LLM: "gemini"
+          # Note: DEFAULT_LLM removed - dmtools will use cursor-agent via cliCommands in agent config
+          # GEMINI_API_KEY is optional when using cursor-agent via cliCommands
+          #GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
 
           # Figma Configuration
           FIGMA_TOKEN: ${{ secrets.FIGMA_TOKEN }}
@@ -103,6 +104,15 @@ jobs:
 
         run: |
           echo "Using configuration: ${{ inputs.config_file }}"
+          
+          # Note: dmtools may try to initialize AI components for internal use even when skipAIProcessing=true
+          # If GEMINI_API_KEY is not set, it will fall back to DIAL, which is fine
+          # The actual AI processing uses cursor-agent via cliCommands in the agent config
+          if [ -z "${GEMINI_API_KEY}" ]; then
+            echo "⚠️ GEMINI_API_KEY not set - dmtools will use DIAL for internal operations"
+            echo "⚠️ This is fine - cursor-agent will be used via cliCommands for actual AI processing"
+          fi
+          
           if [ -n "${ENCODED_CONFIG}" ]; then
             echo "Encoded config received (raw):"
             printf '%s\n' "${ENCODED_CONFIG}"

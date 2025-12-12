@@ -208,8 +208,11 @@ jobs:
 
     - name: Run AI Teammate
       env:
+        
+        DEFAULT_LLM: "Cursor"
+        CURSOR_DEFAULT_MODEL: "auto"
         CURSOR_API_KEY: ${{ secrets.CURSOR_API_KEY }}
-        MODEL: sonnet-4
+        MODEL: "auto"
         AGENT_DISABLE_WATCHDOG: "1"
         PATH: "/home/runner/.local/bin:/home/runner/.dmtools/bin:/bin:/usr/bin:$PATH"
         
@@ -237,13 +240,13 @@ jobs:
         # AI Service Configuration
         # Note: GEMINI_API_KEY may be required even when skipAIProcessing=true
         # For test agents, we'll set it to empty string in the script if needed
-        GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-        GEMINI_DEFAULT_MODEL: ${{ vars.GEMINI_DEFAULT_MODEL }}
-        PROMPT_CHUNK_TOKEN_LIMIT: ${{ vars.PROMPT_CHUNK_TOKEN_LIMIT }}
+        #GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        #GEMINI_DEFAULT_MODEL: ${{ vars.GEMINI_DEFAULT_MODEL }}
+        #PROMPT_CHUNK_TOKEN_LIMIT: ${{ vars.PROMPT_CHUNK_TOKEN_LIMIT }}
         
         # Figma Configuration
-        FIGMA_TOKEN: ${{ secrets.FIGMA_TOKEN }}
-        FIGMA_BASE_PATH: ${{ vars.FIGMA_BASE_PATH }}
+        #FIGMA_TOKEN: ${{ secrets.FIGMA_TOKEN }}
+        #FIGMA_BASE_PATH: ${{ vars.FIGMA_BASE_PATH }}
         
         # GitHub Authentication for PR creation
         PAT_TOKEN: ${{ secrets.PAT_TOKEN }}

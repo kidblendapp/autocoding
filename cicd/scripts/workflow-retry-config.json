@@ -5,7 +5,7 @@
     "encoded_config": ""
   },
   "maxRetries": 10,
-  "waitTimeout": 600,
+  "waitTimeout": 180,
   "pollInterval": 10,
   "fixStrategy": "auto",
   "commitMessage": "fix: Auto-fix workflow errors (run {runNumber}) - {errorSummary}",

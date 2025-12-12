@@ -17,10 +17,15 @@ This script automatically retries failed GitHub Actions workflows and uses curso
 1. **GitHub CLI** (`gh`) - [Installation guide](https://cli.github.com/manual/installation)
 2. **jq** - JSON processor - [Installation guide](https://stedolan.github.io/jq/download/)
 3. **cursor-agent** - Cursor AI CLI tool
+   - ⚠️ **Windows Note:** Cursor Agent CLI doesn't officially support Windows yet
+   - Use WSL for best results, or see [Windows workaround](https://github.com/TomasHubelbauer/cursor-agent-windows)
+   - Alternatively, use `--skip-fix` flag to skip cursor-agent requirement
 4. **Git** - For committing and pushing changes
 5. **Authenticated GitHub CLI** - Run `gh auth login` if not already authenticated
 
 ## Quick Start
+
+> **New to this script?** See [QUICKSTART.md](QUICKSTART.md) for detailed setup instructions and troubleshooting.
 
 1. **Copy the example configuration:**
    ```bash
@@ -46,7 +51,16 @@ This script automatically retries failed GitHub Actions workflows and uses curso
    
    # PowerShell (Windows)
    .\cicd\scripts\workflow-retry.ps1
+   
+   # Show help
+   ./cicd/scripts/workflow-retry.sh --help
    ```
+
+**Note:** If you don't see any output when running the script:
+- Make sure you're running it from a terminal (not double-clicking)
+- Check that you have the required prerequisites installed (see Prerequisites section)
+- The script will show clear error messages if prerequisites are missing
+- All output is also logged to `.workflow-retry-logs/workflow-retry_*.log`
 
 ## Configuration
 

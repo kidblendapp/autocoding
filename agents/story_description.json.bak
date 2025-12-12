@@ -1,0 +1,39 @@
+{
+  "name" : "Teammate",
+  "params" : {
+    "metadata" : {
+      "contextId" : "story_description"
+    },
+    "agentParams" : {
+      "aiRole" : "Experienced Business Analyst",
+      "instructions" : [
+        "https://kidblendapp.atlassian.net/wiki/spaces/AC/pages/786465/JIRA+Template+Story",
+        "./agents/instructions/common/response_output.md",
+        "./agents/instructions/common/no_development.md",
+        "./agents/instructions/common/error_handling.md",
+        "./agents/instructions/common/preserve_references.md",
+        "./agents/instructions/common/media_handling.md",
+        "./agents/instructions/common/jira_context.md",
+        "./agents/instructions/enhancement/no_ticket_reference.md",
+        "if subtasks contain answers to questions, you must include them as an input for the story description",
+        "**IMPORTANT** your role just write description of the story based on the confluence page template!"
+      ],
+      "knownInfo" : "",
+      "formattingRules" : "https://kidblendapp.atlassian.net/wiki/spaces/AC/pages/21921793/JIRA+Markdown+Formatting",
+      "fewShots" : ""
+    },
+    "cliCommands" : [
+      "./cicd/scripts/run-cursor-agent.sh \"**IMPORTANT** implementation details and development is not part of the task. Main request is in 'input' folder, read all files there and do what is requested following instructions from input. Request.md file contains json with all details. 'request' string there contain details of tickets from which was triggered the request.\""
+    ],
+    "outputType" : "field",
+    "fieldName" : "Description",
+    "operationType" : "Replace",
+    "ticketContextDepth" : 0,
+    "attachResponseAsFile" : false,
+    "skipAIProcessing" : true,
+    "inputJql" : "type = Story and assignee = 712020:87eb1729-fc17-4029-97ee-3780fbdbe2e9",
+    "initiator" : "712020:87eb1729-fc17-4029-97ee-3780fbdbe2e9",
+    "preJSAction" : "agents/js/checkWipLabel.js",
+    "postJSAction" : "agents/js/assignForReview.js"
+  }
+}

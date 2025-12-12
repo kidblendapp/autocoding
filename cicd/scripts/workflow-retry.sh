@@ -1,16 +1,68 @@
-#!/bin/bash
+ #!/bin/bash
 set -euo pipefail
 
 # Workflow Retry Script with AI-Powered Auto-Fix
 # This script runs a GitHub Actions workflow, monitors it, and uses cursor-agent
 # to automatically fix errors until the workflow succeeds or max retries is reached.
 
+# Show help if requested
+if [[ "${1:-}" == "--help" ]] || [[ "${1:-}" == "-h" ]]; then
+    cat <<EOF
+Workflow Retry Script with AI-Powered Auto-Fix
+
+Usage: $0 [config-file] [--skip-fix]
+
+Arguments:
+  config-file    Path to configuration JSON file (default: cicd/scripts/workflow-retry-config.json)
+  --skip-fix      Skip the AI fix generation step (manual fixes only)
+
+Examples:
+  $0                                    # Use default config
+  $0 /path/to/config.json              # Use custom config
+  $0 --skip-fix                        # Skip AI fixes (manual fixes only)
+  $0 --help                            # Show this help message
+
+Prerequisites:
+  - GitHub CLI (gh) installed and authenticated (run 'gh auth login')
+  - jq installed
+  - cursor-agent installed (optional if --skip-fix is used)
+  - Git configured
+
+Installing cursor-agent:
+  # Windows (unofficial workaround):
+  powershell -ExecutionPolicy Bypass -File cicd/scripts/install-cursor-agent-windows.ps1
+  
+  # Linux/macOS/WSL (official method):
+  curl https://cursor.com/install -fsS | bash
+  # Then ensure ~/.local/bin is in your PATH:
+  export PATH="\$HOME/.local/bin:\$PATH"
+
+For more information, see: cicd/scripts/README-workflow-retry.md
+EOF
+    exit 0
+fi
+
+# Get script directory early (needed for default config path)
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Check for --skip-fix flag
+SKIP_FIX_FLAG=false
+if [[ "${1:-}" == "--skip-fix" ]]; then
+    SKIP_FIX_FLAG=true
+    CONFIG_FILE="${2:-${SCRIPT_DIR}/workflow-retry-config.json}"
+elif [[ "${2:-}" == "--skip-fix" ]]; then
+    SKIP_FIX_FLAG=true
+    CONFIG_FILE="${1:-${SCRIPT_DIR}/workflow-retry-config.json}"
+else
+    CONFIG_FILE="${1:-${SCRIPT_DIR}/workflow-retry-config.json}"
+fi
 PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
-CONFIG_FILE="${1:-${SCRIPT_DIR}/workflow-retry-config.json}"
 LOG_DIR="${PROJECT_ROOT}/.workflow-retry-logs"
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 LOG_FILE="${LOG_DIR}/workflow-retry_${TIMESTAMP}.log"
+
+# Ensure log directory exists early
+mkdir -p "${LOG_DIR}" 2>/dev/null || true
 
 # Colors for output
 RED='\033[0;31m'
@@ -25,7 +77,10 @@ log() {
     shift
     local message="$*"
     local timestamp=$(date '+%Y-%m-%d %H:%M:%S')
-    echo -e "[${timestamp}] [${level}] ${message}" | tee -a "${LOG_FILE}"
+    local log_line="[${timestamp}] [${level}] ${message}"
+    # Output to stderr (so it doesn't interfere with command substitution) and append to log file
+    echo -e "${log_line}" >&2
+    echo -e "${log_line}" >> "${LOG_FILE}"
 }
 
 log_info() {
@@ -50,31 +105,190 @@ log_debug() {
     fi
 }
 
+# Install cursor-agent if missing
+install_cursor_agent() {
+    log_info "Attempting to install cursor-agent..."
+    
+    # Check if we're on Windows and have the Windows workaround script
+    if [[ "$OSTYPE" == "msys" ]] || [[ "$OSTYPE" == "win32" ]] || [[ -n "${WSL_DISTRO_NAME:-}" ]]; then
+        if [[ -z "${WSL_DISTRO_NAME:-}" ]]; then
+            # On Windows (not WSL), use Windows workaround script
+            local windows_script="${SCRIPT_DIR}/install-cursor-agent-windows.ps1"
+            if [ -f "${windows_script}" ]; then
+                log_info "Using Windows workaround installation script..."
+                log_warn "Please run manually: powershell -ExecutionPolicy Bypass -File ${windows_script}"
+                log_warn "Or use WSL to install the Linux version"
+                return 1
+            fi
+        fi
+    fi
+    
+    # For Linux/macOS, try official installer
+    log_info "Attempting to install via official installer..."
+    log_warn "On Windows, use: powershell -ExecutionPolicy Bypass -File cicd/scripts/install-cursor-agent-windows.ps1"
+    log_warn "On Linux/macOS, use: curl https://cursor.com/install -fsS | bash"
+    
+    # Fallback: Try direct installation with line ending fix
+    log_info "Installing cursor-agent (fixing line endings)..."
+    local temp_installer
+    temp_installer=$(mktemp /tmp/cursor-install-XXXXXX.sh 2>/dev/null || mktemp cursor-install-XXXXXX.sh)
+    
+    if curl -fsSL https://cursor.com/install -o "${temp_installer}" 2>/dev/null; then
+        # Fix line endings (remove \r)
+        if command -v sed >/dev/null 2>&1; then
+            sed -i 's/\r$//' "${temp_installer}" 2>/dev/null || \
+            sed -i '' 's/\r$//' "${temp_installer}" 2>/dev/null || true
+        fi
+        
+        chmod +x "${temp_installer}" 2>/dev/null || true
+        
+        if bash "${temp_installer}"; then
+            rm -f "${temp_installer}"
+            sleep 2
+            export PATH="$HOME/.local/bin:$HOME/.cursor/bin:${PATH}"
+            if command -v cursor-agent >/dev/null 2>&1; then
+                log_success "cursor-agent installed successfully"
+                return 0
+            fi
+        fi
+        rm -f "${temp_installer}"
+    fi
+    
+    log_warn "Could not install cursor-agent automatically"
+    if [[ "$OSTYPE" == "msys" ]] || [[ "$OSTYPE" == "win32" ]]; then
+        if [[ -z "${WSL_DISTRO_NAME:-}" ]]; then
+            log_warn "On Windows, try: powershell -ExecutionPolicy Bypass -File cicd/scripts/install-cursor-agent-windows.ps1"
+        else
+            log_warn "In WSL, try: curl https://cursor.com/install -fsS | bash"
+        fi
+    else
+        log_warn "Try: curl https://cursor.com/install -fsS | bash"
+    fi
+    return 1
+}
+
 # Check prerequisites
 check_prerequisites() {
     log_info "Checking prerequisites..."
     
     local missing=()
+    local errors=()
+    local warnings=()
     
+    # Check for required commands
     if ! command -v gh >/dev/null 2>&1; then
         missing+=("gh (GitHub CLI)")
+        errors+=("GitHub CLI (gh) is not installed. Install from: https://cli.github.com/manual/installation")
     fi
     
     if ! command -v jq >/dev/null 2>&1; then
         missing+=("jq")
+        errors+=("jq is not installed. Install from: https://stedolan.github.io/jq/download/")
     fi
     
-    if ! command -v cursor-agent >/dev/null 2>&1; then
-        missing+=("cursor-agent")
+    # Check for cursor-agent (required only if fix step is not skipped)
+    # Check both the command-line flag and config value (if config was already loaded)
+    local skip_fix_check=false
+    if [ "${SKIP_FIX_FLAG}" = "true" ]; then
+        skip_fix_check=true
+    elif [ -n "${SKIP_FIX:-}" ] && [ "${SKIP_FIX}" = "true" ]; then
+        skip_fix_check=true
     fi
     
-    if ! gh auth status >/dev/null 2>&1; then
-        log_error "GitHub CLI is not authenticated. Run 'gh auth login'"
-        exit 1
+    local cursor_agent_found=false
+    if command -v cursor-agent >/dev/null 2>&1; then
+        cursor_agent_found=true
+    else
+        # Check common installation locations
+        local possible_paths=(
+            "$HOME/.local/bin/cursor-agent"
+            "$HOME/.cursor/bin/cursor-agent"
+            "/usr/local/bin/cursor-agent"
+        )
+        
+        for path in "${possible_paths[@]}"; do
+            if [ -f "${path}" ] && [ -x "${path}" ]; then
+                log_info "Found cursor-agent at: ${path}, adding to PATH"
+                export PATH="$(dirname "${path}"):${PATH}"
+                cursor_agent_found=true
+                break
+            fi
+        done
     fi
     
+    if [ "${cursor_agent_found}" = false ]; then
+        # Check if fix step is skipped - if so, cursor-agent is optional
+        if [ "${skip_fix_check}" = "true" ]; then
+            log_warn "cursor-agent not found, but fix step is skipped - continuing without it"
+        else
+            missing+=("cursor-agent")
+            warnings+=("cursor-agent is not installed or not in PATH")
+            warnings+=("Installation options:")
+            if [[ "$OSTYPE" == "msys" ]] || [[ "$OSTYPE" == "win32" ]]; then
+                if [[ -z "${WSL_DISTRO_NAME:-}" ]]; then
+                    warnings+=("  Windows: powershell -ExecutionPolicy Bypass -File cicd/scripts/install-cursor-agent-windows.ps1")
+                    warnings+=("  Or use WSL: curl https://cursor.com/install -fsS | bash")
+                else
+                    warnings+=("  WSL: curl https://cursor.com/install -fsS | bash")
+                fi
+            else
+                warnings+=("  Linux/macOS: curl https://cursor.com/install -fsS | bash")
+            fi
+            warnings+=("  After installation, ensure ~/.local/bin is in your PATH")
+            warnings+=("  Or add 'skipSteps': ['fix'] to config, or use --skip-fix flag")
+        fi
+    fi
+    
+    # Check GitHub CLI authentication
+    if command -v gh >/dev/null 2>&1; then
+        if ! gh auth status >/dev/null 2>&1; then
+            errors+=("GitHub CLI is not authenticated. Run 'gh auth login' to authenticate")
+        fi
+    fi
+    
+    # Report all errors
     if [ ${#missing[@]} -gt 0 ]; then
         log_error "Missing required tools: ${missing[*]}"
+        for error in "${errors[@]}"; do
+            log_error "  - ${error}"
+        done
+        for warning in "${warnings[@]}"; do
+            log_warn "  - ${warning}"
+        done
+        echo ""
+        
+        # Offer to install cursor-agent if it's the only missing tool
+        if [ ${#missing[@]} -eq 1 ] && [[ "${missing[0]}" == *"cursor-agent"* ]]; then
+            log_info "Would you like to attempt automatic installation of cursor-agent? (y/n)"
+            read -t 10 -r response || response="n"
+            if [[ "${response}" =~ ^[Yy]$ ]]; then
+                if install_cursor_agent; then
+                    log_success "cursor-agent installed, continuing..."
+                    # Remove from missing list
+                    missing=()
+                else
+                    log_error "Automatic installation failed. Please install manually."
+                    log_error "For help, run: $0 --help"
+                    exit 1
+                fi
+            else
+                log_error "Please install missing tools and try again."
+                log_error "For help, run: $0 --help"
+                exit 1
+            fi
+        else
+            log_error "Please install missing tools and try again."
+            log_error "For help, run: $0 --help"
+            exit 1
+        fi
+    fi
+    
+    if [ ${#errors[@]} -gt 0 ]; then
+        for error in "${errors[@]}"; do
+            log_error "${error}"
+        done
+        echo ""
+        log_error "Please fix the issues above and try again."
         exit 1
     fi
     
@@ -87,6 +301,13 @@ load_config() {
     
     if [ ! -f "${CONFIG_FILE}" ]; then
         log_error "Configuration file not found: ${CONFIG_FILE}"
+        echo ""
+        log_error "To create a configuration file:"
+        log_error "  1. Copy the example: cp cicd/scripts/workflow-retry-config.example.json ${CONFIG_FILE}"
+        log_error "  2. Edit the configuration file with your workflow settings"
+        log_error "  3. Run the script again"
+        echo ""
+        log_error "For help, run: $0 --help"
         exit 1
     fi
     
@@ -106,10 +327,17 @@ load_config() {
     CURSOR_FORCE=$(jq -r '.cursorAgentOptions.force // true' "${CONFIG_FILE}")
     CURSOR_ADDITIONAL_ARGS=$(jq -r '.cursorAgentOptions.additionalArgs // [] | join(" ")' "${CONFIG_FILE}")
     
-    # Skip steps
-    SKIP_FIX=$(jq -r '.skipSteps // [] | contains(["fix"])' "${CONFIG_FILE}")
+    # Skip steps (command line flag overrides config)
+    if [ "${SKIP_FIX_FLAG}" = "true" ]; then
+        SKIP_FIX="true"
+    else
+        SKIP_FIX=$(jq -r '.skipSteps // [] | contains(["fix"])' "${CONFIG_FILE}")
+    fi
     SKIP_COMMIT=$(jq -r '.skipSteps // [] | contains(["commit"])' "${CONFIG_FILE}")
     SKIP_PUSH=$(jq -r '.skipSteps // [] | contains(["push"])' "${CONFIG_FILE}")
+    
+    # Export SKIP_FIX for prerequisite check
+    export SKIP_FIX
     
     if [ -z "${WORKFLOW}" ]; then
         log_error "Configuration must specify 'workflow'"
@@ -168,15 +396,27 @@ trigger_workflow() {
     # Wait a moment for the run to be created
     sleep 2
     
-    # Get the run ID
-    local run_id
-    run_id=$(gh run list --workflow="${WORKFLOW}" --limit 1 --json databaseId -q '.[0].databaseId' 2>/dev/null || echo "")
+    # Get the run ID - try multiple times as it may take a moment to appear
+    local run_id=""
+    local attempts=0
+    local max_attempts=5
+    
+    while [ $attempts -lt $max_attempts ] && [ -z "${run_id}" ]; do
+        sleep 1
+        run_id=$(gh run list --workflow="${WORKFLOW}" --limit 1 --json databaseId -q '.[0].databaseId' 2>/dev/null || echo "")
+        attempts=$((attempts + 1))
+    done
+    
+    # Clean run_id - ensure it's only numeric
+    run_id=$(echo "${run_id}" | tr -d '\n\r' | grep -oE '[0-9]+' | head -1)
     
     if [ -z "${run_id}" ]; then
-        log_error "Could not get run ID after triggering workflow"
+        log_error "Could not get run ID after triggering workflow (tried ${max_attempts} times)"
+        log_error "Try running manually: gh run list --workflow=${WORKFLOW} --limit 1"
         return 1
     fi
     
+    # Output only the run_id to stdout (for command substitution)
     echo "${run_id}"
 }
 
@@ -185,22 +425,44 @@ wait_for_workflow() {
     local run_id=$1
     local start_time=$(date +%s)
     local elapsed=0
+    local retry_count=0
+    local max_retries_before_error=3
+    
+    # Clean run_id - remove any non-numeric characters (in case log messages got captured)
+    run_id=$(echo "${run_id}" | tr -d '\n\r' | grep -oE '[0-9]+' | head -1)
+    
+    if [ -z "${run_id}" ]; then
+        log_error "Invalid run ID provided: ${1}"
+        echo "error/invalid_id"
+        return 1
+    fi
     
     log_info "Waiting for workflow run ${run_id} to complete..."
     
     while [ $elapsed -lt $WAIT_TIMEOUT ]; do
         local status
-        status=$(gh run view "${run_id}" --json status,conclusion -q '.status + "/" + (.conclusion // "none")' 2>/dev/null || echo "unknown/unknown")
+        local gh_output
+        gh_output=$(gh run view "${run_id}" --json status,conclusion -q '.status + "/" + (.conclusion // "none")' 2>&1)
+        local gh_exit_code=$?
         
-        log_debug "Workflow status: ${status}"
-        
-        if [[ "${status}" == *"/failure"* ]] || [[ "${status}" == *"/cancelled"* ]] || [[ "${status}" == *"/success"* ]]; then
-            echo "${status}"
-            return 0
-        fi
-        
-        if [[ "${status}" == "unknown"* ]]; then
-            log_warn "Could not get workflow status, retrying..."
+        if [ $gh_exit_code -eq 0 ] && [ -n "${gh_output}" ]; then
+            status="${gh_output}"
+            log_debug "Workflow status: ${status}"
+            
+            if [[ "${status}" == *"/failure"* ]] || [[ "${status}" == *"/cancelled"* ]] || [[ "${status}" == *"/success"* ]]; then
+                echo "${status}"
+                return 0
+            fi
+        else
+            retry_count=$((retry_count + 1))
+            if [ $retry_count -le $max_retries_before_error ]; then
+                log_warn "Could not get workflow status (attempt ${retry_count}/${max_retries_before_error}): ${gh_output}"
+            else
+                log_error "Failed to get workflow status after ${retry_count} attempts. Error: ${gh_output}"
+                log_error "Run ID: ${run_id}. Please verify the run exists: gh run view ${run_id}"
+                echo "error/status_check_failed"
+                return 1
+            fi
         fi
         
         sleep "${POLL_INTERVAL}"
@@ -221,11 +483,28 @@ extract_workflow_errors() {
     local run_id=$1
     local error_file="${LOG_DIR}/errors_${run_id}.txt"
     
-    log_info "Extracting workflow logs and errors..."
+    log_info "Extracting workflow logs and errors for run ${run_id}..."
+    
+    # Clean run_id
+    run_id=$(echo "${run_id}" | tr -d '\n\r' | grep -oE '[0-9]+' | head -1)
+    
+    if [ -z "${run_id}" ]; then
+        log_error "Invalid run ID provided to extract_workflow_errors: ${1}"
+        echo ""
+        return 1
+    fi
+    
+    # Verify the run exists
+    if ! gh run view "${run_id}" --json databaseId >/dev/null 2>&1; then
+        log_error "Run ${run_id} does not exist or is not accessible"
+        log_error "Please verify: gh run view ${run_id}"
+        echo ""
+        return 1
+    fi
     
     # Get failed job
     local job_id
-    job_id=$(gh run view "${run_id}" --json jobs -q '.[] | select(.conclusion == "failure") | .databaseId' | head -1)
+    job_id=$(gh run view "${run_id}" --json jobs -q '.[] | select(.conclusion == "failure") | .databaseId' 2>/dev/null | head -1)
     
     if [ -z "${job_id}" ]; then
         # Try to get any job
@@ -234,10 +513,15 @@ extract_workflow_errors() {
     
     if [ -z "${job_id}" ]; then
         log_warn "Could not get job ID, extracting from run logs"
-        gh run view "${run_id}" --log > "${error_file}" 2>&1 || true
+        if ! gh run view "${run_id}" --log > "${error_file}" 2>&1; then
+            log_warn "Failed to extract logs, trying alternative method"
+            echo "Failed to extract logs for run ${run_id}" > "${error_file}"
+        fi
     else
         log_debug "Extracting logs from job ${job_id}"
-        gh run view "${run_id}" --log > "${error_file}" 2>&1 || true
+        if ! gh run view "${run_id}" --log > "${error_file}" 2>&1; then
+            log_warn "Failed to extract logs for job ${job_id}"
+        fi
     fi
     
     # Also try to get a summary
@@ -249,15 +533,35 @@ extract_workflow_errors() {
         echo "Workflow: ${WORKFLOW}"
         echo ""
         echo "=== Status ==="
-        gh run view "${run_id}" --json status,conclusion,displayTitle,event -q '.[]' 2>/dev/null || echo "Could not get status"
+        local status_info
+        status_info=$(gh run view "${run_id}" --json status,conclusion,displayTitle,event 2>/dev/null)
+        if [ -n "${status_info}" ]; then
+            echo "${status_info}" | jq -r '.status + " / " + (.conclusion // "none") + " - " + (.displayTitle // "N/A")' 2>/dev/null || echo "${status_info}"
+        else
+            echo "Could not get status"
+        fi
         echo ""
-        echo "=== Failed Steps ==="
-        gh run view "${run_id}" --json jobs -q '.[] | select(.conclusion == "failure") | "Job: \(.name) - \(.conclusion)"' 2>/dev/null || echo "Could not get failed jobs"
+        echo "=== Failed Jobs ==="
+        local failed_jobs
+        failed_jobs=$(gh run view "${run_id}" --json jobs -q '.[] | select(.conclusion == "failure") | "Job: \(.name) - \(.conclusion)"' 2>/dev/null)
+        if [ -n "${failed_jobs}" ]; then
+            echo "${failed_jobs}"
+        else
+            echo "Could not get failed jobs or no failed jobs found"
+        fi
         echo ""
-        echo "=== Error Logs (last 100 lines) ==="
-        tail -100 "${error_file}" 2>/dev/null || echo "Could not read error logs"
-    } > "${summary_file}"
+        echo "=== All Jobs ==="
+        gh run view "${run_id}" --json jobs -q '.[] | "\(.name): \(.conclusion // "unknown")"' 2>/dev/null || echo "Could not get jobs"
+        echo ""
+        echo "=== Error Logs (last 200 lines) ==="
+        if [ -f "${error_file}" ] && [ -s "${error_file}" ]; then
+            tail -200 "${error_file}" 2>/dev/null || echo "Could not read error logs"
+        else
+            echo "No error logs available"
+        fi
+    } > "${summary_file}" 2>&1
     
+    log_info "Error summary saved to: ${summary_file}"
     echo "${summary_file}"
 }
 
@@ -442,11 +746,34 @@ push_changes() {
 main() {
     # Setup
     mkdir -p "${LOG_DIR}"
-    log_info "Starting workflow retry script"
-    log_info "Log file: ${LOG_FILE}"
     
-    check_prerequisites
+    # Initial banner
+    echo ""
+    echo "=========================================="
+    echo "  Workflow Retry Script"
+    echo "  AI-Powered Auto-Fix"
+    echo "=========================================="
+    echo ""
+    
+    log_info "Starting workflow retry script"
+    log_info "Configuration file: ${CONFIG_FILE}"
+    log_info "Log file: ${LOG_FILE}"
+    log_info "Working directory: ${PROJECT_ROOT}"
+    if [ "${SKIP_FIX_FLAG}" = "true" ]; then
+        log_info "Fix step will be skipped (--skip-fix flag)"
+    fi
+    echo ""
+    
+    # Verify we can write to log file
+    if ! touch "${LOG_FILE}" 2>/dev/null; then
+        log_error "Cannot write to log file: ${LOG_FILE}"
+        log_error "Please check permissions or specify a different location"
+        exit 1
+    fi
+    
+    # Load config first to get skipSteps, then check prerequisites
     load_config
+    check_prerequisites
     get_repo_info
     
     local run_number=1
@@ -462,16 +789,38 @@ main() {
             exit 1
         fi
         
+        # Clean run_id to ensure it's only numeric
+        run_id=$(echo "${run_id}" | tr -d '\n\r' | grep -oE '[0-9]+' | head -1)
+        
+        if [ -z "${run_id}" ]; then
+            log_error "Invalid run ID received from trigger_workflow"
+            exit 1
+        fi
+        
         last_run_id="${run_id}"
         log_info "Workflow run ID: ${run_id}"
         
         # Wait for completion
         local status_result
-        status_result=$(wait_for_workflow "${run_id}")
+        if ! status_result=$(wait_for_workflow "${run_id}"); then
+            log_error "Failed to get workflow status"
+            log_error "Run ID: ${run_id}"
+            log_error "Please check manually: gh run view ${run_id}"
+            exit 1
+        fi
+        
         local status=$(echo "${status_result}" | cut -d'/' -f1)
         local conclusion=$(echo "${status_result}" | cut -d'/' -f2)
         
         log_info "Workflow completed with status: ${status}, conclusion: ${conclusion}"
+        
+        # Handle error cases
+        if [ "${status}" == "error" ]; then
+            log_error "Error checking workflow status: ${conclusion}"
+            log_error "Run ID: ${run_id}"
+            log_error "Please check manually: gh run view ${run_id}"
+            exit 1
+        fi
         
         # Check if successful
         if [ "${conclusion}" == "success" ]; then

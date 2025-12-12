@@ -65,6 +65,12 @@ jobs:
         run: |
           dmtools || echo "dmtools version failed"
           cursor-agent --version || echo "cursor-agent version failed"
+  
+      - name: Make scripts executable
+        run: |
+          chmod +x cicd/scripts/*.sh
+          chmod +x agents/js/*.js || true
+          ls -la cicd/scripts/ || echo "Scripts directory not found"
 
       - name: Run AI Teammate
         env:

@@ -473,25 +473,49 @@ jobs:
           echo "⚠️ GEMINI_API_KEY not set, using dummy value for test agent"
         fi
         
+        # For test agents, ensure we have an empty inputs directory to prevent ticket processing
+        # dmtools may try to process tickets even when inputJql is removed
+        if [[ "${{ steps.env-prep.outputs.is_test_agent }}" == "true" ]]; then
+          mkdir -p inputs
+          # Remove any existing ticket files that might cause dmtools to try processing
+          rm -f inputs/*.json inputs/*.md inputs/*.txt 2>/dev/null || true
+          touch inputs/.gitkeep
+          echo "Ensured inputs directory is empty for test agent"
+        fi
+        
+        # Build environment variables for dmtools execution
+        # Ensure all required variables are explicitly passed and exported
+        export DMTOOLS_INTEGRATIONS="${DMTOOLS_INTEGRATIONS}"
+        export GEMINI_API_KEY="${GEMINI_API_KEY:-}"
+        export JAVA_OPTS="${JAVA_OPTS:-}"
+        export CI="${CI:-false}"
+        
+        # For test agents, explicitly set integrations to ensure they're recognized
+        if [[ "${{ steps.env-prep.outputs.is_test_agent }}" == "true" ]]; then
+          export DMTOOLS_INTEGRATIONS="cli,file"
+          echo "Explicitly setting DMTOOLS_INTEGRATIONS=cli,file for test agent"
+          echo "DMTOOLS_INTEGRATIONS is now: ${DMTOOLS_INTEGRATIONS}"
+        fi
+        
+        # Verify environment variables are set correctly
+        echo "=== Environment variables before dmtools execution ==="
+        echo "DMTOOLS_INTEGRATIONS: ${DMTOOLS_INTEGRATIONS}"
+        echo "GEMINI_API_KEY: ${GEMINI_API_KEY:+<set>}${GEMINI_API_KEY:-<not set>}"
+        echo "CI: ${CI}"
+        echo "JAVA_OPTS: ${JAVA_OPTS:-<not set>}"
+        echo "===================================================="
+        
         if [ -n "${ENCODED_CONFIG}" ]; then
           echo "Encoded config provided"
           # Run dmtools and capture all output
-          # Use explicit environment to ensure dmtools sees all required vars
-          env DMTOOLS_INTEGRATIONS="${DMTOOLS_INTEGRATIONS}" \
-              GEMINI_API_KEY="${GEMINI_API_KEY:-}" \
-              JAVA_OPTS="${JAVA_OPTS}" \
-              CI="${CI:-false}" \
-            dmtools run "${CONFIG_FILE}" "${ENCODED_CONFIG}" > /tmp/dmtools-output.log 2>&1
+          # Export all variables to ensure dmtools sees them
+          dmtools run "${CONFIG_FILE}" "${ENCODED_CONFIG}" > /tmp/dmtools-output.log 2>&1
           EXIT_CODE=$?
         else
           echo "No encoded config"
           # Run dmtools and capture all output
-          # Use explicit environment to ensure dmtools sees all required vars
-          env DMTOOLS_INTEGRATIONS="${DMTOOLS_INTEGRATIONS}" \
-              GEMINI_API_KEY="${GEMINI_API_KEY:-}" \
-              JAVA_OPTS="${JAVA_OPTS}" \
-              CI="${CI:-false}" \
-            dmtools run "${CONFIG_FILE}" > /tmp/dmtools-output.log 2>&1
+          # Export all variables to ensure dmtools sees them
+          dmtools run "${CONFIG_FILE}" > /tmp/dmtools-output.log 2>&1
           EXIT_CODE=$?
         fi
         
@@ -554,6 +578,31 @@ jobs:
           echo "❌ dmtools exited with code: $EXIT_CODE"
           echo ""
           
+          # Analyze dmtools output for specific error patterns
+          echo "=== Analyzing dmtools error ==="
+          
+          # Check for specific error messages that might indicate the issue
+          if grep -iE "exception|error|failed|cannot|unable" /tmp/dmtools-output.log 2>/dev/null | head -10; then
+            echo "Found error messages in output (see above)"
+          fi
+          
+          # Check if dmtools completed initialization
+          if grep -i "Initializing Teammate\|Created fresh job instance\|Injecting dependencies" /tmp/dmtools-output.log 2>/dev/null; then
+            echo "✅ dmtools initialized successfully"
+          else
+            echo "❌ dmtools failed during initialization"
+          fi
+          
+          # Check if cliCommands execution was attempted
+          if grep -i "executing.*command\|cli.*command\|running.*command" /tmp/dmtools-output.log 2>/dev/null; then
+            echo "✅ cliCommands execution was attempted"
+          else
+            echo "❌ No evidence of cliCommands execution attempt"
+          fi
+          
+          echo "================================="
+          echo ""
+          
           # For test agents, check if cliCommands were executed despite the error
           # Sometimes dmtools exits with error code even when cliCommands succeed
           if [[ "${{ steps.env-prep.outputs.is_test_agent }}" == "true" ]]; then
@@ -568,6 +617,9 @@ jobs:
               EXIT_CODE=0
             else
               echo "❌ outputs/response.md does not exist - cliCommands did not execute"
+              echo ""
+              echo "Checking for any output files:"
+              ls -la outputs/ 2>/dev/null || echo "No outputs directory"
             fi
             echo "====================================================="
             echo ""

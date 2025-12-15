@@ -112,8 +112,7 @@ jobs:
           # First, test with a simple query to verify connection works
           echo "Testing basic connection with: project = AP"
           TEST_QUERY="project = AP"
-          TEST_JSON=$(jq -n --arg jql "$TEST_QUERY" '{searchQueryJQL: $jql, fields: ["key"]}')
-          TEST_RESULT=$(echo "$TEST_JSON" | dmtools jira_search_by_jql 2>&1)
+          TEST_RESULT=$(dmtools jira_search_by_jql "$TEST_QUERY" "key" 2>&1)
           TEST_EXIT=$?
           
           if [ $TEST_EXIT -ne 0 ]; then
@@ -122,14 +121,13 @@ jobs:
             exit 1
           fi
           
-          TEST_COUNT=$(echo "$TEST_RESULT" | jq -r '.issues | length // 0' 2>/dev/null || echo "0")
+          TEST_COUNT=$(echo "$TEST_RESULT" | jq -r 'if type == "array" then length elif .issues then .issues | length else 0 end' 2>/dev/null || echo "0")
           echo "✅ Basic query successful. Found $TEST_COUNT ticket(s) in project AP"
           
-          # Now try the full query
+          # Now try the full query using positional arguments (more reliable)
           echo ""
           echo "🔍 Executing full JQL query..."
-          QUERY_JSON=$(jq -n --arg jql "$JQL_QUERY" '{searchQueryJQL: $jql, fields: ["key", "labels"]}')
-          TICKETS_JSON=$(echo "$QUERY_JSON" | dmtools jira_search_by_jql 2>&1)
+          TICKETS_JSON=$(dmtools jira_search_by_jql "$JQL_QUERY" "key,labels" 2>&1)
           EXIT_CODE=$?
           
           # Check if dmtools command failed
@@ -140,8 +138,16 @@ jobs:
             exit 1
           fi
           
-          # Debug: Show raw response (first 500 chars)
-          echo "Raw response preview: ${TICKETS_JSON:0:500}..."
+          # Validate JSON response
+          if ! echo "$TICKETS_JSON" | jq empty 2>/dev/null; then
+            echo "❌ Invalid JSON response from JIRA API"
+            echo "Response: ${TICKETS_JSON:0:1000}..."
+            exit 1
+          fi
+          
+          # Debug: Show raw response structure
+          echo "Response structure:"
+          echo "$TICKETS_JSON" | jq 'keys' 2>/dev/null || echo "Could not parse response keys"
           
           # Check if response contains an error
           if echo "$TICKETS_JSON" | jq -e '.error == true' > /dev/null 2>&1; then
@@ -152,7 +158,8 @@ jobs:
           fi
           
           # Extract ticket keys and labels from JSON response
-          TICKET_COUNT=$(echo "$TICKETS_JSON" | jq -r '.issues | length // 0' 2>/dev/null || echo "0")
+          # Handle both 'issues' array and direct array response formats
+          TICKET_COUNT=$(echo "$TICKETS_JSON" | jq -r 'if type == "array" then length elif .issues then .issues | length else 0 end' 2>/dev/null || echo "0")
           
           if [ "$TICKET_COUNT" = "0" ] || [ "$TICKET_COUNT" = "null" ]; then
             echo "ℹ️  No tickets found matching JQL: $JQL_QUERY"
@@ -174,6 +181,14 @@ jobs:
           # Process each ticket - use process substitution to avoid subshell issues
           # IMPORTANT: Each ticket is processed exactly once, even if it has multiple AI labels
           # The first matching label in priority order is selected and processed
+          # Handle both 'issues' array and direct array response formats
+          TICKETS_ARRAY=$(echo "$TICKETS_JSON" | jq -c 'if type == "array" then .[] elif .issues then .issues[] else empty end' 2>/dev/null)
+          
+          if [ -z "$TICKETS_ARRAY" ]; then
+            echo "⚠️  No tickets found or invalid response format"
+            exit 0
+          fi
+          
           while IFS= read -r TICKET_JSON; do
             TICKET_KEY=$(echo "$TICKET_JSON" | jq -r '.key')
             
@@ -255,7 +270,7 @@ jobs:
             
             # Small delay between triggers to avoid rate limiting
             sleep 2
-          done < <(echo "$TICKETS_JSON" | jq -c '.issues[]')
+          done < <(echo "$TICKETS_ARRAY")
           
           echo ""
           echo "Summary: Processed ${#PROCESSED_TICKETS[@]} unique ticket(s) in this run"

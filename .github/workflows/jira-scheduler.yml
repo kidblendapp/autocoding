@@ -98,7 +98,7 @@ jobs:
 
       - name: Fetch Jira tickets and trigger workflows
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.PAT_TOKEN }}
         run: |
           # Get list of tickets via JQL query
           # Search for tickets with any of the AI processing labels

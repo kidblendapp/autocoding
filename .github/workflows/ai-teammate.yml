@@ -122,9 +122,13 @@ jobs:
           fi
           
           if [ -n "${ENCODED_CONFIG}" ]; then
-            echo "Encoded config received (raw):"
-            printf '%s\n' "${ENCODED_CONFIG}"
-            dmtools run "${{ inputs.config_file }}" "${ENCODED_CONFIG}"
+            echo "Encoded config received (base64)"
+            # Decode base64 encoded config
+            DECODED_CONFIG=$(echo "${ENCODED_CONFIG}" | base64 -d)
+            echo "Decoded config preview (first 200 chars):"
+            echo "${DECODED_CONFIG}" | head -c 200
+            echo "..."
+            dmtools run "${{ inputs.config_file }}" "${DECODED_CONFIG}"
           else
             echo "No encoded config provided."
             dmtools run "${{ inputs.config_file }}"

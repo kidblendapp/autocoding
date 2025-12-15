@@ -252,8 +252,8 @@ jobs:
             jq --arg ticket "$TICKET_KEY" '.params.inputJql = "key = \($ticket)"' \
               "$SELECTED_CONFIG" > "$TEMP_CONFIG"
             
-            # Encode the config as compact JSON for encoded_config input
-            ENCODED_CONFIG=$(jq -c . "$TEMP_CONFIG")
+            # Encode the config as compact JSON, then base64 encode to avoid shell quote issues
+            ENCODED_CONFIG=$(jq -c . "$TEMP_CONFIG" | base64 -w 0)
             
             # Trigger the workflow with encoded config
             gh workflow run ai-teammate.yml \

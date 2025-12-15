@@ -16,7 +16,24 @@ function action(params) {
             : null;
         
         // Use common assignForReview function
-        return assignForReview(ticketKey, initiatorId, wipLabel);
+        const assignResult = assignForReview(ticketKey, initiatorId, wipLabel);
+        
+        if (!assignResult.success) {
+            return assignResult;
+        }
+        
+        // Remove AI_description label after successful processing
+        try {
+            jira_remove_label({
+                key: ticketKey,
+                label: 'AI_description'
+            });
+            console.log('Removed AI_description label from ' + ticketKey);
+        } catch (labelError) {
+            console.warn('Failed to remove AI_description label:', labelError);
+        }
+        
+        return assignResult;
         
     } catch (error) {
         console.error("❌ Error:", error);

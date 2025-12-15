@@ -22,7 +22,7 @@
     "skipAIProcessing" : true,
     "preJSAction" : "agents/js/checkWipLabel.js",
     "postJSAction" : "agents/js/developTicketAndCreatePR.js",
-    "inputJql" : "key in (JD-10)",
+    "inputJql" : "project = AP and type = Story and assignee = 712020:87eb1729-fc17-4029-97ee-3780fbdbe2e9 and labels = 'AI_development' and status != DONE",
     "initiator" : "712020:87eb1729-fc17-4029-97ee-3780fbdbe2e9"
   }
 }

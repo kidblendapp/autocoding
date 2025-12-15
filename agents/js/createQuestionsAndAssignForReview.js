@@ -85,6 +85,17 @@ function action(params) {
             return assignResult;
         }
         
+        // Remove AI_questions label after successful processing
+        try {
+            jira_remove_label({
+                key: ticketKey,
+                label: 'AI_questions'
+            });
+            console.log('Removed AI_questions label from ' + ticketKey);
+        } catch (labelError) {
+            console.warn('Failed to remove AI_questions label:', labelError);
+        }
+        
         return {
             success: true,
             message: `Ticket ${ticketKey} assigned, moved to In Review, created ${createdQuestionTickets.length} question subtasks`,

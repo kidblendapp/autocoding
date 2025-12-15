@@ -146,6 +146,17 @@ function action(params) {
             return assignResult;
         }
 
+        // Remove AI_solution label after successful processing
+        try {
+            jira_remove_label({
+                key: ticketKey,
+                label: 'AI_solution'
+            });
+            console.log('Removed AI_solution label from ' + ticketKey);
+        } catch (labelError) {
+            console.warn('Failed to remove AI_solution label:', labelError);
+        }
+
         const successCount = (updateResults.descriptionUpdated ? 1 : 0) +
                            (updateResults.diagramUpdated ? 1 : 0);
 

@@ -435,6 +435,17 @@ function action(params) {
             }
         }
 
+        // Remove AI_development label after successful processing
+        try {
+            jira_remove_label({
+                key: ticketKey,
+                label: 'AI_development'
+            });
+            console.log('Removed AI_development label from ' + ticketKey);
+        } catch (labelError) {
+            console.warn('Failed to remove AI_development label:', labelError);
+        }
+
         console.log('✅ Development workflow completed successfully');
 
         return {

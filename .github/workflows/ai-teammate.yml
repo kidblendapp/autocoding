@@ -123,12 +123,36 @@ jobs:
           
           if [ -n "${ENCODED_CONFIG}" ]; then
             echo "Encoded config received (base64)"
-            # Decode base64 encoded config
-            DECODED_CONFIG=$(echo "${ENCODED_CONFIG}" | base64 -d)
+            # Decode base64 encoded config to a temporary file to avoid shell quoting issues
+            TEMP_CONFIG=$(mktemp)
+            echo "${ENCODED_CONFIG}" | base64 -d > "${TEMP_CONFIG}"
             echo "Decoded config preview (first 200 chars):"
-            echo "${DECODED_CONFIG}" | head -c 200
+            head -c 200 "${TEMP_CONFIG}"
             echo "..."
-            dmtools run "${{ inputs.config_file }}" "${DECODED_CONFIG}"
+            # Validate JSON with jq to ensure it's properly formatted
+            if ! jq empty "${TEMP_CONFIG}" 2>/dev/null; then
+              echo "❌ Error: Decoded config is not valid JSON"
+              rm -f "${TEMP_CONFIG}"
+              exit 1
+            fi
+            # Use Python to safely read the file and pass it as an argument without shell expansion
+            # This avoids all shell quoting issues with special characters in JSON
+            python3 -c "
+import sys
+import subprocess
+import json
+
+config_file = '${{ inputs.config_file }}'
+with open('${TEMP_CONFIG}', 'r') as f:
+    config_content = f.read()
+
+# Validate JSON
+json.loads(config_content)
+
+# Execute dmtools with the config as argument
+subprocess.run(['dmtools', 'run', config_file, config_content], check=True)
+"
+            rm -f "${TEMP_CONFIG}"
           else
             echo "No encoded config provided."
             dmtools run "${{ inputs.config_file }}"

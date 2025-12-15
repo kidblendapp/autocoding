@@ -111,7 +111,8 @@ jobs:
           # First, test with a simple query to verify connection works
           echo "Testing basic connection with: project = AP"
           TEST_QUERY="project = AP"
-          TEST_RESULT=$(dmtools jira_search_by_jql "$TEST_QUERY" "key" 2>&1)
+          TEST_JSON=$(jq -n --arg jql "$TEST_QUERY" '{searchQueryJQL: $jql, fields: ["key"]}')
+          TEST_RESULT=$(echo "$TEST_JSON" | dmtools jira_search_by_jql 2>&1)
           TEST_EXIT=$?
           
           if [ $TEST_EXIT -ne 0 ]; then
@@ -126,7 +127,8 @@ jobs:
           # Now try the full query
           echo ""
           echo "🔍 Executing full JQL query..."
-          TICKETS_JSON=$(dmtools jira_search_by_jql "$JQL_QUERY" "key,labels" 2>&1)
+          QUERY_JSON=$(jq -n --arg jql "$JQL_QUERY" '{searchQueryJQL: $jql, fields: ["key", "labels"]}')
+          TICKETS_JSON=$(echo "$QUERY_JSON" | dmtools jira_search_by_jql 2>&1)
           EXIT_CODE=$?
           
           # Check if dmtools command failed

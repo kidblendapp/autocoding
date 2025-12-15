@@ -57,7 +57,7 @@ jobs:
           
           echo "✅ Environment variables are set"
           echo "  JIRA_BASE_PATH: $JIRA_BASE_PATH"
-          echo "  JIRA_EMAIL: $JIRA_EMAIL"
+          echo "  JIRA_EMAIL: [configured]"
           echo "  JIRA_AUTH_TYPE: ${JIRA_AUTH_TYPE:-basic}"
           
           # Test JIRA connection by getting user profile
@@ -91,6 +91,7 @@ jobs:
           echo "✅ JIRA connection successful!"
           echo "  Authenticated as: ${USER_NAME:-$USER_EMAIL}"
           if [ -n "$USER_EMAIL" ]; then
+            # Display email but note it may be masked by GitHub Actions if it matches a secret
             echo "  Email: $USER_EMAIL"
           fi
           echo "  JIRA Base URL: $JIRA_BASE_PATH"
@@ -101,16 +102,64 @@ jobs:
         run: |
           # Get list of tickets via JQL query
           # Search for tickets with any of the AI processing labels
-          JQL_QUERY='project = AP AND type = Story'
+          # Note: In JQL, labels should be in quotes if they contain special characters
+          JQL_QUERY="project = AP AND type = Story AND labels in (AI_questions, AI_description, AI_solution, AI_development) AND status != DONE"
           
-          # Use dmtools to get tickets with labels field included
-          TICKETS_JSON=$(dmtools jira_search_by_jql "$JQL_QUERY" "key,labels")
+          echo "🔍 Searching JIRA with JQL: $JQL_QUERY"
+          echo "📋 Testing JQL query syntax..."
+          
+          # First, test with a simple query to verify connection works
+          echo "Testing basic connection with: project = AP"
+          TEST_QUERY="project = AP"
+          TEST_RESULT=$(dmtools jira_search_by_jql "$TEST_QUERY" "key" 2>&1)
+          TEST_EXIT=$?
+          
+          if [ $TEST_EXIT -ne 0 ]; then
+            echo "❌ Basic JQL query failed. This indicates a connection or authentication issue."
+            echo "Test query output: $TEST_RESULT"
+            exit 1
+          fi
+          
+          TEST_COUNT=$(echo "$TEST_RESULT" | jq -r '.issues | length // 0' 2>/dev/null || echo "0")
+          echo "✅ Basic query successful. Found $TEST_COUNT ticket(s) in project AP"
+          
+          # Now try the full query
+          echo ""
+          echo "🔍 Executing full JQL query..."
+          TICKETS_JSON=$(dmtools jira_search_by_jql "$JQL_QUERY" "key,labels" 2>&1)
+          EXIT_CODE=$?
+          
+          # Check if dmtools command failed
+          if [ $EXIT_CODE -ne 0 ]; then
+            echo "❌ Error executing JQL query"
+            echo "Exit code: $EXIT_CODE"
+            echo "Command output: $TICKETS_JSON"
+            exit 1
+          fi
+          
+          # Debug: Show raw response (first 500 chars)
+          echo "Raw response preview: ${TICKETS_JSON:0:500}..."
+          
+          # Check if response contains an error
+          if echo "$TICKETS_JSON" | jq -e '.error == true' > /dev/null 2>&1; then
+            ERROR_MSG=$(echo "$TICKETS_JSON" | jq -r '.message // "Unknown error"')
+            echo "❌ JIRA API returned an error: $ERROR_MSG"
+            echo "Full response: $TICKETS_JSON"
+            exit 1
+          fi
           
           # Extract ticket keys and labels from JSON response
-          TICKET_COUNT=$(echo "$TICKETS_JSON" | jq -r '.issues | length')
+          TICKET_COUNT=$(echo "$TICKETS_JSON" | jq -r '.issues | length // 0' 2>/dev/null || echo "0")
           
-          if [ "$TICKET_COUNT" -eq 0 ] || [ "$TICKET_COUNT" = "null" ]; then
-            echo "No tickets found matching JQL: $JQL_QUERY"
+          if [ "$TICKET_COUNT" = "0" ] || [ "$TICKET_COUNT" = "null" ]; then
+            echo "ℹ️  No tickets found matching JQL: $JQL_QUERY"
+            echo "This is normal if there are no tickets with the required labels."
+            echo ""
+            echo "💡 Troubleshooting tips:"
+            echo "  1. Verify tickets exist with labels: AI_questions, AI_description, AI_solution, or AI_development"
+            echo "  2. Check that tickets are not in DONE status"
+            echo "  3. Verify project key 'AP' is correct"
+            echo "  4. Check that issue type 'Story' is correct"
             exit 0
           fi
           

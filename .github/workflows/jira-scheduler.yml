@@ -40,7 +40,7 @@ jobs:
         run: |
           # Get list of tickets via JQL query
           # Search for tickets with any of the AI processing labels
-          JQL_QUERY='project = AP AND type = Story AND labels in (AI_questions, AI_description, AI_solution, AI_development) AND status != DONE'
+          JQL_QUERY='project = AP AND type = Story'
           
           # Use dmtools to get tickets with labels field included
           TICKETS_JSON=$(dmtools jira_search_by_jql "$JQL_QUERY" "key,labels")

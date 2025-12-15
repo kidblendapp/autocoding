@@ -13,6 +13,12 @@ permissions:
 jobs:
   fetch-and-trigger:
     runs-on: ubuntu-latest
+    env:
+      JIRA_EMAIL: ${{ secrets.JIRA_EMAIL }}
+      JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
+      JIRA_BASE_PATH: ${{ vars.JIRA_BASE_PATH }}
+      JIRA_AUTH_TYPE: ${{ vars.JIRA_AUTH_TYPE }}
+      DMTOOLS_INTEGRATIONS: "jira"
     
     steps:
       - name: Checkout repository
@@ -29,13 +35,68 @@ jobs:
           curl -fsSL https://github.com/IstiN/dmtools/releases/latest/download/install.sh | bash
           echo "$HOME/.dmtools/bin" >> $GITHUB_PATH
 
+      - name: Verify JIRA connection
+        run: |
+          echo "🔍 Testing JIRA connection and authentication..."
+          
+          # Check required environment variables
+          if [ -z "$JIRA_BASE_PATH" ]; then
+            echo "❌ Error: JIRA_BASE_PATH is not set"
+            exit 1
+          fi
+          
+          if [ -z "$JIRA_EMAIL" ]; then
+            echo "❌ Error: JIRA_EMAIL is not set"
+            exit 1
+          fi
+          
+          if [ -z "$JIRA_API_TOKEN" ]; then
+            echo "❌ Error: JIRA_API_TOKEN is not set"
+            exit 1
+          fi
+          
+          echo "✅ Environment variables are set"
+          echo "  JIRA_BASE_PATH: $JIRA_BASE_PATH"
+          echo "  JIRA_EMAIL: $JIRA_EMAIL"
+          echo "  JIRA_AUTH_TYPE: ${JIRA_AUTH_TYPE:-basic}"
+          
+          # Test JIRA connection by getting user profile
+          echo "🔗 Attempting to connect to JIRA..."
+          PROFILE_RESULT=$(dmtools jira_get_my_profile 2>&1)
+          EXIT_CODE=$?
+          
+          if [ $EXIT_CODE -ne 0 ]; then
+            echo "❌ Failed to connect to JIRA"
+            echo "Error output: $PROFILE_RESULT"
+            exit 1
+          fi
+          
+          # Check if response contains error
+          if echo "$PROFILE_RESULT" | jq -e '.error == true' > /dev/null 2>&1; then
+            ERROR_MSG=$(echo "$PROFILE_RESULT" | jq -r '.message // "Unknown error"')
+            echo "❌ JIRA API returned an error: $ERROR_MSG"
+            exit 1
+          fi
+          
+          # Verify we got a valid profile response
+          USER_EMAIL=$(echo "$PROFILE_RESULT" | jq -r '.emailAddress // empty')
+          USER_NAME=$(echo "$PROFILE_RESULT" | jq -r '.displayName // empty')
+          
+          if [ -z "$USER_EMAIL" ] && [ -z "$USER_NAME" ]; then
+            echo "❌ Invalid response from JIRA API"
+            echo "Response: $PROFILE_RESULT"
+            exit 1
+          fi
+          
+          echo "✅ JIRA connection successful!"
+          echo "  Authenticated as: ${USER_NAME:-$USER_EMAIL}"
+          if [ -n "$USER_EMAIL" ]; then
+            echo "  Email: $USER_EMAIL"
+          fi
+          echo "  JIRA Base URL: $JIRA_BASE_PATH"
+
       - name: Fetch Jira tickets and trigger workflows
         env:
-          JIRA_EMAIL: ${{ secrets.JIRA_EMAIL }}
-          JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
-          JIRA_BASE_PATH: ${{ vars.JIRA_BASE_PATH }}
-          JIRA_AUTH_TYPE: ${{ vars.JIRA_AUTH_TYPE }}
-          DMTOOLS_INTEGRATIONS: "jira"
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           # Get list of tickets via JQL query

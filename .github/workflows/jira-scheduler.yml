@@ -103,14 +103,15 @@ jobs:
           # Get list of tickets via JQL query
           # Search for tickets with any of the AI processing labels
           # Note: In JQL, labels should be in quotes if they contain special characters
-          JQL_QUERY="pproject = Autoplanning AND type = Story AND labels in (AI_questions, AI_description, AI_solution, AI_development) AND status != DONE"
+          # Note: JQL requires project KEY (AP), not project NAME (Autoplanning)
+          JQL_QUERY="project = AP AND type = Story AND labels in (AI_questions, AI_description, AI_solution, AI_development) AND status != DONE"
           
           echo "🔍 Searching JIRA with JQL: $JQL_QUERY"
           echo "📋 Testing JQL query syntax..."
           
           # First, test with a simple query to verify connection works
-          echo "Testing basic connection with: project = Autoplanning"
-          TEST_QUERY="project = Autoplanning"
+          echo "Testing basic connection with: project = AP"
+          TEST_QUERY="project = AP"
           TEST_JSON=$(jq -n --arg jql "$TEST_QUERY" '{searchQueryJQL: $jql, fields: ["key"]}')
           TEST_RESULT=$(echo "$TEST_JSON" | dmtools jira_search_by_jql 2>&1)
           TEST_EXIT=$?
@@ -122,7 +123,7 @@ jobs:
           fi
           
           TEST_COUNT=$(echo "$TEST_RESULT" | jq -r '.issues | length // 0' 2>/dev/null || echo "0")
-          echo "✅ Basic query successful. Found $TEST_COUNT ticket(s) in project Autoplanning"
+          echo "✅ Basic query successful. Found $TEST_COUNT ticket(s) in project AP"
           
           # Now try the full query
           echo ""
@@ -160,7 +161,7 @@ jobs:
             echo "💡 Troubleshooting tips:"
             echo "  1. Verify tickets exist with labels: AI_questions, AI_description, AI_solution, or AI_development"
             echo "  2. Check that tickets are not in DONE status"
-            echo "  3. Verify project 'Autoplanning' is correct"
+            echo "  3. Verify project key 'AP' is correct"
             echo "  4. Check that issue type 'Story' is correct"
             exit 0
           fi

@@ -3,7 +3,7 @@ name: Jira Ticket Scheduler
 on:
   schedule:
     # Запускается каждые 5 минут
-    - cron: '*/5 * * * *'
+    - cron: '*/2 * * * *'
   workflow_dispatch:  # Для ручного запуска
 
 permissions:

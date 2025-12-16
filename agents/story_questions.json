@@ -11,11 +11,14 @@
         "Content from the response.md file will be parsed via JSON Parser, it must be valid JSONArray. Based on that will be created jira tickets by script. You must follow format from formattingRules and fewShots.",
         "Allowed priorities 'Highest', 'High', 'Medium', 'Low', 'Lowest'",
         "If you don't have questions, or all needed questions are created already and everything is crystal clear just write empty array [] to the outputs/response.md",
-        "**CRITICAL** Child tickets (subtasks) are automatically included in the input context when ticketContextDepth is set to 1. You MUST check the input folder for files related to child tickets. Look for files with names containing the parent ticket key followed by child ticket keys.",
-        "**CRITICAL** Review ALL child tickets found in the input folder. Extract information from:",
+        "**CRITICAL** Child tickets (subtasks) and blocking issues are automatically included in the input context. You MUST check the input folder for files related to:",
+        "* Child tickets (subtasks) - files with names containing the parent ticket key followed by child ticket keys (e.g., AP-2-1, AP-2-2)",
+        "* Blocking issues - files with ticket keys of issues that block the current ticket (via 'is blocked by' link)",
+        "**CRITICAL** Review ALL related tickets found in the input folder. Extract information from:",
         "* Answered questions - if a question subtask has an answer or is marked as Done, that question has been answered and should NOT be generated again",
         "* Solution design details - use information from solution design subtasks to avoid asking questions that are already addressed",
-        "* Any other subtask information that provides context",
+        "* Blocking issue descriptions - use information from blocking issues to understand dependencies and constraints",
+        "* Any other related ticket information that provides context",
         "**CRITICAL** If you find child tickets with answers or completed status in the input folder, you MUST check them before generating new questions. Do not generate questions that have already been answered in child tickets.",
         "You must investigate codebase to understand current functionality regarding the topic to avoid stupid questions.",
         "if you can't read file yourself for instance images you must use the terminal (CLI) command \"dmtools gemini_ai_chat_with_files --data '{\"message\": \"Your request what you need to understand from file\", \"filePaths\": [\"/path/to/image.png\"]}'",
@@ -28,7 +31,7 @@
       "fewShots" : "[\n  {\n    \"summary\": \"Clarify requirements\",\n    \"priority\": \"High\",\n    \"description\": \"Follow template from instructions.\"\n  },\n  {\n    \"summary\": \"Validate dependencies\",\n    \"priority\": \"Medium\",\n    \"description\": \"Follow template from instructions.\"\n  }\n]"
     },
     "cliCommands" : [
-       "./cicd/scripts/run-cursor-agent.sh \"**Important** Your Task is to generate outputs/response.md file with questions according to instructions from user which are in input folder. User request is in 'input' folder, read all files there and do what is requested. **CRITICAL** Check for child ticket files in the input folder (files with ticket keys like AP-2-1, AP-2-2, etc.) and review their content, especially answers, before generating new questions.\""
+       "./cicd/scripts/run-cursor-agent.sh \"**Important** Your Task is to generate outputs/response.md file with questions according to instructions from user which are in input folder. User request is in 'input' folder, read all files there and do what is requested. **CRITICAL** Check for child ticket files and blocking issue files in the input folder (files with ticket keys like AP-2-1, AP-2-2, etc.) and review their content, especially answers and descriptions, before generating new questions.\""
    ],
     "outputType" : "none",
     "ticketContextDepth" : 1,

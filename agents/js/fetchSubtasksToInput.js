@@ -1,7 +1,8 @@
 /**
- * Fetch Subtasks to Input Folder Pre-Action
- * Fetches all child tickets (subtasks) and writes them to the input folder
- * before AI processing begins. This ensures subtasks are always available
+ * Fetch Subtasks and Blocking Issues to Input Folder Pre-Action
+ * Fetches all child tickets (subtasks) and blocking issues (via "is blocked by" links)
+ * and writes them to the input folder before AI processing begins.
+ * This ensures subtasks and blocking issues are always available
  * even if ticketContextDepth doesn't work as expected.
  * 
  * Also checks for WIP label and stops processing if found.
@@ -117,7 +118,7 @@ function action(params) {
         }
         
         const parentKey = ticket.key;
-        console.log('Fetching subtasks for parent ticket: ' + parentKey);
+        console.log('Fetching subtasks and blocking issues for ticket: ' + parentKey);
         
         // Search for all subtasks using JQL
         let subtasks = [];
@@ -138,20 +139,82 @@ function action(params) {
             // Continue processing even if subtask fetch fails
         }
         
-        if (subtasks.length === 0) {
-            console.log('No subtasks found for ' + parentKey);
+        // Fetch blocking issues (issues that this ticket is blocked by)
+        let blockingIssueKeys = [];
+        try {
+            // Get full ticket with issue links to find blocking issues
+            const fullTicket = jira_get_ticket({
+                key: parentKey,
+                fields: ['issuelinks']
+            });
+            
+            if (fullTicket && fullTicket.fields && fullTicket.fields.issuelinks) {
+                const issueLinks = fullTicket.fields.issuelinks || [];
+                
+                // Find "is blocked by" links (inward links)
+                // In Jira API: if link has inwardIssue and type.inward = "is blocked by", 
+                // then the current ticket is blocked by inwardIssue
+                issueLinks.forEach(function(link) {
+                    if (link.inwardIssue && link.type && link.type.inward) {
+                        // Check if this is an "is blocked by" relationship
+                        if (link.type.inward.toLowerCase().includes('blocked by') || 
+                            link.type.inward === 'is blocked by') {
+                            blockingIssueKeys.push(link.inwardIssue.key);
+                        }
+                    }
+                });
+                
+                if (blockingIssueKeys.length > 0) {
+                    console.log('Found ' + blockingIssueKeys.length + ' blocking issue key(s): ' + blockingIssueKeys.join(', '));
+                }
+            }
+        } catch (error) {
+            console.warn('Failed to fetch blocking issue links:', error);
+            // Continue processing even if blocking issue fetch fails
+        }
+        
+        // Fetch full details of blocking issues
+        let blockingIssues = [];
+        if (blockingIssueKeys.length > 0) {
+            try {
+                const blockingKeys = blockingIssueKeys.join(', ');
+                const blockingSearchResult = jira_search_by_jql({
+                    jql: 'key IN (' + blockingKeys + ')',
+                    fields: ['key', 'summary', 'description', 'status', 'labels', 'Diagrams', 'comment']
+                });
+                
+                if (blockingSearchResult && blockingSearchResult.issues) {
+                    blockingIssues = blockingSearchResult.issues;
+                } else if (blockingSearchResult && Array.isArray(blockingSearchResult)) {
+                    blockingIssues = blockingSearchResult;
+                }
+                
+                if (blockingIssues.length > 0) {
+                    console.log('Successfully fetched ' + blockingIssues.length + ' blocking issue(s)');
+                }
+            } catch (error) {
+                console.warn('Failed to fetch blocking issue details:', error);
+                // Continue processing even if blocking issue fetch fails
+            }
+        }
+        
+        // Combine subtasks and blocking issues
+        const allRelatedIssues = subtasks.concat(blockingIssues);
+        
+        if (allRelatedIssues.length === 0) {
+            console.log('No subtasks or blocking issues found for ' + parentKey);
             return true; // Continue processing
         }
         
-        console.log('Found ' + subtasks.length + ' subtask(s) for ' + parentKey);
+        console.log('Found ' + subtasks.length + ' subtask(s) and ' + blockingIssues.length + ' blocking issue(s) for ' + parentKey);
         
-        // Write each subtask to input folder
+        // Write each related issue to input folder
         let writtenCount = 0;
-        subtasks.forEach(function(subtask) {
+        allRelatedIssues.forEach(function(relatedIssue) {
             try {
-                const subtaskKey = subtask.key;
-                const filename = 'input/' + subtaskKey + '.md';
-                const content = formatTicketAsMarkdown(subtask);
+                const issueKey = relatedIssue.key;
+                const filename = 'input/' + issueKey + '.md';
+                const content = formatTicketAsMarkdown(relatedIssue);
                 
                 if (content) {
                     file_write({
@@ -159,16 +222,17 @@ function action(params) {
                         content: content
                     });
                     writtenCount++;
-                    console.log('✅ Written subtask ' + subtaskKey + ' to ' + filename);
+                    const issueType = subtasks.some(function(st) { return st.key === issueKey; }) ? 'subtask' : 'blocking issue';
+                    console.log('✅ Written ' + issueType + ' ' + issueKey + ' to ' + filename);
                 } else {
-                    console.warn('Skipping subtask ' + subtaskKey + ' - no content to write');
+                    console.warn('Skipping ' + issueKey + ' - no content to write');
                 }
             } catch (writeError) {
-                console.error('Failed to write subtask ' + subtask.key + ':', writeError);
+                console.error('Failed to write ' + relatedIssue.key + ':', writeError);
             }
         });
         
-        console.log('Successfully wrote ' + writtenCount + ' subtask(s) to input folder');
+        console.log('Successfully wrote ' + writtenCount + ' related issue(s) to input folder');
         return true; // Continue processing
         
     } catch (error) {

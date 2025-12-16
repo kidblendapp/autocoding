@@ -14,12 +14,15 @@
         "**IMPORTANT** if current description looks fully correct look any mentions of tagging account like [~accountid:712020:39ae9870-8a56-44be-945e-a8ad26273932], which means user asked extra improvements. That can be in comments or in the texts.",
         "if you can't read file yourself for instance images you must use the terminal (CLI) command \"dmtools gemini_ai_chat_with_files --data '{\"message\": \"Your request what you need to understand from file\", \"filePaths\": [\"/path/to/image.png\"]}'",
         "Use the terminal (cli) command to get png file of figma designs and then read it via gemini_ai_chat_with_files: dmtools figma_download_image_of_file <<EOF\n{\n  \"href\": \"https://www.figma.com/design/asdsadasdasdasd/Business-App?m=auto&node-id=NODEID&t=ASdasdsadas-1\"\n}\nEOF",
-        "**CRITICAL** Child tickets (subtasks) are automatically included in the input context when ticketContextDepth is set to 1. You MUST check the input folder for files related to child tickets. Look for files with names containing the parent ticket key followed by child ticket keys (e.g., if parent is AP-2, look for AP-2-1, AP-2-2, etc.).",
-        "**CRITICAL** Review ALL child tickets found in the input folder. Extract and incorporate information from:",
+        "**CRITICAL** Child tickets (subtasks) and blocking issues are automatically included in the input context. You MUST check the input folder for files related to:",
+        "* Child tickets (subtasks) - files with names containing the parent ticket key followed by child ticket keys (e.g., if parent is AP-2, look for AP-2-1, AP-2-2, etc.)",
+        "* Blocking issues - files with ticket keys of issues that block the current ticket (via 'is blocked by' link)",
+        "**CRITICAL** Review ALL related tickets found in the input folder. Extract and incorporate information from:",
         "* Answered questions from question subtasks - use the answers to clarify requirements",
         "* Solution design details from solution design subtasks - incorporate technical details",
-        "* Any other subtask information that provides context",
-        "**CRITICAL** If you find child tickets in the input folder, you MUST explicitly reference and use their content in the enhanced description. Do not ignore child ticket information.",
+        "* Blocking issue descriptions - use information from blocking issues to understand dependencies and constraints",
+        "* Any other related ticket information that provides context",
+        "**CRITICAL** If you find child tickets or blocking issues in the input folder, you MUST explicitly reference and use their content in the enhanced description. Do not ignore related ticket information.",
         "If child tickets are not found in the input folder but should exist, use the terminal (cli) command to fetch them: dmtools jira_search_by_jql <<EOF\n{\n  \"jql\": \"parent = TICKET-XXX\"\n}\nEOF"
       ],
       "knownInfo" : "",
@@ -27,7 +30,7 @@
       "fewShots" : ""
     },
     "cliCommands" : [
-      "./cicd/scripts/run-cursor-agent.sh \"**IMPORTANT** implementation details and development is not part of the task. Main request is in 'input' folder, read all files there and do what is requested following instructions from input. Request.md file contains json with all details. 'request' string there contain details of tickets from which was triggered the request. **CRITICAL** Check for child ticket files in the input folder (files with ticket keys like AP-2-1, AP-2-2, etc.) and use their content to enhance the description.\""
+      "./cicd/scripts/run-cursor-agent.sh \"**IMPORTANT** implementation details and development is not part of the task. Main request is in 'input' folder, read all files there and do what is requested following instructions from input. Request.md file contains json with all details. 'request' string there contain details of tickets from which was triggered the request. **CRITICAL** Check for child ticket files and blocking issue files in the input folder (files with ticket keys like AP-2-1, AP-2-2, etc.) and use their content to enhance the description.\""
     ],
     "outputType" : "field",
     "fieldName" : "Description",

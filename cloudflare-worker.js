@@ -80,6 +80,18 @@ export default {
       const workflowInfo = await workflowInfoResponse.json()
       const workflowId = workflowInfo.id
 
+      // Create a config override object with the issue key in inputJql
+      // This will be merged with the base config file by dmtools
+      const configOverride = {
+        params: {
+          inputJql: `key = ${issueKey}`
+        }
+      }
+
+      // Base64 encode the config override JSON
+      // Cloudflare Workers support btoa for base64 encoding
+      const encodedConfig = btoa(JSON.stringify(configOverride))
+
       // Call GitHub API to trigger workflow using workflow ID
       const githubResponse = await fetch(
         `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/actions/workflows/${workflowId}/dispatches`,
@@ -95,7 +107,7 @@ export default {
             ref: GITHUB_REF,
             inputs: {
               config_file: configFile || DEFAULT_CONFIG,
-              encoded_config: issueKey
+              encoded_config: encodedConfig
             }
           })
         }

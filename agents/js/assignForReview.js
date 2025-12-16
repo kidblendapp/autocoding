@@ -18,11 +18,7 @@ function action(params) {
         // Use common assignForReview function
         const assignResult = assignForReview(ticketKey, initiatorId, wipLabel);
         
-        if (!assignResult.success) {
-            return assignResult;
-        }
-        
-        // Remove AI_description label after successful processing
+        // Remove AI_description label after processing (regardless of success)
         try {
             jira_remove_label({
                 key: ticketKey,

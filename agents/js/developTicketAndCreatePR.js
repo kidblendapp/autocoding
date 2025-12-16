@@ -306,8 +306,9 @@ function postErrorCommentToJira(ticketKey, stage, errorMessage) {
  * @returns {Object} Result object with success status
  */
 function action(params) {
+    let ticketKey = null;
     try {
-        const ticketKey = params.ticket.key;
+        ticketKey = params.ticket.key;
         const ticketSummary = params.ticket.fields.summary;
         const ticketDescription = params.ticket.fields.description || '';
         const developmentSummary = params.response || '';
@@ -323,6 +324,8 @@ function action(params) {
         if (!configureGitAuthor()) {
             const error = 'Failed to configure git author';
             postErrorCommentToJira(ticketKey, 'Git Configuration', error);
+            // Remove AI_development label before returning
+            removeAIDevelopmentLabel(ticketKey);
             return {
                 success: false,
                 error: error
@@ -340,6 +343,8 @@ function action(params) {
         const gitResult = performGitOperations(branchName, commitMessage);
         if (!gitResult.success) {
             postErrorCommentToJira(ticketKey, 'Git Operations', gitResult.error);
+            // Remove AI_development label before returning
+            removeAIDevelopmentLabel(ticketKey);
             return {
                 success: false,
                 error: 'Git operations failed: ' + gitResult.error
@@ -355,6 +360,8 @@ function action(params) {
                 const error = 'outputs/response.md not found or empty - must be created before running this script';
                 console.error(error);
                 postErrorCommentToJira(ticketKey, 'PR Body Preparation', error);
+                // Remove AI_development label before returning
+                removeAIDevelopmentLabel(ticketKey);
                 return {
                     success: false,
                     error: error
@@ -364,6 +371,8 @@ function action(params) {
         } catch (error) {
             console.error('Failed to read outputs/response.md:', error);
             postErrorCommentToJira(ticketKey, 'PR Body Preparation', error.toString());
+            // Remove AI_development label before returning
+            removeAIDevelopmentLabel(ticketKey);
             return {
                 success: false,
                 error: 'Failed to read PR body: ' + error.toString()
@@ -376,6 +385,8 @@ function action(params) {
 
         if (!prResult.success) {
             postErrorCommentToJira(ticketKey, 'Pull Request Creation', prResult.error);
+            // Remove AI_development label before returning
+            removeAIDevelopmentLabel(ticketKey);
             return {
                 success: false,
                 error: 'PR creation failed: ' + prResult.error
@@ -435,16 +446,8 @@ function action(params) {
             }
         }
 
-        // Remove AI_development label after successful processing
-        try {
-            jira_remove_label({
-                key: ticketKey,
-                label: 'AI_development'
-            });
-            console.log('Removed AI_development label from ' + ticketKey);
-        } catch (labelError) {
-            console.warn('Failed to remove AI_development label:', labelError);
-        }
+        // Remove AI_development label after processing
+        removeAIDevelopmentLabel(ticketKey);
 
         console.log('✅ Development workflow completed successfully');
 
@@ -467,9 +470,30 @@ function action(params) {
             console.error('Failed to post error comment:', commentError);
         }
 
+        // Remove AI_development label even on error
+        if (ticketKey) {
+            removeAIDevelopmentLabel(ticketKey);
+        }
+
         return {
             success: false,
             error: error.toString()
         };
+    }
+}
+
+/**
+ * Helper function to remove AI_development label
+ * @param {string} ticketKey - Ticket key
+ */
+function removeAIDevelopmentLabel(ticketKey) {
+    try {
+        jira_remove_label({
+            key: ticketKey,
+            label: 'AI_development'
+        });
+        console.log('Removed AI_development label from ' + ticketKey);
+    } catch (labelError) {
+        console.warn('Failed to remove AI_development label:', labelError);
     }
 }

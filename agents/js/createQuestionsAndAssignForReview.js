@@ -81,11 +81,7 @@ function action(params) {
         // Use common assignForReview function for post-processing
         const assignResult = assignForReview(ticketKey, initiatorId, wipLabel);
         
-        if (!assignResult.success) {
-            return assignResult;
-        }
-        
-        // Remove AI_questions label after successful processing
+        // Remove AI_questions label after processing (regardless of success)
         try {
             jira_remove_label({
                 key: ticketKey,
@@ -94,6 +90,10 @@ function action(params) {
             console.log('Removed AI_questions label from ' + ticketKey);
         } catch (labelError) {
             console.warn('Failed to remove AI_questions label:', labelError);
+        }
+        
+        if (!assignResult.success) {
+            return assignResult;
         }
         
         return {

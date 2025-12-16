@@ -16,7 +16,7 @@ The Cloudflare Worker acts as a proxy between JIRA and GitHub Actions. When trig
    - `agents/story_questions.json` - For generating questions
    - `agents/story_description.json` - For enhancing story descriptions
    - `agents/solution_description.json` - For solution design
-   - `agents/story_development.json` - For development tasks
+   - `agents/subtask_implementation.json` - For development tasks
 
 ## JIRA Automation Rule Setup
 
@@ -96,7 +96,7 @@ Create separate automation rules for each label type:
   ```json
   {
     "issueKey": "{{issue.key}}",
-    "configFile": "agents/story_development.json"
+    "configFile": "agents/subtask_implementation.json"
   }
   ```
 

@@ -37,7 +37,7 @@ Each job has a unique WIP label dynamically generated from `metadata.contextId`:
 | Job Configuration | Context ID | Generated WIP Label |
 |-------------------|------------|---------------------|
 | `api_development.json` | `api_development` | `api_development_wip` |
-| `story_development.json` | `story_development` | `story_development_wip` |
+| `subtask_implementation.json` | `story_development` | `story_development_wip` |
 | `sd_api_description.json` | `sd_api_description` | `sd_api_description_wip` |
 | `sd_core_description.json` | `sd_core_description` | `sd_core_description_wip` |
 | `core_description.json` | `core_description` | `core_description_wip` |

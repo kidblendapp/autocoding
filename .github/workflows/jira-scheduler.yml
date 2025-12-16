@@ -264,14 +264,15 @@ jobs:
             fi
             echo "  ✅ GH_TOKEN is set (length: ${#GH_TOKEN} chars)"
             
-            # Check if we can authenticate
+            # Check if we can authenticate by testing API access
             echo "  Testing GitHub authentication..."
-            AUTH_STATUS=$(gh auth status --token "${GH_TOKEN}" 2>&1 || echo "AUTH_FAILED")
-            if echo "$AUTH_STATUS" | grep -q "AUTH_FAILED\|not logged in\|authentication failed"; then
+            AUTH_TEST=$(gh api user --jq '.login' 2>&1)
+            AUTH_EXIT=$?
+            if [ $AUTH_EXIT -ne 0 ]; then
               echo "  ❌ Authentication failed"
-              echo "  Auth status: $AUTH_STATUS"
+              echo "  Error: $AUTH_TEST"
             else
-              echo "  ✅ Authentication successful"
+              echo "  ✅ Authentication successful (logged in as: $AUTH_TEST)"
             fi
             
             # Check workflow exists and is accessible
@@ -285,7 +286,7 @@ jobs:
               echo "$WORKFLOW_INFO" | jq -r '. | "    ID: \(.id), Name: \(.name), State: \(.state)"'
             fi
             
-            # Check token permissions by trying to get workflow runs
+            # Check token permissions by trying to get workflow info
             echo "  Checking token permissions..."
             PERM_CHECK=$(gh api repos/kidblendapp/autocoding/actions/workflows/ai-teammate.yml 2>&1)
             PERM_EXIT=$?
@@ -293,6 +294,20 @@ jobs:
               echo "  ❌ Permission check failed: $PERM_CHECK"
             else
               echo "  ✅ Can read workflow info"
+              WORKFLOW_ID=$(echo "$PERM_CHECK" | jq -r '.id // empty')
+              if [ -n "$WORKFLOW_ID" ]; then
+                echo "  Workflow ID: $WORKFLOW_ID"
+              fi
+            fi
+            
+            # Test if token can access workflow dispatch endpoint
+            echo "  Testing workflow dispatch permissions..."
+            WORKFLOW_ID=$(gh api repos/kidblendapp/autocoding/actions/workflows/ai-teammate.yml --jq '.id' 2>/dev/null || echo "")
+            if [ -n "$WORKFLOW_ID" ]; then
+              echo "  Workflow ID found: $WORKFLOW_ID"
+              echo "  Note: Token needs 'workflow' scope to trigger workflows"
+            else
+              echo "  ⚠️  Could not retrieve workflow ID"
             fi
             
             # Trigger the workflow with encoded config

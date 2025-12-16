@@ -1,8 +1,5 @@
-addEventListener('fetch', event => {
-  event.respondWith(handleRequest(event.request, event.env))
-})
-
-async function handleRequest(request, env) {
+export default {
+  async fetch(request, env) {
   // CORS headers
   const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
@@ -106,5 +103,5 @@ async function handleRequest(request, env) {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     })
   }
+  }
 }
-

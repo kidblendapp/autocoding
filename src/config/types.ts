@@ -33,3 +33,39 @@ export const defaultConfig: AppConfig = {
     validStoryPoints: [1, 2, 3, 5, 8],
   },
 };
+
+/**
+ * Schedule configuration for Gantt schedule calculations.
+ * 
+ * This configuration defines team velocity and project timeline parameters
+ * that are used by the scheduler component for accurate schedule calculations.
+ */
+export interface ScheduleConfig {
+  /** 
+   * Project start date in ISO format (YYYY-MM-DD).
+   * Example: "2024-02-01"
+   */
+  projectStartDate: string;
+  
+  /** 
+   * Sprint duration in days. Must be a positive number.
+   * Example: 10
+   */
+  sprintDurationDays: number;
+  
+  /** 
+   * Team velocity (story points per sprint). Must be a positive number.
+   * Example: 20
+   */
+  velocity: number;
+}
+
+/**
+ * Raw configuration object as read from config.json file.
+ * This type represents the unvalidated structure before validation.
+ */
+export interface RawScheduleConfig {
+  projectStartDate?: unknown;
+  sprintDurationDays?: unknown;
+  velocity?: unknown;
+}

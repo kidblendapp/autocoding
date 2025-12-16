@@ -112,54 +112,10 @@ jobs:
 
         run: |
           echo "Using configuration: ${{ inputs.config_file }}"
-          
-          # Note: dmtools may try to initialize AI components for internal use even when skipAIProcessing=true
-          # If GEMINI_API_KEY is not set, it will fall back to DIAL, which is fine
-          # The actual AI processing uses cursor-agent via cliCommands in the agent config
-          if [ -z "${GEMINI_API_KEY}" ]; then
-            echo "⚠️ GEMINI_API_KEY not set - dmtools will use DIAL for internal operations"
-            echo "⚠️ This is fine - cursor-agent will be used via cliCommands for actual AI processing"
-          fi
-          
           if [ -n "${ENCODED_CONFIG}" ]; then
-            echo "Encoded config received (base64)"
-            # Decode base64 encoded config to a temporary file to avoid shell quoting issues
-            TEMP_CONFIG=$(mktemp)
-            echo "${ENCODED_CONFIG}" | base64 -d > "${TEMP_CONFIG}"
-            echo "Decoded config preview (first 200 chars):"
-            head -c 200 "${TEMP_CONFIG}"
-            echo "..."
-            # Validate JSON with jq to ensure it's properly formatted
-            if ! jq empty "${TEMP_CONFIG}" 2>/dev/null; then
-              echo "❌ Error: Decoded config is not valid JSON"
-              rm -f "${TEMP_CONFIG}"
-              exit 1
-            fi
-            # Use Python to safely read the file and pass it as an argument without shell expansion
-            # This avoids all shell quoting issues with special characters in JSON
-            export CONFIG_FILE="${{ inputs.config_file }}"
-            export TEMP_CONFIG
-            PYTHON_SCRIPT=$(mktemp)
-            cat > "$PYTHON_SCRIPT" << 'EOF'
-import sys
-import subprocess
-import json
-import os
-
-config_file = os.environ['CONFIG_FILE']
-temp_config = os.environ['TEMP_CONFIG']
-
-with open(temp_config, 'r') as f:
-    config_content = f.read()
-
-# Validate JSON
-json.loads(config_content)
-
-# Execute dmtools with the config as argument
-subprocess.run(['dmtools', 'run', config_file, config_content], check=True)
-EOF
-            python3 "$PYTHON_SCRIPT"
-            rm -f "${TEMP_CONFIG}" "$PYTHON_SCRIPT"
+            echo "Encoded config received (raw):"
+            printf '%s\n' "${ENCODED_CONFIG}"
+            dmtools run "${{ inputs.config_file }}" "${ENCODED_CONFIG}"
           else
             echo "No encoded config provided."
             dmtools run "${{ inputs.config_file }}"

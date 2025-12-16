@@ -23,14 +23,11 @@ function formatTicketAsMarkdown(ticket) {
     const summary = fields.summary || 'No summary';
     const description = fields.description || 'No description';
     const status = fields.status ? fields.status.name : 'Unknown';
-    const issueType = fields.issuetype ? fields.issuetype.name : 'Unknown';
-    const assignee = fields.assignee ? fields.assignee.displayName : 'Unassigned';
     const labels = fields.labels || [];
+    const diagrams = fields.Diagrams || fields.diagrams || '';
     
     let markdown = `# ${key}: ${summary}\n\n`;
-    markdown += `**Issue Type:** ${issueType}\n`;
     markdown += `**Status:** ${status}\n`;
-    markdown += `**Assignee:** ${assignee}\n`;
     
     if (labels.length > 0) {
         markdown += `**Labels:** ${labels.join(', ')}\n`;
@@ -38,19 +35,19 @@ function formatTicketAsMarkdown(ticket) {
     
     markdown += `\n## Description\n\n${description}\n\n`;
     
-    // Add comments if available
+    // Add Diagrams field if available
+    if (diagrams) {
+        markdown += `## Diagrams\n\n${diagrams}\n\n`;
+    }
+    
+    // Add comments if available (with author)
     if (fields.comment && fields.comment.comments && fields.comment.comments.length > 0) {
         markdown += `## Comments\n\n`;
         fields.comment.comments.forEach(function(comment) {
             const author = comment.author ? comment.author.displayName : 'Unknown';
             const body = comment.body || '';
-            markdown += `### ${author} (${comment.created || ''})\n\n${body}\n\n`;
+            markdown += `### ${author}${comment.created ? ' (' + comment.created + ')' : ''}\n\n${body}\n\n`;
         });
-    }
-    
-    // Add other relevant fields
-    if (fields.acceptanceCriteria) {
-        markdown += `## Acceptance Criteria\n\n${fields.acceptanceCriteria}\n\n`;
     }
     
     return markdown;
@@ -127,7 +124,7 @@ function action(params) {
         try {
             const searchResult = jira_search_by_jql({
                 jql: 'parent = ' + parentKey,
-                fields: ['key', 'summary', 'description', 'status', 'issuetype', 'assignee', 'labels', 'comment', 'acceptanceCriteria']
+                fields: ['key', 'summary', 'description', 'status', 'labels', 'Diagrams', 'comment']
             });
             
             if (searchResult && searchResult.issues) {

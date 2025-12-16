@@ -40,6 +40,7 @@ export default {
       const GITHUB_REPO = env.GITHUB_REPO
       const GITHUB_TOKEN = env.GITHUB_TOKEN
       const DEFAULT_CONFIG = env.DEFAULT_CONFIG || 'agents/story_description.json'
+      const GITHUB_REF = env.GITHUB_REF || 'main'
 
       // Validate required secrets
       if (!GITHUB_OWNER || !GITHUB_REPO || !GITHUB_TOKEN) {
@@ -51,9 +52,37 @@ export default {
         })
       }
 
-      // Call GitHub API
+      // First, get the workflow ID to ensure we're using the correct workflow
+      const workflowInfoResponse = await fetch(
+        `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/actions/workflows/ai-teammate.yml`,
+        {
+          method: 'GET',
+          headers: {
+            'Accept': 'application/vnd.github.v3+json',
+            'Authorization': `Bearer ${GITHUB_TOKEN}`,
+            'User-Agent': 'Jira-GitHub-Proxy'
+          }
+        }
+      )
+
+      if (!workflowInfoResponse.ok) {
+        const errorText = await workflowInfoResponse.text()
+        return new Response(JSON.stringify({ 
+          success: false,
+          error: `Failed to get workflow info: ${workflowInfoResponse.status}`,
+          details: errorText
+        }), {
+          status: workflowInfoResponse.status,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        })
+      }
+
+      const workflowInfo = await workflowInfoResponse.json()
+      const workflowId = workflowInfo.id
+
+      // Call GitHub API to trigger workflow using workflow ID
       const githubResponse = await fetch(
-        `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/actions/workflows/ai-teammate.yml/dispatches`,
+        `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/actions/workflows/${workflowId}/dispatches`,
         {
           method: 'POST',
           headers: {
@@ -63,7 +92,7 @@ export default {
             'User-Agent': 'Jira-GitHub-Proxy'
           },
           body: JSON.stringify({
-            ref: 'main',
+            ref: GITHUB_REF,
             inputs: {
               config_file: configFile || DEFAULT_CONFIG,
               encoded_config: issueKey

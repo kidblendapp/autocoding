@@ -2,136 +2,70 @@
 
 All acceptance criteria implemented successfully. No blocking issues encountered.
 
-**Note on Scheduler Integration**: The configuration system is fully implemented and ready for integration with the scheduler component. The scheduler can access configuration values through the `scheduleConfig` singleton using `getProjectStartDate()`, `getSprintDurationDays()`, and `getVelocity()` methods. The scheduler component itself is not yet implemented in the codebase, but the configuration system provides the required interface for when it is developed.
-
-**Note on Configuration File Location**: The system defaults to `config.json` in the current working directory, but supports custom paths via the `configPath` option. This allows flexibility for different deployment scenarios.
+**Note**: Fractional days in duration calculations are supported (e.g., 3.5 days), but when adding to dates, the result is rounded to the nearest whole day since JavaScript Date objects work with discrete day values. This is consistent with the requirement that "all days are treated as working days" and provides practical date calculations.
 
 ## Approach
 
-Implemented Team & Velocity Configuration functionality following the solution design document with a modular architecture:
+Implemented the Basic Linear Schedule Calculation feature following the solution design architecture:
 
-1. **Configuration Types** (`src/config/types.ts`): Extended existing configuration types with:
-   - `ScheduleConfig` interface defining the three required fields (projectStartDate, sprintDurationDays, velocity)
-   - `RawScheduleConfig` interface for unvalidated configuration structure
-   - Comprehensive JSDoc documentation for all fields
+1. **Created ScheduledTask interface** extending Task with `calculatedStartDate` and `calculatedEndDate` fields in ISO format (YYYY-MM-DD)
 
-2. **Configuration Loader** (`src/config/loader.ts`): 
-   - Reads and parses config.json files from the file system
-   - Supports custom file paths via `LoadConfigOptions`
-   - Defaults to `config.json` in current working directory
-   - Handles file not found errors and JSON parse errors with clear messages
-   - Uses Node.js `fs` and `path` modules for cross-platform compatibility
+2. **Implemented schedule calculator** (`src/calculators/schedule-calculator.ts`) with:
+   - `calculateDuration()`: Pure function implementing formula `(Estimate / Velocity) * SprintDuration`
+   - `addDays()`: Date arithmetic function that adds days to a date (treats all days as working days)
+   - `calculateSchedule()`: Main function that processes tasks sequentially:
+     - First task uses project start date
+     - Subsequent tasks use previous task's end date as their start date
+     - Calculates duration and end date for each task
+     - Preserves all original task fields
 
-3. **Configuration Validator** (`src/config/validator.ts`):
-   - Validates presence of all required fields
-   - Validates projectStartDate is a valid ISO date string (YYYY-MM-DD format)
-   - Validates sprintDurationDays is a positive integer (> 0)
-   - Validates velocity is a positive number (> 0, supports decimals)
-   - Provides specific error messages for each validation failure
-   - Returns structured validation results with error details
+3. **Created output generator** (`src/output/output-generator.ts`) that writes scheduled tasks to `output.json` in formatted JSON
 
-4. **Configuration Singleton** (`src/config/schedule-config.ts`):
-   - Implements singleton pattern ensuring single source of truth
-   - Configuration is immutable after initialization
-   - Provides accessor methods: `getProjectStartDate()`, `getSprintDurationDays()`, `getVelocity()`, `getConfig()`
-   - Prevents double initialization with clear error messages
-   - Returns copies of configuration to prevent external modification
-   - Includes `reset()` method for testing purposes
+4. **Updated CLI command** (`src/cli/commands/ingest-csv.ts`) to:
+   - Initialize schedule configuration
+   - Calculate schedule after CSV parsing
+   - Generate output.json file
+   - Return scheduled tasks with calculated dates
 
-5. **Error Handling**: All components provide clear, actionable error messages:
-   - File not found errors specify the path that was attempted
-   - JSON parse errors include the specific syntax error
-   - Validation errors specify which field failed and why
-   - Error messages follow format: "field - specific error message"
+5. **Updated main entry point** (`src/index.ts`) to reflect schedule calculation in console output
 
-The implementation follows existing codebase patterns, uses TypeScript for type safety, and integrates with the existing logger utility for consistent error reporting.
+6. **Comprehensive error handling**:
+   - Validates velocity > 0, sprint duration > 0, estimates >= 0
+   - Validates project start date format
+   - Handles negative estimates by using 0
+   - Clear error messages for all validation failures
 
 ## Files Modified
 
-- `src/config/types.ts`: Added `ScheduleConfig` and `RawScheduleConfig` interfaces with comprehensive JSDoc documentation
-- `tsconfig.json`: Updated exclude pattern to exclude test files from compilation
-
-## Files Created
-
-- `src/config/loader.ts`: Configuration file loader with file reading and JSON parsing (64 lines)
-- `src/config/validator.ts`: Configuration validation logic with comprehensive field validation (178 lines)
-- `src/config/schedule-config.ts`: Configuration singleton/context implementation (150 lines)
-- `src/config/__tests__/loader.test.ts`: Unit tests for configuration loader (9 tests)
-- `src/config/__tests__/validator.test.ts`: Unit tests for configuration validator (30 tests)
-- `src/config/__tests__/schedule-config.test.ts`: Unit tests for configuration singleton (17 tests)
+- `src/models/ScheduledTask.ts` (new): Interface extending Task with calculated date fields
+- `src/calculators/schedule-calculator.ts` (new): Core schedule calculation logic
+- `src/output/output-generator.ts` (new): JSON output file generation
+- `src/cli/commands/ingest-csv.ts`: Updated to integrate schedule calculation and output generation
+- `src/index.ts`: Updated console output to reflect schedule calculation
 
 ## Test Coverage
 
-Created comprehensive unit tests covering all acceptance criteria:
+Created comprehensive unit tests covering:
 
-1. **Configuration Loader** (9 tests):
-   - Valid JSON configuration loading
-   - Default path resolution (config.json in cwd)
-   - File not found error handling
-   - Invalid JSON format error handling
-   - Malformed JSON error handling
-   - Empty JSON object handling
-   - JSON with extra fields (ignored gracefully)
-   - Absolute and relative path resolution
+**Schedule Calculator Tests** (`src/calculators/__tests__/schedule-calculator.test.ts`):
+- Duration calculation formula validation (AC2 scenario: Estimate=5, Velocity=10, SprintDuration=7 → 3.5 days)
+- Fractional and whole number duration results
+- Date arithmetic with month/year boundaries and leap years
+- Sequential task processing (first task uses project start, subsequent tasks use previous end date)
+- Preservation of all original task fields
+- Edge cases: zero estimates, negative estimates (handled as 0), empty task lists
+- Error handling: zero/negative velocity, zero/negative sprint duration, invalid dates
+- Multiple tasks with different estimates
 
-2. **Configuration Validator** (30 tests):
-   - **Required Field Validation**: Missing/null checks for all three fields, multiple missing fields reporting
-   - **projectStartDate Validation**: 
-     - Non-string rejection
-     - Invalid format rejection (non-ISO formats)
-     - Invalid date rejection (invalid month/day, non-leap year Feb 29)
-     - Valid ISO date acceptance
-     - Leap year date acceptance
-   - **sprintDurationDays Validation**:
-     - Non-number rejection
-     - Zero/negative rejection
-     - Non-integer rejection
-     - Positive integer acceptance
-   - **velocity Validation**:
-     - Non-number rejection
-     - Zero/negative rejection
-     - Positive number acceptance (both integer and decimal)
-   - **Multiple Error Reporting**: All validation errors reported together
-   - **Error Formatting**: Single and multiple error message formatting
+**ScheduledTask Model Tests** (`src/models/__tests__/ScheduledTask.test.ts`):
+- Interface structure validation
+- ISO date format validation
+- Optional field support
 
-3. **Configuration Singleton** (17 tests):
-   - Successful initialization with valid configuration
-   - Double initialization prevention
-   - Invalid configuration error handling
-   - Missing file error handling
-   - Default path usage
-   - All accessor methods (`getProjectStartDate`, `getSprintDurationDays`, `getVelocity`, `getConfig`)
-   - Uninitialized access error handling
-   - Configuration immutability (returned copies cannot modify original)
-   - Initialization state checking (`isInitialized`)
-   - Reset functionality for testing
+**Output Generator Tests** (`src/output/__tests__/output-generator.test.ts`):
+- JSON file generation with proper formatting
+- Field preservation in output
+- Empty task array handling
+- Default path handling
 
-**Total: 56 new tests, all passing (96 total tests in codebase)**
-
-Test coverage exceeds the 90% target for validation logic. All tests follow existing patterns using Vitest, proper file I/O mocking with temporary files, and comprehensive edge case coverage. Tests validate all acceptance criteria including:
-- AC1: Valid configuration accessible to scheduler
-- AC2: Missing field error handling
-- AC3: Invalid date format error handling
-- AC4: Negative sprint duration error handling
-- AC5: Zero/negative velocity error handling
-- AC6: Singleton/context pattern implementation
-- AC7: All business rules validated
-- AC8: User-friendly error messages
-
-## Integration Notes
-
-The configuration system is ready for scheduler integration. The scheduler component can access configuration as follows:
-
-```typescript
-import { scheduleConfig } from './config/schedule-config';
-
-// Initialize during application startup
-scheduleConfig.initialize({ configPath: 'config.json' });
-
-// Access configuration values
-const startDate = scheduleConfig.getProjectStartDate();
-const sprintDays = scheduleConfig.getSprintDurationDays();
-const velocity = scheduleConfig.getVelocity();
-```
-
-The configuration must be initialized before the scheduler component attempts to access it, otherwise a clear error message is provided.
+**All existing tests pass** (135 tests total, including new tests)

@@ -19,17 +19,18 @@ if (inputIndex === -1 || inputIndex === args.length - 1) {
 const inputFile = args[inputIndex + 1];
 const quiet = args.includes('--quiet');
 
-// Execute CSV ingestion
+// Execute CSV ingestion and schedule calculation
 ingestCsv({
   input: inputFile,
   quiet,
 })
-  .then((tasks) => {
-    console.log('\n✅ CSV ingestion completed successfully');
-    console.log(`📊 Total tasks: ${tasks.length}`);
+  .then((scheduledTasks) => {
+    console.log('\n✅ CSV ingestion and schedule calculation completed successfully');
+    console.log(`📊 Total tasks scheduled: ${scheduledTasks.length}`);
+    console.log('📄 Output file: output.json');
     process.exit(0);
   })
   .catch((error) => {
-    console.error('\n❌ CSV ingestion failed:', error.message);
+    console.error('\n❌ CSV ingestion and schedule calculation failed:', error.message);
     process.exit(1);
   });

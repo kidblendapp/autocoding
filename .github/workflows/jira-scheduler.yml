@@ -255,10 +255,67 @@ jobs:
             # Encode the config as compact JSON, then base64 encode to avoid shell quote issues
             ENCODED_CONFIG=$(jq -c . "$TEMP_CONFIG" | base64 -w 0)
             
+            # Debug: Check authentication and permissions
+            echo "  🔍 Debugging workflow trigger..."
+            echo "  Checking GH_TOKEN status..."
+            if [ -z "${GH_TOKEN}" ]; then
+              echo "  ❌ Error: GH_TOKEN is not set!"
+              exit 1
+            fi
+            echo "  ✅ GH_TOKEN is set (length: ${#GH_TOKEN} chars)"
+            
+            # Check if we can authenticate
+            echo "  Testing GitHub authentication..."
+            AUTH_STATUS=$(gh auth status --token "${GH_TOKEN}" 2>&1 || echo "AUTH_FAILED")
+            if echo "$AUTH_STATUS" | grep -q "AUTH_FAILED\|not logged in\|authentication failed"; then
+              echo "  ❌ Authentication failed"
+              echo "  Auth status: $AUTH_STATUS"
+            else
+              echo "  ✅ Authentication successful"
+            fi
+            
+            # Check workflow exists and is accessible
+            echo "  Checking workflow accessibility..."
+            WORKFLOW_INFO=$(gh workflow view ai-teammate.yml --json id,name,state 2>&1)
+            WORKFLOW_EXIT=$?
+            if [ $WORKFLOW_EXIT -ne 0 ]; then
+              echo "  ❌ Cannot access workflow: $WORKFLOW_INFO"
+            else
+              echo "  ✅ Workflow accessible:"
+              echo "$WORKFLOW_INFO" | jq -r '. | "    ID: \(.id), Name: \(.name), State: \(.state)"'
+            fi
+            
+            # Check token permissions by trying to get workflow runs
+            echo "  Checking token permissions..."
+            PERM_CHECK=$(gh api repos/kidblendapp/autocoding/actions/workflows/ai-teammate.yml 2>&1)
+            PERM_EXIT=$?
+            if [ $PERM_EXIT -ne 0 ]; then
+              echo "  ❌ Permission check failed: $PERM_CHECK"
+            else
+              echo "  ✅ Can read workflow info"
+            fi
+            
             # Trigger the workflow with encoded config
-            gh workflow run ai-teammate.yml \
+            echo "  🚀 Attempting to trigger workflow..."
+            TRIGGER_OUTPUT=$(gh workflow run ai-teammate.yml \
               -f config_file="$SELECTED_CONFIG" \
-              -f encoded_config="$ENCODED_CONFIG"
+              -f encoded_config="$ENCODED_CONFIG" 2>&1)
+            TRIGGER_EXIT=$?
+            
+            if [ $TRIGGER_EXIT -ne 0 ]; then
+              echo "  ❌ Failed to trigger workflow (exit code: $TRIGGER_EXIT)"
+              echo "  Error output: $TRIGGER_OUTPUT"
+              echo ""
+              echo "  💡 Troubleshooting:"
+              echo "    1. Verify PAT_TOKEN has 'workflow' scope enabled"
+              echo "    2. Check token hasn't expired"
+              echo "    3. Ensure token has access to this repository"
+              echo "    4. Token must be a classic PAT (not fine-grained token)"
+              exit 1
+            else
+              echo "  ✅ Workflow triggered successfully"
+              echo "  Output: $TRIGGER_OUTPUT"
+            fi
             
             # Clean up temp config
             rm -f "$TEMP_CONFIG"

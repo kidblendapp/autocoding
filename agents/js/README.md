@@ -12,7 +12,7 @@ agents/js/
 │   └── jiraHelpers.js                            # Jira operation helpers
 ├── assignForReview.js                            # Assign ticket to initiator and move to "In Review"
 ├── createQuestionsAndAssignForReview.js          # Create question subtasks and assign for review
-├── createSolutionDesignTicketsAndAssignForReview.js  # Create SD subtasks (Core/API/UI)
+├── createSolutionDesignTicketsAndAssignForReview.js  # Create SD subtasks (Technical Components/Scenarios)
 ├── developTicketAndCreatePR.js                   # Git operations and PR creation workflow
 ├── enhanceSDAPIDescriptionAndAssess.js           # Enhance SD API ticket descriptions
 └── enhanceSDCoreDescriptionAndAssess.js          # Enhance SD CORE ticket descriptions
@@ -90,7 +90,9 @@ Centralized configuration for all agent scripts. Contains:
 - `GIT_CONFIG.DEFAULT_ISSUE_TYPE_PREFIX`: 'feature'
 
 ### Solution Design Modules
-- `SOLUTION_DESIGN_MODULES`: Array of module configurations (core, api, ui)
+- `SOLUTION_DESIGN_COMPONENTS`: Array of technical component configurations (dataIngestion, schedulingEngine, outputLayer)
+- `SOLUTION_DESIGN_SCENARIOS`: Array of scenario-based configurations (scenario1, scenario2, scenario3)
+- `SOLUTION_DESIGN_MODULES`: Legacy module configurations (core, api, ui) - deprecated
 
 ### Diagram Defaults & Formatting
 - `DIAGRAM_DEFAULTS`: Default Mermaid diagrams for API and Core
@@ -132,10 +134,14 @@ Creates subtasks based on AI-generated questions, then assigns the parent ticket
 - Moves to `STATUSES.IN_REVIEW`
 
 ### `createSolutionDesignTicketsAndAssignForReview.js`
-Creates solution design subtasks (SD CORE, SD API, SD UI) based on AI module analysis.
+Creates solution design subtasks based on technical component boundaries or implementation scenarios.
+- Supports component-based decomposition (Data Ingestion, Scheduling Engine, Output Layer)
+- Supports scenario-based decomposition (Scenario 1, 2, 3)
+- Falls back to legacy Core/API/UI approach for backward compatibility
 - Creates subtasks with `PRIORITIES.MEDIUM`
-- Adds module-specific labels (`LABELS.SD_CORE`, etc.)
+- Adds component/scenario-specific labels
 - Posts summary comment with analysis results
+- If scope is manageable, creates no subtasks (single solution design)
 
 ### `developTicketAndCreatePR.js`
 Handles complete git workflow: branch creation, commit, push, and PR creation.

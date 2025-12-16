@@ -139,7 +139,8 @@ jobs:
             # This avoids all shell quoting issues with special characters in JSON
             export CONFIG_FILE="${{ inputs.config_file }}"
             export TEMP_CONFIG
-            python3 << 'PYTHON_SCRIPT'
+            PYTHON_SCRIPT=$(mktemp)
+            cat > "$PYTHON_SCRIPT" << 'EOF'
 import sys
 import subprocess
 import json
@@ -156,8 +157,9 @@ json.loads(config_content)
 
 # Execute dmtools with the config as argument
 subprocess.run(['dmtools', 'run', config_file, config_content], check=True)
-PYTHON_SCRIPT
-            rm -f "${TEMP_CONFIG}"
+EOF
+            python3 "$PYTHON_SCRIPT"
+            rm -f "${TEMP_CONFIG}" "$PYTHON_SCRIPT"
           else
             echo "No encoded config provided."
             dmtools run "${{ inputs.config_file }}"

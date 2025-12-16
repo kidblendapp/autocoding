@@ -51,7 +51,7 @@
     "inputJql" : "project = AP and type = Story and assignee = 712020:87eb1729-fc17-4029-97ee-3780fbdbe2e9 and labels = 'AI_solution' and status != DONE",
     "defaultIssueKey" : "AP-2",
     "initiator" : "712020:87eb1729-fc17-4029-97ee-3780fbdbe2e9",
-    "preJSAction" : "agents/js/checkWipLabel.js",
+    "preJSAction" : "agents/js/fetchSubtasksToInput.js",
     "postJSAction" : "agents/js/enhanceSolutionDesignDescriptionAndAssess.js"
   }
 }

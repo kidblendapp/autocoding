@@ -23,7 +23,12 @@
         "**IMPORTANT** Create a valid Mermaid diagram showing the technical architecture, component relationships, or workflow for the solution design implementation",
         "The diagram should visualize key components, data flow, integration points, and architectural patterns mentioned in the enhanced description",
         "Use proper Mermaid syntax: graph TD, flowchart TD, sequenceDiagram, classDiagram, etc. based on what best represents the technical solution",
-        "Content from the response.md and diagram.md files will be used for automated description and diagram update"
+        "Content from the response.md and diagram.md files will be used for automated description and diagram update",
+        "**CRITICAL** Child tickets (subtasks) are automatically included in the input context when ticketContextDepth is set to 1. You MUST check the input folder for files related to child tickets. Look for files with names containing the parent ticket key followed by child ticket keys.",
+        "**CRITICAL** Review ALL child tickets found in the input folder. Extract and incorporate information from:",
+        "* Questions and answers from question subtasks - use answered questions to understand requirements better",
+        "* Any other subtask information that provides context for the solution design",
+        "**CRITICAL** If you find child tickets in the input folder, you MUST use their content to inform your solution design. Incorporate relevant details from child tickets into the enhanced description."
 
       ],
       "knownInfo" : "",
@@ -31,7 +36,7 @@
       "fewShots" : "./agents/instructions/enhancement/solution_design_few_shots.md"
     },
       "cliCommands" : [
-        "./cicd/scripts/run-cursor-agent.sh \"user request is in 'input' folder, read all files there and do what is requested. **IMPORTANT** implementation details and development is not part of the task. You must not write code here. Follow instructions from input. request.md file contains json with all detail. 'request' string there contains details of ticket from which was triggered the request. **IMPORTANT** write the description to outputs/response.md and the diagram to outputs/diagram.md files.\""
+        "./cicd/scripts/run-cursor-agent.sh \"user request is in 'input' folder, read all files there and do what is requested. **IMPORTANT** implementation details and development is not part of the task. You must not write code here. Follow instructions from input. request.md file contains json with all detail. 'request' string there contains details of ticket from which was triggered the request. **CRITICAL** Check for child ticket files in the input folder (files with ticket keys like AP-2-1, AP-2-2, etc.) and use their content to inform the solution design. **IMPORTANT** write the description to outputs/response.md and the diagram to outputs/diagram.md files.\""
       ],
     "outputType" : "none",
     "ticketContextDepth" : 1,

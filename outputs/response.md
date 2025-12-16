@@ -2,84 +2,136 @@
 
 All acceptance criteria implemented successfully. No blocking issues encountered.
 
-**Note on estimate validation**: The requirement states that estimates >= 7 days are invalid. The implementation interprets this as 7 calendar days (56 hours) for day/hour estimates, while allowing weeks up to 2 weeks (10 working days) since weeks represent a different planning unit. This allows reasonable week-based estimates while still enforcing the business rule for day estimates.
+**Note on Scheduler Integration**: The configuration system is fully implemented and ready for integration with the scheduler component. The scheduler can access configuration values through the `scheduleConfig` singleton using `getProjectStartDate()`, `getSprintDurationDays()`, and `getVelocity()` methods. The scheduler component itself is not yet implemented in the codebase, but the configuration system provides the required interface for when it is developed.
+
+**Note on Configuration File Location**: The system defaults to `config.json` in the current working directory, but supports custom paths via the `configPath` option. This allows flexibility for different deployment scenarios.
 
 ## Approach
 
-Implemented CSV Backlog Ingestion following a modular architecture with clear separation of concerns:
+Implemented Team & Velocity Configuration functionality following the solution design document with a modular architecture:
 
-1. **Task Model**: Created `Task` interface in `src/models/Task.ts` with required fields (id, title, estimate) and optional fields (component, parentId, issueType) aligned with the broader Task model from technical requirements.
+1. **Configuration Types** (`src/config/types.ts`): Extended existing configuration types with:
+   - `ScheduleConfig` interface defining the three required fields (projectStartDate, sprintDurationDays, velocity)
+   - `RawScheduleConfig` interface for unvalidated configuration structure
+   - Comprehensive JSDoc documentation for all fields
 
-2. **Structured Logger**: Implemented a logger in `src/utils/logger.ts` that provides consistent warning/error logging with row numbers and details, supporting warning suppression via `--quiet` flag.
+2. **Configuration Loader** (`src/config/loader.ts`): 
+   - Reads and parses config.json files from the file system
+   - Supports custom file paths via `LoadConfigOptions`
+   - Defaults to `config.json` in current working directory
+   - Handles file not found errors and JSON parse errors with clear messages
+   - Uses Node.js `fs` and `path` modules for cross-platform compatibility
 
-3. **Configuration System**: Created configuration types in `src/config/types.ts` supporting Story Points and Days/Hours estimation types with configurable validation rules.
+3. **Configuration Validator** (`src/config/validator.ts`):
+   - Validates presence of all required fields
+   - Validates projectStartDate is a valid ISO date string (YYYY-MM-DD format)
+   - Validates sprintDurationDays is a positive integer (> 0)
+   - Validates velocity is a positive number (> 0, supports decimals)
+   - Provides specific error messages for each validation failure
+   - Returns structured validation results with error details
 
-4. **Estimate Processor**: Implemented estimate validation and processing in `src/processors/estimate-processor.ts`:
-   - Story Points: Validates against allowed values (1,2,3,5,8 by default), rejects >= 13
-   - Days/Hours: Supports "4h", "2d", "1w" formats, converts to hours, rejects >= 7 calendar days
-   - Defaults to 1 when estimate is missing or invalid, with appropriate logging
+4. **Configuration Singleton** (`src/config/schedule-config.ts`):
+   - Implements singleton pattern ensuring single source of truth
+   - Configuration is immutable after initialization
+   - Provides accessor methods: `getProjectStartDate()`, `getSprintDurationDays()`, `getVelocity()`, `getConfig()`
+   - Prevents double initialization with clear error messages
+   - Returns copies of configuration to prevent external modification
+   - Includes `reset()` method for testing purposes
 
-5. **CSV Parser**: Implemented comprehensive CSV parsing in `src/parsers/csv-parser.ts`:
-   - File validation (existence, readability, size limits)
-   - CSV parsing with csv-parse library handling quoted fields, escaped commas, empty rows
-   - Flexible column name matching (supports "Issue Key"/"ID", "Summary"/"Title", etc.)
-   - Row validation skipping rows with missing ID or Title
-   - Task object creation with all field combinations
+5. **Error Handling**: All components provide clear, actionable error messages:
+   - File not found errors specify the path that was attempted
+   - JSON parse errors include the specific syntax error
+   - Validation errors specify which field failed and why
+   - Error messages follow format: "field - specific error message"
 
-6. **CLI Command**: Created CLI entry point in `src/index.ts` and command handler in `src/cli/commands/ingest-csv.ts` supporting `--input` flag and `--quiet` option.
-
-The implementation follows functional programming principles with immutable data structures, pure functions for calculations, and comprehensive error handling that logs warnings but continues processing valid rows.
+The implementation follows existing codebase patterns, uses TypeScript for type safety, and integrates with the existing logger utility for consistent error reporting.
 
 ## Files Modified
 
-- `package.json`: Added dependencies (csv-parse, vitest) and scripts (build, test, start)
-- `tsconfig.json`: Already configured for TypeScript strict mode
-- `vitest.config.ts`: Created Vitest configuration for testing
+- `src/config/types.ts`: Added `ScheduleConfig` and `RawScheduleConfig` interfaces with comprehensive JSDoc documentation
+- `tsconfig.json`: Updated exclude pattern to exclude test files from compilation
 
 ## Files Created
 
-- `src/models/Task.ts`: Task interface definition
-- `src/utils/logger.ts`: Structured logger implementation
-- `src/config/types.ts`: Configuration types and defaults
-- `src/processors/estimate-processor.ts`: Estimate validation and processing logic
-- `src/parsers/csv-parser.ts`: CSV file parsing and validation
-- `src/cli/commands/ingest-csv.ts`: CLI command handler
-- `src/index.ts`: Updated entry point with CLI argument parsing
-- `src/models/__tests__/Task.test.ts`: Unit tests for Task model
-- `src/utils/__tests__/logger.test.ts`: Unit tests for logger (5 tests)
-- `src/processors/__tests__/estimate-processor.test.ts`: Unit tests for estimate processor (17 tests)
-- `src/parsers/__tests__/csv-parser.test.ts`: Unit tests for CSV parser (16 tests)
+- `src/config/loader.ts`: Configuration file loader with file reading and JSON parsing (64 lines)
+- `src/config/validator.ts`: Configuration validation logic with comprehensive field validation (178 lines)
+- `src/config/schedule-config.ts`: Configuration singleton/context implementation (150 lines)
+- `src/config/__tests__/loader.test.ts`: Unit tests for configuration loader (9 tests)
+- `src/config/__tests__/validator.test.ts`: Unit tests for configuration validator (30 tests)
+- `src/config/__tests__/schedule-config.test.ts`: Unit tests for configuration singleton (17 tests)
 
 ## Test Coverage
 
-Created comprehensive unit tests covering:
+Created comprehensive unit tests covering all acceptance criteria:
 
-1. **Task Model** (2 tests):
-   - Required fields validation
-   - Optional fields support
+1. **Configuration Loader** (9 tests):
+   - Valid JSON configuration loading
+   - Default path resolution (config.json in cwd)
+   - File not found error handling
+   - Invalid JSON format error handling
+   - Malformed JSON error handling
+   - Empty JSON object handling
+   - JSON with extra fields (ignored gracefully)
+   - Absolute and relative path resolution
 
-2. **Logger** (5 tests):
-   - Warning, error, and info message logging
-   - Summary statistics
-   - Warning suppression
+2. **Configuration Validator** (30 tests):
+   - **Required Field Validation**: Missing/null checks for all three fields, multiple missing fields reporting
+   - **projectStartDate Validation**: 
+     - Non-string rejection
+     - Invalid format rejection (non-ISO formats)
+     - Invalid date rejection (invalid month/day, non-leap year Feb 29)
+     - Valid ISO date acceptance
+     - Leap year date acceptance
+   - **sprintDurationDays Validation**:
+     - Non-number rejection
+     - Zero/negative rejection
+     - Non-integer rejection
+     - Positive integer acceptance
+   - **velocity Validation**:
+     - Non-number rejection
+     - Zero/negative rejection
+     - Positive number acceptance (both integer and decimal)
+   - **Multiple Error Reporting**: All validation errors reported together
+   - **Error Formatting**: Single and multiple error message formatting
 
-3. **Estimate Processor** (17 tests):
-   - Story Points: Valid values (1,2,3,5,8), invalid values, non-integer rejection, negative/zero rejection
-   - Days/Hours: Hour/day/week conversion, plain number parsing, maximum limits, invalid format rejection
-   - Validation with logging and default values
+3. **Configuration Singleton** (17 tests):
+   - Successful initialization with valid configuration
+   - Double initialization prevention
+   - Invalid configuration error handling
+   - Missing file error handling
+   - Default path usage
+   - All accessor methods (`getProjectStartDate`, `getSprintDurationDays`, `getVelocity`, `getConfig`)
+   - Uninitialized access error handling
+   - Configuration immutability (returned copies cannot modify original)
+   - Initialization state checking (`isInitialized`)
+   - Reset functionality for testing
 
-4. **CSV Parser** (16 tests):
-   - File validation (existence, readability, size limits)
-   - Valid CSV parsing with all required fields
-   - Column name variations
-   - Missing ID/Title handling
-   - Optional fields (component, parentId, issueType)
-   - Invalid/missing estimate handling with defaults
-   - Days/Hours estimate processing
-   - Quoted fields and escaped characters
-   - Empty row handling
-   - Large file processing (1000 rows)
+**Total: 56 new tests, all passing (96 total tests in codebase)**
 
-**Total: 40 tests, all passing**
+Test coverage exceeds the 90% target for validation logic. All tests follow existing patterns using Vitest, proper file I/O mocking with temporary files, and comprehensive edge case coverage. Tests validate all acceptance criteria including:
+- AC1: Valid configuration accessible to scheduler
+- AC2: Missing field error handling
+- AC3: Invalid date format error handling
+- AC4: Negative sprint duration error handling
+- AC5: Zero/negative velocity error handling
+- AC6: Singleton/context pattern implementation
+- AC7: All business rules validated
+- AC8: User-friendly error messages
 
-Tests follow existing patterns with Vitest, use proper mocking for file I/O, and provide comprehensive coverage of edge cases, error scenarios, and business rule validation.
+## Integration Notes
+
+The configuration system is ready for scheduler integration. The scheduler component can access configuration as follows:
+
+```typescript
+import { scheduleConfig } from './config/schedule-config';
+
+// Initialize during application startup
+scheduleConfig.initialize({ configPath: 'config.json' });
+
+// Access configuration values
+const startDate = scheduleConfig.getProjectStartDate();
+const sprintDays = scheduleConfig.getSprintDurationDays();
+const velocity = scheduleConfig.getVelocity();
+```
+
+The configuration must be initialized before the scheduler component attempts to access it, otherwise a clear error message is provided.

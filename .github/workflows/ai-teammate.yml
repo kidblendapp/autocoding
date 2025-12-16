@@ -137,13 +137,18 @@ jobs:
             fi
             # Use Python to safely read the file and pass it as an argument without shell expansion
             # This avoids all shell quoting issues with special characters in JSON
-            python3 -c "
+            export CONFIG_FILE="${{ inputs.config_file }}"
+            export TEMP_CONFIG
+            python3 << 'PYTHON_SCRIPT'
 import sys
 import subprocess
 import json
+import os
 
-config_file = '${{ inputs.config_file }}'
-with open('${TEMP_CONFIG}', 'r') as f:
+config_file = os.environ['CONFIG_FILE']
+temp_config = os.environ['TEMP_CONFIG']
+
+with open(temp_config, 'r') as f:
     config_content = f.read()
 
 # Validate JSON
@@ -151,7 +156,7 @@ json.loads(config_content)
 
 # Execute dmtools with the config as argument
 subprocess.run(['dmtools', 'run', config_file, config_content], check=True)
-"
+PYTHON_SCRIPT
             rm -f "${TEMP_CONFIG}"
           else
             echo "No encoded config provided."

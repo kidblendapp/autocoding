@@ -3,5 +3,8 @@
  * Entry point for the CLI application.
  */
 
-console.log('Gantt Schedule Calculation System initialized.');
+import { runCli } from './cli/cli';
+
+// Run CLI with command-line arguments
+runCli(process.argv.slice(2));
 

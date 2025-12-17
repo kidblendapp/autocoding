@@ -35,6 +35,28 @@ export const defaultConfig: AppConfig = {
 };
 
 /**
+ * Change history field mapping configuration.
+ */
+export interface ChangeHistoryFieldMapping {
+  /** Custom field code for Sprint field (e.g., "customfield_10020") */
+  sprint?: string;
+  
+  /** Custom field code for Story Points field (e.g., "customfield_10021") */
+  storyPoints?: string;
+}
+
+/**
+ * Change history extraction configuration.
+ */
+export interface ChangeHistoryConfig {
+  /** JQL query to select tickets for change history extraction */
+  jql: string;
+  
+  /** Optional field mapping for custom fields */
+  fieldMapping?: ChangeHistoryFieldMapping;
+}
+
+/**
  * Schedule configuration for Gantt schedule calculations.
  * 
  * This configuration defines team velocity and project timeline parameters
@@ -58,6 +80,12 @@ export interface ScheduleConfig {
    * Example: 20
    */
   velocity: number;
+  
+  /** 
+   * Optional change history extraction configuration.
+   * If provided, change history will be extracted and exported to CSV.
+   */
+  changeHistory?: ChangeHistoryConfig;
 }
 
 /**
@@ -68,4 +96,11 @@ export interface RawScheduleConfig {
   projectStartDate?: unknown;
   sprintDurationDays?: unknown;
   velocity?: unknown;
+  changeHistory?: {
+    jql?: unknown;
+    fieldMapping?: {
+      sprint?: unknown;
+      storyPoints?: unknown;
+    };
+  };
 }

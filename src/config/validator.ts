@@ -138,6 +138,84 @@ export function validateConfig(rawConfig: RawScheduleConfig): ValidationResult {
     });
   }
 
+  // Validate optional changeHistory configuration
+  let changeHistory: ScheduleConfig['changeHistory'] = undefined;
+  if (rawConfig.changeHistory !== undefined && rawConfig.changeHistory !== null) {
+    if (typeof rawConfig.changeHistory !== 'object' || Array.isArray(rawConfig.changeHistory)) {
+      errors.push({
+        field: 'changeHistory',
+        message: 'changeHistory must be an object',
+      });
+    } else {
+      const changeHistoryObj = rawConfig.changeHistory;
+      
+      // Validate jql is present and is a string
+      if (changeHistoryObj.jql === undefined || changeHistoryObj.jql === null) {
+        errors.push({
+          field: 'changeHistory.jql',
+          message: 'changeHistory.jql is required when changeHistory is provided',
+        });
+      } else if (typeof changeHistoryObj.jql !== 'string') {
+        errors.push({
+          field: 'changeHistory.jql',
+          message: 'changeHistory.jql must be a string',
+        });
+      } else if (changeHistoryObj.jql.trim().length === 0) {
+        errors.push({
+          field: 'changeHistory.jql',
+          message: 'changeHistory.jql must not be empty',
+        });
+      } else {
+        // Validate optional fieldMapping
+        let fieldMapping: NonNullable<ScheduleConfig['changeHistory']>['fieldMapping'] = undefined;
+        if (changeHistoryObj.fieldMapping !== undefined && changeHistoryObj.fieldMapping !== null) {
+          if (typeof changeHistoryObj.fieldMapping !== 'object' || Array.isArray(changeHistoryObj.fieldMapping)) {
+            errors.push({
+              field: 'changeHistory.fieldMapping',
+              message: 'changeHistory.fieldMapping must be an object',
+            });
+          } else {
+            const fieldMappingObj = changeHistoryObj.fieldMapping;
+            const mapping: { sprint?: string; storyPoints?: string } = {};
+            
+            if (fieldMappingObj.sprint !== undefined && fieldMappingObj.sprint !== null) {
+              if (typeof fieldMappingObj.sprint !== 'string') {
+                errors.push({
+                  field: 'changeHistory.fieldMapping.sprint',
+                  message: 'changeHistory.fieldMapping.sprint must be a string',
+                });
+              } else {
+                mapping.sprint = fieldMappingObj.sprint;
+              }
+            }
+            
+            if (fieldMappingObj.storyPoints !== undefined && fieldMappingObj.storyPoints !== null) {
+              if (typeof fieldMappingObj.storyPoints !== 'string') {
+                errors.push({
+                  field: 'changeHistory.fieldMapping.storyPoints',
+                  message: 'changeHistory.fieldMapping.storyPoints must be a string',
+                });
+              } else {
+                mapping.storyPoints = fieldMappingObj.storyPoints;
+              }
+            }
+            
+            if (Object.keys(mapping).length > 0) {
+              fieldMapping = mapping;
+            }
+          }
+        }
+        
+        if (!errors.some(e => e.field.startsWith('changeHistory'))) {
+          changeHistory = {
+            jql: changeHistoryObj.jql as string,
+            fieldMapping: fieldMapping,
+          };
+        }
+      }
+    }
+  }
+
   // If there are errors, return them
   if (errors.length > 0) {
     return { valid: false, errors };
@@ -151,6 +229,7 @@ export function validateConfig(rawConfig: RawScheduleConfig): ValidationResult {
       projectStartDate: projectStartDate as string,
       sprintDurationDays: sprintDurationDays as number,
       velocity: velocity as number,
+      changeHistory: changeHistory,
     },
   };
 }

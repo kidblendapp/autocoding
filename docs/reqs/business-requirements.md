@@ -22,7 +22,10 @@ This project aims to deliver a "Gantt Schedule Calculation System" that automate
 
 ### 4.2. Data Import
 *   **US-3:** As a user, I want to import a CSV export from JIRA containing "Summary", "Story Points", "Original Estimate", "Assignee", and "Issue Type".
-*   **US-4:** As a user, I want the system to automatically detect which team a task belongs to based on its "Component" or "Label".
+*   **US-3.1:** As a user, I want to extract all JIRA tickets directly from JIRA API using project configuration, including tickets without estimates.
+*   **US-3.2:** As a user, I want the system to extract comprehensive ticket fields including Issue Key, Summary, Issue Type, Status, Assignee, Reporter, Creator, Priority, Story Points, Original Estimate, Component, Parent Id, Epic Link, Labels, Fix Versions, Versions, Sprint, Created, Updated, Resolution Date, Due Date, and Resolution.
+*   **US-3.3:** As a user, I want the system to handle pagination automatically to extract all tickets from large projects (2000+ tickets).
+*   **US-4:** As a user, I want the system to automatically detect which team a task belongs to based on its "Component", "Label", or "Team" custom field.
 *   **US-4.1:** As a user, I want the system to validate estimates according to business rules (Story Points: 1,2,3,5,8 allowed; Days/Hours: max 7 calendar days).
 
 ### 4.3. Scheduling Scenarios
@@ -37,8 +40,15 @@ This project aims to deliver a "Gantt Schedule Calculation System" that automate
 *   **US-9:** As a PM, I want to see a warning if a task has no estimate or team assigned.
 
 ### 4.5. Change History Tracking
-*   **US-10:** As a PM, I want to extract change history from JIRA tickets to track status, sprint, and story point changes over time.
+*   **US-10:** As a PM, I want to extract change history from JIRA tickets to track status, sprint, original estimate, and story point changes over time.
+*   **US-10.1:** As a PM, I want change history to include the value, timestamp, and user who made each change.
 *   **US-11:** As a PM, I want change history exported to CSV format with timestamps for analysis and reporting.
+*   **US-11.1:** As a PM, I want to optionally include change history when extracting JIRA tickets using a `--history` flag.
+
+### 4.6. Team Configuration Generation
+*   **US-12:** As a PM, I want to automatically generate team configuration files based on tags in JIRA ticket summaries and assignees.
+*   **US-12.1:** As a PM, I want the system to extract unique tags (e.g., [FE], [BE], [SFMC], [CRM]) from ticket summaries and map them to team members.
+*   **US-12.2:** As a PM, I want the system to generate a `teams_config.json` file with team definitions including team ID, name, velocity, members, and match rules.
 
 ## 5. Success Metrics
 *   **Accuracy:** Calculated completion dates usually fall within +/- 15% of actual completion (once velocity is calibrated).

@@ -25,7 +25,7 @@ function createAuthHeader(email: string, apiToken: string): string {
 async function inspectTicket() {
   const config = loadJiraConfig('jira-config.json');
   const baseUrl = config.jiraPath.replace(/\/$/, '');
-  const ticketKey = 'PSME-608';
+  const ticketKey = 'PSME-2777';
   const apiUrl = `${baseUrl}/rest/api/3/issue/${ticketKey}`;
   const authHeader = createAuthHeader(config.jiraEmail, config.jiraApiToken);
   

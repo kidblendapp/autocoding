@@ -16,13 +16,25 @@ The Gantt Schedule Calculation System is a Node.js/TypeScript application design
 *   **Parsers:**
     *   `CsvParser`: Uses `csv-parse` library to read CSV files with flexible column matching, quoted fields, and escaped characters.
     *   `XlsxParser`: (Future) Uses `xlsx` library for Excel sheets.
-    *   `JiraAdapter`: (Future) Fetches/parses JIRA API responses or DOM constructs.
+    *   `JiraExtractor`: Fetches/parses JIRA API responses using JIRA REST API v3.
+        *   Uses `/rest/api/3/search/jql` endpoint for ticket search
+        *   Implements key-range based pagination to handle large projects (2000+ tickets)
+        *   Extracts comprehensive ticket fields including custom fields:
+            *   `customfield_10052`: Story Points
+            *   `customfield_10410`: Original Estimate (numeric)
+            *   `customfield_10014`: Epic Link
+            *   `customfield_10010`: Sprint information
+            *   `customfield_10001`: Team name (e.g., "PSME-FE")
+        *   Supports optional change history extraction for Status, Sprint, Original Estimate, and Story Points
+        *   Exports tickets to CSV format with proper escaping
+        *   Generates separate CSV for unique sprint details
 *   **Normalization:**
     *   Converts input rows into a standardized `Task` interface.
     *   `EstimateProcessor`: Validates and processes estimates (Story Points or Days/Hours).
     *   Resolves team assignment based on configurable rules (Component, Label, Custom Field, Regex on Title).
 *   **Components:**
     *   `Task` model with required fields (id, title, estimate) and optional fields (component, parentId, issueType)
+    *   `JiraTicket` interface with comprehensive fields including history arrays
     *   Structured logger for consistent warning/error logging
 
 ### 3.2. Configuration System
@@ -63,14 +75,19 @@ The Gantt Schedule Calculation System is a Node.js/TypeScript application design
 
 ### 3.4. Change History Service
 *   **Change History Extractor:**
-    *   Executes JQL queries using `dmtools` CLI
-    *   Retrieves ticket changelogs from JIRA API
-    *   Filters for Status, Sprint, and Story Points fields
-    *   Supports custom field mapping
+    *   Retrieves ticket changelogs from JIRA REST API v3 (`/rest/api/3/issue/{key}/changelog`)
+    *   Filters for Status, Sprint, Original Estimate, and Story Points fields
+    *   Maps custom field IDs to field names:
+        *   `customfield_10052`: Story Points
+        *   `customfield_10410`: Original Estimate
+        *   `customfield_10010`: Sprint
+    *   Extracts change information including value, timestamp, and user
+    *   Processes tickets in batches to avoid API rate limits
 *   **CSV Generator:**
     *   Transforms changelog data to CSV format
-    *   Writes to timestamped directories (format: YYYYMMDD_HH)
+    *   Appends history columns to main ticket export CSV when `--history` flag is used
     *   Handles CSV escaping for special characters
+    *   Formats history as JSON strings for CSV compatibility
 
 ### 3.5. Output Layer
 *   **Output Generator:**

@@ -34,6 +34,7 @@ const LABELS = {
     AI_QUESTIONS_ASKED: 'ai_questions_asked',
     AI_SOLUTION_DESIGN_CREATED: 'ai_solution_design_created',
     AI_DEVELOPED: 'ai_developed',
+    AI_REQUIREMENTS_UPDATED: 'ai_requirements_updated',
     SD_CORE: 'sd_core',
     SD_API: 'sd_api',
     SD_UI: 'sd_ui',

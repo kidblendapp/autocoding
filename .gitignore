@@ -1,9 +1,11 @@
 dmtools.env
 node_modules/
+cacheBasicJiraClient/
+outputs/
 dist/
 *.log
 .env
 .DS_Store
 *.tsbuildinfo
-
 *.tmp
+

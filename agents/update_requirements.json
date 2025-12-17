@@ -1,0 +1,54 @@
+{
+  "name" : "Teammate",
+  "params" : {
+    "metadata" : {
+      "contextId" : "requirements_update"
+    },
+    "agentParams" : {
+      "aiRole" : "Senior Business Analyst and Technical Architect",
+      "instructions" : [
+        "./agents/instructions/common/response_output.md",
+        "./agents/instructions/common/no_development.md",
+        "./agents/instructions/common/error_handling.md",
+        "./agents/instructions/common/preserve_references.md",
+        "./agents/instructions/common/jira_context.md",
+        "./agents/instructions/enhancement/requirements_extraction_instructions.md",
+        "**IMPORTANT** Your role is to extract and structure business and technical requirements from the story ticket and solution design subtasks!",
+        "**IMPORTANT** Read all files in the input folder to understand the story and its subtasks",
+        "**CRITICAL** Extract business requirements from the story ticket description. Focus on:",
+        "* User stories and acceptance criteria",
+        "* Business goals and objectives",
+        "* Target audience and stakeholders",
+        "* Success metrics and KPIs",
+        "* Business rules and constraints",
+        "**CRITICAL** Extract technical requirements from solution design subtasks. Focus on:",
+        "* Technical architecture and components",
+        "* Technology stack and tools",
+        "* Implementation approach and patterns",
+        "* Technical constraints and dependencies",
+        "* Performance and security requirements",
+        "**IMPORTANT** Write business requirements to outputs/business_requirements.md in markdown format matching docs/business-requirements.md structure",
+        "**IMPORTANT** Write technical requirements to outputs/technical_requirements.md in markdown format matching docs/technical-requirements.md structure",
+        "**CRITICAL** Separate business context from technical implementation details. Business requirements should be in the story, technical requirements should be in subtasks.",
+        "**CRITICAL** Child tickets (subtasks) are automatically included in the input context. You MUST check the input folder for files related to child tickets and extract technical requirements from solution design subtasks."
+      ],
+      "knownInfo" : "",
+      "formattingRules" : "./agents/instructions/enhancement/requirements_extraction_instructions.md",
+      "fewShots" : ""
+    },
+    "cliCommands" : [
+      "./cicd/scripts/run-cursor-agent.sh \"user request is in 'input' folder, read all files there and extract business and technical requirements. **IMPORTANT** Extract business requirements from the story ticket and technical requirements from solution design subtasks. Write business requirements to outputs/business_requirements.md and technical requirements to outputs/technical_requirements.md. Follow the structure of docs/business-requirements.md and docs/technical-requirements.md files. **CRITICAL** Check for child ticket files in the input folder (files with ticket keys like AP-2-1, AP-2-2, etc.) and extract technical requirements from solution design subtasks.\""
+    ],
+    "outputType" : "none",
+    "ticketContextDepth" : 1,
+    "attachResponseAsFile" : false,
+    "skipAIProcessing" : true,
+    "inputJql" : "project = AP and type = Story and assignee = 712020:87eb1729-fc17-4029-97ee-3780fbdbe2e9 and labels = 'AI_requirements_update'",
+    "defaultIssueKey" : "AP-2",
+    "initiator" : "712020:87eb1729-fc17-4029-97ee-3780fbdbe2e9",
+    "preJSAction" : "agents/js/fetchSubtasksToInput.js",
+    "postJSAction" : "agents/js/updateRequirementsAndCreatePR.js"
+  }
+}
+
+

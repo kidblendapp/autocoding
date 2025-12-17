@@ -138,6 +138,75 @@ export function validateConfig(rawConfig: RawScheduleConfig): ValidationResult {
     });
   }
 
+  // Validate optional nonWorkingDays array
+  let nonWorkingDays: string[] | undefined = undefined;
+  if (rawConfig.nonWorkingDays !== undefined && rawConfig.nonWorkingDays !== null) {
+    if (!Array.isArray(rawConfig.nonWorkingDays)) {
+      errors.push({
+        field: 'nonWorkingDays',
+        message: 'nonWorkingDays must be an array',
+      });
+    } else {
+      const validDates: string[] = [];
+      const isoDateRegex = /^\d{4}-\d{2}-\d{2}$/;
+      
+      for (let i = 0; i < rawConfig.nonWorkingDays.length; i++) {
+        const dateValue = rawConfig.nonWorkingDays[i];
+        
+        if (typeof dateValue !== 'string') {
+          errors.push({
+            field: `nonWorkingDays[${i}]`,
+            message: `nonWorkingDays[${i}] must be a string in ISO format (YYYY-MM-DD)`,
+          });
+          continue;
+        }
+        
+        if (!isoDateRegex.test(dateValue)) {
+          errors.push({
+            field: `nonWorkingDays[${i}]`,
+            message: `nonWorkingDays[${i}] must be in ISO format: YYYY-MM-DD (e.g., "2024-01-01")`,
+          });
+          continue;
+        }
+        
+        // Validate that it's a valid date
+        const date = new Date(dateValue);
+        if (isNaN(date.getTime())) {
+          errors.push({
+            field: `nonWorkingDays[${i}]`,
+            message: `nonWorkingDays[${i}] is not a valid date: ${dateValue}`,
+          });
+          continue;
+        }
+        
+        // Check if the date string matches the parsed date (prevents dates like "2024-13-45")
+        const [year, month, day] = dateValue.split('-').map(Number);
+        const expectedDate = new Date(year, month - 1, day);
+        if (
+          expectedDate.getFullYear() !== year ||
+          expectedDate.getMonth() !== month - 1 ||
+          expectedDate.getDate() !== day
+        ) {
+          errors.push({
+            field: `nonWorkingDays[${i}]`,
+            message: `nonWorkingDays[${i}] is not a valid date: ${dateValue}`,
+          });
+          continue;
+        }
+        
+        validDates.push(dateValue);
+      }
+      
+      if (validDates.length > 0) {
+        nonWorkingDays = validDates;
+      } else if (rawConfig.nonWorkingDays.length > 0) {
+        // Array was provided but all dates were invalid
+        // Errors have already been added above
+      }
+      // If array is empty, nonWorkingDays remains undefined (which is valid)
+    }
+  }
+
   // Validate optional changeHistory configuration
   let changeHistory: ScheduleConfig['changeHistory'] = undefined;
   if (rawConfig.changeHistory !== undefined && rawConfig.changeHistory !== null) {
@@ -229,6 +298,7 @@ export function validateConfig(rawConfig: RawScheduleConfig): ValidationResult {
       projectStartDate: projectStartDate as string,
       sprintDurationDays: sprintDurationDays as number,
       velocity: velocity as number,
+      nonWorkingDays: nonWorkingDays,
       changeHistory: changeHistory,
     },
   };

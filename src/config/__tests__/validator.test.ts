@@ -598,4 +598,160 @@ describe('Config Validator', () => {
       expect(result.config?.changeHistory).toBeUndefined();
     });
   });
+
+  describe('nonWorkingDays validation', () => {
+    it('should accept valid configuration with nonWorkingDays', () => {
+      const config: RawScheduleConfig = {
+        projectStartDate: '2024-02-01',
+        sprintDurationDays: 10,
+        velocity: 20,
+        nonWorkingDays: ['2024-12-25', '2024-01-01'],
+      };
+
+      const result = validateConfig(config);
+      
+      expect(result.valid).toBe(true);
+      expect(result.config?.nonWorkingDays).toEqual(['2024-12-25', '2024-01-01']);
+    });
+
+    it('should accept empty nonWorkingDays array', () => {
+      const config: RawScheduleConfig = {
+        projectStartDate: '2024-02-01',
+        sprintDurationDays: 10,
+        velocity: 20,
+        nonWorkingDays: [],
+      };
+
+      const result = validateConfig(config);
+      
+      expect(result.valid).toBe(true);
+      expect(result.config?.nonWorkingDays).toBeUndefined();
+    });
+
+    it('should accept configuration without nonWorkingDays', () => {
+      const config: RawScheduleConfig = {
+        projectStartDate: '2024-02-01',
+        sprintDurationDays: 10,
+        velocity: 20,
+      };
+
+      const result = validateConfig(config);
+      
+      expect(result.valid).toBe(true);
+      expect(result.config?.nonWorkingDays).toBeUndefined();
+    });
+
+    it('should reject nonWorkingDays with non-array value', () => {
+      const config: RawScheduleConfig = {
+        projectStartDate: '2024-02-01',
+        sprintDurationDays: 10,
+        velocity: 20,
+        nonWorkingDays: '2024-12-25',
+      };
+
+      const result = validateConfig(config);
+      
+      expect(result.valid).toBe(false);
+      expect(result.errors.some(e => e.field === 'nonWorkingDays' && e.message.includes('must be an array'))).toBe(true);
+    });
+
+    it('should reject nonWorkingDays with non-string values', () => {
+      const config: RawScheduleConfig = {
+        projectStartDate: '2024-02-01',
+        sprintDurationDays: 10,
+        velocity: 20,
+        nonWorkingDays: [20241225, '2024-01-01'],
+      };
+
+      const result = validateConfig(config);
+      
+      expect(result.valid).toBe(false);
+      expect(result.errors.some(e => e.field === 'nonWorkingDays[0]' && e.message.includes('must be a string'))).toBe(true);
+    });
+
+    it('should reject nonWorkingDays with invalid date format', () => {
+      const config: RawScheduleConfig = {
+        projectStartDate: '2024-02-01',
+        sprintDurationDays: 10,
+        velocity: 20,
+        nonWorkingDays: ['12/25/2024', '2024-01-01'],
+      };
+
+      const result = validateConfig(config);
+      
+      expect(result.valid).toBe(false);
+      expect(result.errors.some(e => e.field === 'nonWorkingDays[0]' && e.message.includes('ISO format'))).toBe(true);
+    });
+
+    it('should reject nonWorkingDays with invalid dates', () => {
+      const config: RawScheduleConfig = {
+        projectStartDate: '2024-02-01',
+        sprintDurationDays: 10,
+        velocity: 20,
+        nonWorkingDays: ['2024-13-01', '2024-02-30'],
+      };
+
+      const result = validateConfig(config);
+      
+      expect(result.valid).toBe(false);
+      expect(result.errors.some(e => e.field === 'nonWorkingDays[0]' && e.message.includes('not a valid date'))).toBe(true);
+      expect(result.errors.some(e => e.field === 'nonWorkingDays[1]' && e.message.includes('not a valid date'))).toBe(true);
+    });
+
+    it('should accept valid dates in nonWorkingDays array', () => {
+      const config: RawScheduleConfig = {
+        projectStartDate: '2024-02-01',
+        sprintDurationDays: 10,
+        velocity: 20,
+        nonWorkingDays: ['2024-12-25', '2024-01-01', '2024-07-04'],
+      };
+
+      const result = validateConfig(config);
+      
+      expect(result.valid).toBe(true);
+      expect(result.config?.nonWorkingDays).toEqual(['2024-12-25', '2024-01-01', '2024-07-04']);
+    });
+
+    it('should report all invalid dates in nonWorkingDays array', () => {
+      const config: RawScheduleConfig = {
+        projectStartDate: '2024-02-01',
+        sprintDurationDays: 10,
+        velocity: 20,
+        nonWorkingDays: ['invalid', '2024-13-01', '2024-02-30'],
+      };
+
+      const result = validateConfig(config);
+      
+      expect(result.valid).toBe(false);
+      expect(result.errors.filter(e => e.field.startsWith('nonWorkingDays')).length).toBeGreaterThanOrEqual(3);
+    });
+
+    it('should accept leap year date in nonWorkingDays', () => {
+      const config: RawScheduleConfig = {
+        projectStartDate: '2024-02-01',
+        sprintDurationDays: 10,
+        velocity: 20,
+        nonWorkingDays: ['2024-02-29'],
+      };
+
+      const result = validateConfig(config);
+      
+      expect(result.valid).toBe(true);
+      expect(result.config?.nonWorkingDays).toEqual(['2024-02-29']);
+    });
+
+    it('should reject non-leap year February 29 in nonWorkingDays', () => {
+      const config: RawScheduleConfig = {
+        projectStartDate: '2024-02-01',
+        sprintDurationDays: 10,
+        velocity: 20,
+        nonWorkingDays: ['2023-02-29'],
+      };
+
+      const result = validateConfig(config);
+      
+      expect(result.valid).toBe(false);
+      expect(result.errors.some(e => e.field === 'nonWorkingDays[0]' && e.message.includes('not a valid date'))).toBe(true);
+    });
+  });
 });

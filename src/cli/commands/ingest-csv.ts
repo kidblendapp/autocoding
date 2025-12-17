@@ -11,6 +11,8 @@ import { logger } from '../../utils/logger';
 import { scheduleConfig } from '../../config/schedule-config';
 import { calculateSchedule } from '../../calculators/schedule-calculator';
 import { generateOutput } from '../../output/output-generator';
+import { extractChangeHistory } from '../../services/change-history-extractor';
+import { generateChangeHistoryCsv } from '../../services/change-history-csv-generator';
 import type { ScheduledTask } from '../../models/ScheduledTask';
 
 export interface IngestOptions {
@@ -60,11 +62,33 @@ export async function ingestCsv(options: IngestOptions): Promise<ScheduledTask[]
       configPath: options.scheduleConfigPath,
     });
 
+    const config = scheduleConfig.getConfig();
+
+    // Extract change history if configured (run in parallel with schedule calculation)
+    const changeHistoryPromise = config.changeHistory
+      ? extractChangeHistory(config.changeHistory)
+          .then(changes => {
+            if (changes.length > 0) {
+              generateChangeHistoryCsv(changes);
+            } else {
+              logger.info('No change history data to export');
+            }
+          })
+          .catch(error => {
+            // Log error but don't fail the entire command
+            logger.error(`Change history extraction failed: ${error instanceof Error ? error.message : String(error)}`);
+            logger.warn('Continuing with schedule calculation despite change history extraction error');
+          })
+      : Promise.resolve();
+
     // Calculate schedule
-    const scheduledTasks = calculateSchedule(result.tasks, scheduleConfig.getConfig());
+    const scheduledTasks = calculateSchedule(result.tasks, config);
 
     // Generate output file
     generateOutput(scheduledTasks, options.output);
+
+    // Wait for change history extraction to complete (if it was started)
+    await changeHistoryPromise;
 
     return scheduledTasks;
   } catch (error) {

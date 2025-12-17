@@ -418,4 +418,184 @@ describe('Config Validator', () => {
       expect(formatted).toBe('');
     });
   });
+
+  describe('changeHistory validation', () => {
+    it('should accept valid configuration with changeHistory', () => {
+      const config: RawScheduleConfig = {
+        projectStartDate: '2024-02-01',
+        sprintDurationDays: 10,
+        velocity: 20,
+        changeHistory: {
+          jql: 'project = PROJ AND status = Done',
+        },
+      };
+
+      const result = validateConfig(config);
+      
+      expect(result.valid).toBe(true);
+      expect(result.config?.changeHistory).toEqual({
+        jql: 'project = PROJ AND status = Done',
+        fieldMapping: undefined,
+      });
+    });
+
+    it('should accept changeHistory with fieldMapping', () => {
+      const config: RawScheduleConfig = {
+        projectStartDate: '2024-02-01',
+        sprintDurationDays: 10,
+        velocity: 20,
+        changeHistory: {
+          jql: 'project = PROJ',
+          fieldMapping: {
+            sprint: 'customfield_10020',
+            storyPoints: 'customfield_10021',
+          },
+        },
+      };
+
+      const result = validateConfig(config);
+      
+      expect(result.valid).toBe(true);
+      expect(result.config?.changeHistory?.fieldMapping).toEqual({
+        sprint: 'customfield_10020',
+        storyPoints: 'customfield_10021',
+      });
+    });
+
+    it('should accept changeHistory with partial fieldMapping', () => {
+      const config: RawScheduleConfig = {
+        projectStartDate: '2024-02-01',
+        sprintDurationDays: 10,
+        velocity: 20,
+        changeHistory: {
+          jql: 'project = PROJ',
+          fieldMapping: {
+            sprint: 'customfield_10020',
+          },
+        },
+      };
+
+      const result = validateConfig(config);
+      
+      expect(result.valid).toBe(true);
+      expect(result.config?.changeHistory?.fieldMapping).toEqual({
+        sprint: 'customfield_10020',
+      });
+    });
+
+    it('should reject changeHistory with missing jql', () => {
+      const config: RawScheduleConfig = {
+        projectStartDate: '2024-02-01',
+        sprintDurationDays: 10,
+        velocity: 20,
+        changeHistory: {
+          fieldMapping: {
+            sprint: 'customfield_10020',
+          },
+        },
+      };
+
+      const result = validateConfig(config);
+      
+      expect(result.valid).toBe(false);
+      expect(result.errors.some(e => e.field === 'changeHistory.jql')).toBe(true);
+    });
+
+    it('should reject changeHistory with null jql', () => {
+      const config: RawScheduleConfig = {
+        projectStartDate: '2024-02-01',
+        sprintDurationDays: 10,
+        velocity: 20,
+        changeHistory: {
+          jql: null,
+        },
+      };
+
+      const result = validateConfig(config);
+      
+      expect(result.valid).toBe(false);
+      expect(result.errors.some(e => e.field === 'changeHistory.jql')).toBe(true);
+    });
+
+    it('should reject changeHistory with empty jql', () => {
+      const config: RawScheduleConfig = {
+        projectStartDate: '2024-02-01',
+        sprintDurationDays: 10,
+        velocity: 20,
+        changeHistory: {
+          jql: '   ',
+        },
+      };
+
+      const result = validateConfig(config);
+      
+      expect(result.valid).toBe(false);
+      expect(result.errors.some(e => e.field === 'changeHistory.jql' && e.message.includes('not be empty'))).toBe(true);
+    });
+
+    it('should reject changeHistory with non-string jql', () => {
+      const config: RawScheduleConfig = {
+        projectStartDate: '2024-02-01',
+        sprintDurationDays: 10,
+        velocity: 20,
+        changeHistory: {
+          jql: 123,
+        },
+      };
+
+      const result = validateConfig(config);
+      
+      expect(result.valid).toBe(false);
+      expect(result.errors.some(e => e.field === 'changeHistory.jql' && e.message.includes('must be a string'))).toBe(true);
+    });
+
+    it('should reject changeHistory with non-object fieldMapping', () => {
+      const config: RawScheduleConfig = {
+        projectStartDate: '2024-02-01',
+        sprintDurationDays: 10,
+        velocity: 20,
+        changeHistory: {
+          jql: 'project = PROJ',
+          fieldMapping: 'invalid',
+        },
+      };
+
+      const result = validateConfig(config);
+      
+      expect(result.valid).toBe(false);
+      expect(result.errors.some(e => e.field === 'changeHistory.fieldMapping')).toBe(true);
+    });
+
+    it('should reject changeHistory with non-string fieldMapping values', () => {
+      const config: RawScheduleConfig = {
+        projectStartDate: '2024-02-01',
+        sprintDurationDays: 10,
+        velocity: 20,
+        changeHistory: {
+          jql: 'project = PROJ',
+          fieldMapping: {
+            sprint: 123,
+          },
+        },
+      };
+
+      const result = validateConfig(config);
+      
+      expect(result.valid).toBe(false);
+      expect(result.errors.some(e => e.field === 'changeHistory.fieldMapping.sprint')).toBe(true);
+    });
+
+    it('should accept configuration without changeHistory', () => {
+      const config: RawScheduleConfig = {
+        projectStartDate: '2024-02-01',
+        sprintDurationDays: 10,
+        velocity: 20,
+      };
+
+      const result = validateConfig(config);
+      
+      expect(result.valid).toBe(true);
+      expect(result.config?.changeHistory).toBeUndefined();
+    });
+  });
 });

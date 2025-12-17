@@ -123,8 +123,10 @@ describe('Schedule Calculator', () => {
 
       expect(scheduled).toHaveLength(1);
       expect(scheduled[0].id).toBe('TASK-1');
-      expect(scheduled[0].calculatedStartDate).toBe('2024-02-01');
-      expect(scheduled[0].calculatedEndDate).toBe('2024-02-05'); // 3.5 days rounded
+      expect(scheduled[0].calculatedStartDate).toBe('2024-02-01'); // Thursday
+      // Duration: (5/10) * 7 = 3.5 days, rounded up to 4 working days
+      // Thu + 4 working days = Thu, Fri, Mon, Tue = Tuesday 2024-02-06
+      expect(scheduled[0].calculatedEndDate).toBe('2024-02-06');
     });
 
     it('should use project start date for first task', () => {
@@ -191,17 +193,20 @@ describe('Schedule Calculator', () => {
 
       expect(scheduled).toHaveLength(3);
       
-      // Task 1: (5/10) * 7 = 3.5 days -> 2024-02-01 to 2024-02-05
+      // Task 1: (5/10) * 7 = 3.5 days, rounded up to 4 working days
+      // Thu 2024-02-01 + 4 working days = Thu, Fri, Mon, Tue = Tue 2024-02-06
       expect(scheduled[0].calculatedStartDate).toBe('2024-02-01');
-      expect(scheduled[0].calculatedEndDate).toBe('2024-02-05');
+      expect(scheduled[0].calculatedEndDate).toBe('2024-02-06');
       
-      // Task 2: starts when Task 1 ends, (10/10) * 7 = 7 days
-      expect(scheduled[1].calculatedStartDate).toBe('2024-02-05');
-      expect(scheduled[1].calculatedEndDate).toBe('2024-02-12');
+      // Task 2: starts when Task 1 ends (Tue), (10/10) * 7 = 7 working days
+      // Tue + 7 working days = Tue, Wed, Thu, Fri, Mon, Tue, Wed = Wed 2024-02-14
+      expect(scheduled[1].calculatedStartDate).toBe('2024-02-06');
+      expect(scheduled[1].calculatedEndDate).toBe('2024-02-14');
       
-      // Task 3: starts when Task 2 ends, (3/10) * 7 = 2.1 days -> 2 days
-      expect(scheduled[2].calculatedStartDate).toBe('2024-02-12');
-      expect(scheduled[2].calculatedEndDate).toBe('2024-02-14');
+      // Task 3: starts when Task 2 ends (Wed), (3/10) * 7 = 2.1 days, rounded up to 3 working days
+      // Wed + 3 working days = Wed, Thu, Fri = Fri 2024-02-16
+      expect(scheduled[2].calculatedStartDate).toBe('2024-02-14');
+      expect(scheduled[2].calculatedEndDate).toBe('2024-02-16');
     });
 
     it('should preserve all original task fields', () => {
@@ -239,8 +244,8 @@ describe('Schedule Calculator', () => {
 
       const scheduled = calculateSchedule(tasks, validConfig);
 
-      expect(scheduled[0].calculatedStartDate).toBe('2024-02-01');
-      expect(scheduled[0].calculatedEndDate).toBe('2024-02-01'); // 0 days duration
+      expect(scheduled[0].calculatedStartDate).toBe('2024-02-01'); // Thursday
+      expect(scheduled[0].calculatedEndDate).toBe('2024-02-01'); // 0 days duration, same day
     });
 
     it('should handle tasks with negative estimates by using 0', () => {
@@ -254,8 +259,8 @@ describe('Schedule Calculator', () => {
 
       const scheduled = calculateSchedule(tasks, validConfig);
 
-      expect(scheduled[0].calculatedStartDate).toBe('2024-02-01');
-      expect(scheduled[0].calculatedEndDate).toBe('2024-02-01'); // 0 days duration
+      expect(scheduled[0].calculatedStartDate).toBe('2024-02-01'); // Thursday
+      expect(scheduled[0].calculatedEndDate).toBe('2024-02-01'); // 0 days duration, same day
     });
 
     it('should return empty array for empty task list', () => {
@@ -334,11 +339,11 @@ describe('Schedule Calculator', () => {
 
       const scheduled = calculateSchedule(tasks, config);
 
-      // Duration = (5/10) * 7 = 3.5 days
-      // Start: 2024-02-01
-      // End: 2024-02-01 + 3.5 days = 2024-02-05 (rounded)
+      // Duration = (5/10) * 7 = 3.5 days, rounded up to 4 working days
+      // Start: 2024-02-01 (Thursday)
+      // End: Thu + 4 working days = Thu, Fri, Mon, Tue = 2024-02-06 (Tuesday)
       expect(scheduled[0].calculatedStartDate).toBe('2024-02-01');
-      expect(scheduled[0].calculatedEndDate).toBe('2024-02-05');
+      expect(scheduled[0].calculatedEndDate).toBe('2024-02-06');
     });
 
     it('should handle multiple tasks with different estimates', () => {
@@ -368,17 +373,177 @@ describe('Schedule Calculator', () => {
 
       const scheduled = calculateSchedule(tasks, config);
 
-      // Task 1: (2/10) * 10 = 2 days -> 2024-01-01 to 2024-01-03
+      // Task 1: (2/10) * 10 = 2 working days
+      // Mon 2024-01-01 + 2 working days = Mon, Tue = Tue 2024-01-02
       expect(scheduled[0].calculatedStartDate).toBe('2024-01-01');
-      expect(scheduled[0].calculatedEndDate).toBe('2024-01-03');
+      expect(scheduled[0].calculatedEndDate).toBe('2024-01-02');
       
-      // Task 2: (5/10) * 10 = 5 days -> 2024-01-03 to 2024-01-08
-      expect(scheduled[1].calculatedStartDate).toBe('2024-01-03');
+      // Task 2: starts when Task 1 ends (Tue), (5/10) * 10 = 5 working days
+      // Tue + 5 working days = Tue, Wed, Thu, Fri, Mon = Mon 2024-01-08
+      expect(scheduled[1].calculatedStartDate).toBe('2024-01-02');
       expect(scheduled[1].calculatedEndDate).toBe('2024-01-08');
       
-      // Task 3: (13/10) * 10 = 13 days -> 2024-01-08 to 2024-01-21
+      // Task 3: starts when Task 2 ends (Mon), (13/10) * 10 = 13 working days
+      // Mon + 13 working days = Mon, Tue, Wed, Thu, Fri, Mon, Tue, Wed, Thu, Fri, Mon, Tue, Wed = Wed 2024-01-24
       expect(scheduled[2].calculatedStartDate).toBe('2024-01-08');
-      expect(scheduled[2].calculatedEndDate).toBe('2024-01-21');
+      expect(scheduled[2].calculatedEndDate).toBe('2024-01-24');
+    });
+
+    describe('working days functionality', () => {
+      it('should handle AC1: Task with 2.5 days starting Monday completes Wednesday', () => {
+        const tasks: Task[] = [
+          {
+            id: 'TASK-1',
+            title: 'AC1 Test Task',
+            estimate: 5,
+          },
+        ];
+
+        const config: ScheduleConfig = {
+          projectStartDate: '2024-02-05', // Monday
+          sprintDurationDays: 7,
+          velocity: 10,
+        };
+
+        const scheduled = calculateSchedule(tasks, config);
+
+        // Duration = (5/10) * 7 = 3.5 days, but let's test 2.5 days scenario
+        // Actually, let's create a scenario that gives us 2.5 days
+        // Estimate = 5, Velocity = 14, SprintDuration = 7 gives us (5/14) * 7 = 2.5 days
+        const config2: ScheduleConfig = {
+          projectStartDate: '2024-02-05', // Monday
+          sprintDurationDays: 7,
+          velocity: 14,
+        };
+
+        const scheduled2 = calculateSchedule(tasks, config2);
+
+        // Duration = (5/14) * 7 = 2.5 days, rounded up to 3 working days
+        // Mon + 3 working days = Mon, Tue, Wed = Wed 2024-02-07
+        expect(scheduled2[0].calculatedStartDate).toBe('2024-02-05'); // Monday
+        expect(scheduled2[0].calculatedEndDate).toBe('2024-02-07'); // Wednesday
+      });
+
+      it('should handle AC2: Task starting Friday with 1.5 days completes Monday', () => {
+        const tasks: Task[] = [
+          {
+            id: 'TASK-1',
+            title: 'AC2 Test Task',
+            estimate: 3,
+          },
+        ];
+
+        const config: ScheduleConfig = {
+          projectStartDate: '2024-02-09', // Friday
+          sprintDurationDays: 7,
+          velocity: 14, // (3/14) * 7 = 1.5 days
+        };
+
+        const scheduled = calculateSchedule(tasks, config);
+
+        // Duration = 1.5 days, rounded up to 2 working days
+        // Fri + 2 working days = Fri, Mon (skips weekend) = Mon 2024-02-12
+        expect(scheduled[0].calculatedStartDate).toBe('2024-02-09'); // Friday
+        expect(scheduled[0].calculatedEndDate).toBe('2024-02-12'); // Monday
+      });
+
+      it('should handle AC3: Configuration with non-working days excludes those dates', () => {
+        const tasks: Task[] = [
+          {
+            id: 'TASK-1',
+            title: 'AC3 Test Task',
+            estimate: 5,
+          },
+        ];
+
+        const config: ScheduleConfig = {
+          projectStartDate: '2024-02-05', // Monday
+          sprintDurationDays: 7,
+          velocity: 10,
+          nonWorkingDays: ['2024-02-07', '2024-02-08'], // Wednesday and Thursday holidays
+        };
+
+        const scheduled = calculateSchedule(tasks, config);
+
+        // Duration = (5/10) * 7 = 3.5 days, rounded up to 4 working days
+        // Mon + 4 working days = Mon, Tue, Fri, Mon (skips Wed, Thu holidays) = Mon 2024-02-12
+        expect(scheduled[0].calculatedStartDate).toBe('2024-02-05'); // Monday
+        expect(scheduled[0].calculatedEndDate).toBe('2024-02-12'); // Monday (skipped Wed, Thu)
+      });
+
+      it('should handle AC4: Sequential tasks properly chain with no gaps', () => {
+        const tasks: Task[] = [
+          {
+            id: 'TASK-1',
+            title: 'Task 1',
+            estimate: 5,
+          },
+          {
+            id: 'TASK-2',
+            title: 'Task 2',
+            estimate: 5,
+          },
+        ];
+
+        const config: ScheduleConfig = {
+          projectStartDate: '2024-02-05', // Monday
+          sprintDurationDays: 7,
+          velocity: 14, // (5/14) * 7 = 2.5 days per task
+        };
+
+        const scheduled = calculateSchedule(tasks, config);
+
+        // Task 1: Mon + 2.5 days (rounded to 3) = Mon, Tue, Wed = Wed 2024-02-07
+        expect(scheduled[0].calculatedStartDate).toBe('2024-02-05'); // Monday
+        expect(scheduled[0].calculatedEndDate).toBe('2024-02-07'); // Wednesday
+
+        // Task 2: starts when Task 1 ends (Wed), Wed + 2.5 days (rounded to 3) = Wed, Thu, Fri = Fri 2024-02-09
+        expect(scheduled[1].calculatedStartDate).toBe('2024-02-07'); // Wednesday (same as Task 1 end)
+        expect(scheduled[1].calculatedEndDate).toBe('2024-02-09'); // Friday
+      });
+
+      it('should handle project start date on weekend', () => {
+        const tasks: Task[] = [
+          {
+            id: 'TASK-1',
+            title: 'Weekend Start Task',
+            estimate: 5,
+          },
+        ];
+
+        const config: ScheduleConfig = {
+          projectStartDate: '2024-02-10', // Saturday
+          sprintDurationDays: 7,
+          velocity: 10,
+        };
+
+        const scheduled = calculateSchedule(tasks, config);
+
+        // Should start on next working day (Monday)
+        expect(scheduled[0].calculatedStartDate).toBe('2024-02-12'); // Monday
+      });
+
+      it('should handle project start date on holiday', () => {
+        const tasks: Task[] = [
+          {
+            id: 'TASK-1',
+            title: 'Holiday Start Task',
+            estimate: 5,
+          },
+        ];
+
+        const config: ScheduleConfig = {
+          projectStartDate: '2024-02-05', // Monday (will be a holiday)
+          sprintDurationDays: 7,
+          velocity: 10,
+          nonWorkingDays: ['2024-02-05'], // Monday is a holiday
+        };
+
+        const scheduled = calculateSchedule(tasks, config);
+
+        // Should start on next working day (Tuesday)
+        expect(scheduled[0].calculatedStartDate).toBe('2024-02-06'); // Tuesday
+      });
     });
   });
 });

@@ -82,6 +82,13 @@ export interface ScheduleConfig {
   velocity: number;
   
   /** 
+   * Optional array of non-working days (holidays) in ISO format (YYYY-MM-DD).
+   * Weekends (Saturday, Sunday) are automatically excluded.
+   * Example: ["2024-12-25", "2024-01-01"]
+   */
+  nonWorkingDays?: string[];
+  
+  /** 
    * Optional change history extraction configuration.
    * If provided, change history will be extracted and exported to CSV.
    */
@@ -96,6 +103,7 @@ export interface RawScheduleConfig {
   projectStartDate?: unknown;
   sprintDurationDays?: unknown;
   velocity?: unknown;
+  nonWorkingDays?: unknown;
   changeHistory?: {
     jql?: unknown;
     fieldMapping?: {

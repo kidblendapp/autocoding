@@ -9,6 +9,7 @@ import type { Task } from '../models/Task';
 import type { ScheduledTask } from '../models/ScheduledTask';
 import type { ScheduleConfig } from '../config/types';
 import { logger } from '../utils/logger';
+import { WorkingDaysCalendar } from './working-days-calculator';
 
 /**
  * Calculates the duration in days for a task based on estimate, velocity, and sprint duration.
@@ -46,6 +47,9 @@ export function calculateDuration(
  * 
  * All days are treated as working days (no weekend/holiday skipping).
  * 
+ * @deprecated Use WorkingDaysCalendar.addWorkingDays() instead for working days calculation.
+ * This function is kept for backward compatibility but should not be used in new code.
+ * 
  * @param startDate - Start date in ISO format (YYYY-MM-DD)
  * @param days - Number of days to add (can be fractional)
  * @returns End date in ISO format (YYYY-MM-DD)
@@ -73,13 +77,14 @@ export function addDays(startDate: string, days: number): string {
  * Calculates the schedule for a list of tasks sequentially.
  * 
  * Tasks are processed in order:
- * - First task uses project start date
+ * - First task uses project start date (adjusted to next working day if needed)
  * - Subsequent tasks use the previous task's end date as their start date
  * - Duration is calculated using: (Estimate / Velocity) * SprintDuration
- * - End date is calculated as: Start Date + Duration
+ * - End date is calculated using working days (excluding weekends and holidays)
+ * - Fractional durations are rounded up to the next working day
  * 
  * @param tasks - Array of tasks to schedule (in CSV order)
- * @param config - Schedule configuration (project start date, sprint duration, velocity)
+ * @param config - Schedule configuration (project start date, sprint duration, velocity, optional non-working days)
  * @returns Array of scheduled tasks with calculated start and end dates
  * @throws Error if configuration is invalid or tasks cannot be scheduled
  */
@@ -107,8 +112,13 @@ export function calculateSchedule(
     throw new Error(`Invalid project start date: ${config.projectStartDate}. Expected ISO format (YYYY-MM-DD).`);
   }
 
+  // Initialize working days calendar
+  const workingDaysCalendar = new WorkingDaysCalendar(config.nonWorkingDays || []);
+
+  // Ensure project start date is a working day
+  let currentDate = workingDaysCalendar.nextWorkingDay(config.projectStartDate);
+
   const scheduledTasks: ScheduledTask[] = [];
-  let currentDate = config.projectStartDate;
 
   // Process tasks sequentially
   for (let i = 0; i < tasks.length; i++) {
@@ -119,18 +129,22 @@ export function calculateSchedule(
       logger.warn(`Task ${task.id} has negative estimate (${task.estimate}), using 0`, i + 1);
     }
 
-    // Calculate duration
+    // Calculate duration (preserves fractional values)
     const duration = calculateDuration(
       Math.max(0, task.estimate),
       config.velocity,
       config.sprintDurationDays
     );
 
-    // Determine start date
-    const startDate = i === 0 ? config.projectStartDate : currentDate;
+    // Determine start date (ensure it's a working day)
+    // For first task, use project start date (adjusted to working day)
+    // For subsequent tasks, use previous task's end date (which is already a working day)
+    const startDate = i === 0 
+      ? workingDaysCalendar.nextWorkingDay(config.projectStartDate)
+      : workingDaysCalendar.nextWorkingDay(currentDate);
 
-    // Calculate end date
-    const endDate = addDays(startDate, duration);
+    // Calculate end date using working days
+    const endDate = workingDaysCalendar.addWorkingDays(startDate, duration);
 
     // Create scheduled task
     const scheduledTask: ScheduledTask = {
@@ -141,7 +155,8 @@ export function calculateSchedule(
 
     scheduledTasks.push(scheduledTask);
 
-    // Update current date for next task
+    // Update current date for next task (use end date as base)
+    // Next task starts on the same day as this task ends (per requirements)
     currentDate = endDate;
   }
 

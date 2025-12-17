@@ -24,4 +24,13 @@ export interface Task {
   
   /** Optional issue type (e.g., "Story", "Bug", "Task", "Sub-task") */
   issueType?: string;
+  
+  /** Optional status (e.g., "To Do", "In Progress", "Done") */
+  status?: string;
+  
+  /** Optional assignee (e.g., "John Doe", "jdoe@example.com") */
+  assignee?: string;
+  
+  /** Optional epic link (e.g., "PROJ-100") */
+  epicLink?: string;
 }

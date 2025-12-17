@@ -135,6 +135,9 @@ export function parseCsvFile(filePath: string, options: ParseOptions = {}): Pars
     const component = extractField(row, 'Component', ['Component', 'component']);
     const parentId = extractField(row, 'Parent Id', ['Parent Id', 'ParentId', 'parentId', 'Parent']);
     const issueType = extractField(row, 'Issue Type', ['Issue Type', 'IssueType', 'issueType']);
+    const status = extractField(row, 'Status', ['Status', 'status']);
+    const assignee = extractField(row, 'Assignee', ['Assignee', 'assignee', 'Assigned To']);
+    const epicLink = extractField(row, 'Epic Link', ['Epic Link', 'EpicLink', 'epicLink', 'Epic']);
 
     // Validate and process estimate
     const estimate = validateAndProcessEstimate(estimateValue, config, rowNumber);
@@ -147,6 +150,9 @@ export function parseCsvFile(filePath: string, options: ParseOptions = {}): Pars
       ...(component && component.trim() !== '' && { component: component.trim() }),
       ...(parentId && parentId.trim() !== '' && { parentId: parentId.trim() }),
       ...(issueType && issueType.trim() !== '' && { issueType: issueType.trim() }),
+      ...(status && status.trim() !== '' && { status: status.trim() }),
+      ...(assignee && assignee.trim() !== '' && { assignee: assignee.trim() }),
+      ...(epicLink && epicLink.trim() !== '' && { epicLink: epicLink.trim() }),
     };
 
     tasks.push(task);

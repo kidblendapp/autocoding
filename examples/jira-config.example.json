@@ -1,0 +1,8 @@
+{
+  "jiraPath": "https://yourcompany.atlassian.net",
+  "jiraEmail": "your.email@company.com",
+  "jiraApiToken": "your-api-token-here",
+  "projectName": "AP"
+}
+
+

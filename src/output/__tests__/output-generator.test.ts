@@ -72,6 +72,9 @@ describe('Output Generator', () => {
           component: 'Backend',
           parentId: 'EPIC-1',
           issueType: 'Story',
+          status: 'In Progress',
+          assignee: 'John Doe',
+          epicLink: 'EPIC-100',
           calculatedStartDate: '2024-02-01',
           calculatedEndDate: '2024-02-05',
         },
@@ -88,6 +91,9 @@ describe('Output Generator', () => {
       expect(parsed[0].component).toBe('Backend');
       expect(parsed[0].parentId).toBe('EPIC-1');
       expect(parsed[0].issueType).toBe('Story');
+      expect(parsed[0].status).toBe('In Progress');
+      expect(parsed[0].assignee).toBe('John Doe');
+      expect(parsed[0].epicLink).toBe('EPIC-100');
       expect(parsed[0].calculatedStartDate).toBe('2024-02-01');
       expect(parsed[0].calculatedEndDate).toBe('2024-02-05');
     });

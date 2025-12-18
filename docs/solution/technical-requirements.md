@@ -148,3 +148,25 @@ For detailed technical requirements for each subsystem, see:
 *   [Schedule Calculation](./subsystems/schedule-calculation.md)
 *   [Change History Extraction](./subsystems/change-history.md)
 
+### 7.1. Subsystem selection for solution design stories
+
+When an AI agent prepares or enhances a solution design for a specific Story, it MUST pick the most relevant subsystem document from `docs/solution/subsystems` based on the Story scope:
+
+- **CSV Backlog Ingestion (`docs/solution/subsystems/csv-ingestion.md`)**
+  - Use when the Story is about importing / parsing backlog data, JIRA CSV exports, or direct JIRA ticket extraction and normalization into internal models.
+- **Configuration Management (`docs/solution/subsystems/configuration.md`)**
+  - Use when the Story is about project configuration, team velocity, sprint duration, holidays, or any global settings that influence scheduling.
+- **Schedule Calculation (`docs/solution/subsystems/schedule-calculation.md`)**
+  - Use when the Story is about how tasks are scheduled, duration formulas, working days logic, queue management, or allocation rules.
+- **Change History Extraction (`docs/solution/subsystems/change-history.md`)**
+  - Use when the Story is about extracting, transforming, or consuming JIRA changelog / history data (status, sprint, estimates, story points).
+
+The Markdown links above are the **single source of truth** for subsystem → file mapping:
+
+- **Link targets** (e.g. `./subsystems/csv-ingestion.md`) map directly to repository paths under `docs/solution/subsystems/` (e.g. `docs/solution/subsystems/csv-ingestion.md`).
+- AI agents should:
+  1. Read this file (`docs/solution/technical-requirements.md` or its GitHub version at `https://github.com/kidblendapp/autocoding/blob/main/docs/solution/technical-requirements.md`).
+  2. Use the Story context to choose the appropriate subsystem from the list above.
+  3. Extract the relative Markdown link for that subsystem and resolve it to the repo path under `docs/solution/subsystems/`.
+  4. Use the chosen subsystem document as the **primary technical reference** when designing the solution for that Story.
+

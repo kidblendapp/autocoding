@@ -59,9 +59,26 @@ This project aims to deliver a "Gantt Schedule Calculation System" that automate
 
 ## 6. Subsystem Requirements
 
-For detailed business requirements for each subsystem, see:
-*   [CSV Backlog Ingestion](./subsystems/csv-ingestion.md)
-*   [Configuration Management](./subsystems/configuration.md)
-*   [Schedule Calculation](./subsystems/schedule-calculation.md)
-*   [Change History Extraction](./subsystems/change-history.md)
+This section maps high-level user stories to concrete subsystem documentation paths for both business and technical requirements.  
+Paths are written relative to the repository root so that automation tools (e.g., Cursor agents) can reliably locate them.
+
+- **CSV Backlog Ingestion**
+  - **Related user stories:** US-3, US-3.1, US-3.2, US-3.3, US-4, US-4.1
+  - **Business requirements:** `docs/reqs/subsystems/csv-ingestion.md`
+  - **Technical requirements:** `docs/solution/subsystems/csv-ingestion.md`
+
+- **Configuration Management**
+  - **Related user stories:** US-1, US-2, US-2.1
+  - **Business requirements:** `docs/reqs/subsystems/configuration.md`
+  - **Technical requirements:** `docs/solution/subsystems/configuration.md`
+
+- **Schedule Calculation**
+  - **Related user stories:** US-5, US-6, US-7, US-7.1, US-7.2
+  - **Business requirements:** `docs/reqs/subsystems/schedule-calculation.md`
+  - **Technical requirements:** `docs/solution/subsystems/schedule-calculation.md`
+
+- **Change History Extraction**
+  - **Related user stories:** US-10, US-10.1, US-11, US-11.1
+  - **Business requirements:** `docs/reqs/subsystems/change-history.md`
+  - **Technical requirements:** `docs/solution/subsystems/change-history.md`
 

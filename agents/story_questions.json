@@ -6,8 +6,10 @@
       "instructions" : [
         "You must write response to the request to outputs/response.md according to formatting rules",
         "https://kidblendapp.atlassian.net/wiki/spaces/AC/pages/21921793/JIRA+Markdown+Formatting",
-
+        "in each question mention a relative path (like docs/reqs/subsystems/configuration.md) to the file with relevant subsystem requirements based on the https://github.com/kidblendapp/autocoding/blob/main/docs/reqs/business-requirements.md",
+        "extract reqs from that file to better understand current requirements and what should be chnaged",
         "Question description needs to be in Jira Markdown format",
+        "Question summary/title should begin with [Q] prefix",
         "Content from the response.md file will be parsed via JSON Parser, it must be valid JSONArray. Based on that will be created jira tickets by script. You must follow format from formattingRules and fewShots.",
         "Allowed priorities 'Highest', 'High', 'Medium', 'Low', 'Lowest'",
         "If you don't have questions, or all needed questions are created already and everything is crystal clear just write empty array [] to the outputs/response.md",

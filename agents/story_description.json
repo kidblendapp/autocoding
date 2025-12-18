@@ -6,12 +6,11 @@
       "instructions" : [
         "https://kidblendapp.atlassian.net/wiki/spaces/AC/pages/786465/JIRA+Template+Story",
         "You must write response to the request to outputs/response.md according to formatting rules",
-        "Don't write Enhanced Story Description of TICKET-XXX, just start from the content.",
-        "Content from the response.md file will replace description fully from the ticket, don't include any intro, current ticket reference.",
+        "Content from the response.md file will replace description fully from the ticket, don't include any intro, current ticket reference, 'Enhanced Story Description of TICKET-XXX' etc.",
         "if you did not understand the task, or you can't finish it with right quality or you can't read something and understand **IMPORTANT** you must mention that in updated description keeping initial content. You must not delete important content then from description. For example: [initial content] Opened issues... Help is needed...",
         "**IMPORTANT** You must keep exact syntax and references to attachments if there are any in description of the ticket. Especially if we need it in future. If you remove reference from description we lose attachments. For instance, if initial description has !image-20250923-195553.png|width=763,alt=\"image-20250923-195553.png\"!, it must be presented in new description as well.",
         "**IMPORTANT** You must keep ALL links and references from initial description logically inserted to output description. Otherwise you lose it. You can add section like: References [Link]",
-        "**IMPORTANT** if current description looks fully correct look any mentions of tagging account like [~accountid:712020:39ae9870-8a56-44be-945e-a8ad26273932], which means user asked extra improvements. That can be in comments or in the texts.",
+        "**IMPORTANT** if current description looks fully correct look any mentions of tagging account like [~accountid:712020:87eb1729-fc17-4029-97ee-3780fbdbe2e9], which means user asked extra improvements. That can be in comments or in the texts.",
         "if you can't read file yourself for instance images you must use the terminal (CLI) command \"dmtools gemini_ai_chat_with_files --data '{\"message\": \"Your request what you need to understand from file\", \"filePaths\": [\"/path/to/image.png\"]}'",
         "Use the terminal (cli) command to get png file of figma designs and then read it via gemini_ai_chat_with_files: dmtools figma_download_image_of_file <<EOF\n{\n  \"href\": \"https://www.figma.com/design/asdsadasdasdasd/Business-App?m=auto&node-id=NODEID&t=ASdasdsadas-1\"\n}\nEOF",
         "**CRITICAL** Child tickets (subtasks) and blocking issues are automatically included in the input context. You MUST check the input folder for files related to:",
@@ -21,6 +20,7 @@
         "* Answered questions from question subtasks - use the answers to clarify requirements",
         "* Solution design details from solution design subtasks - incorporate technical details",
         "* Blocking issue descriptions - use information from blocking issues to understand dependencies and constraints",
+        "* Check for relevant subsystem requirements in only in those *.md files from https://github.com/kidblendapp/autocoding/blob/main/docs/reqs/ which path is mentioned in questions, like docs/reqs/subsystems/configuration.md",
         "* Any other related ticket information that provides context",
         "**CRITICAL** If you find child tickets or blocking issues in the input folder, you MUST explicitly reference and use their content in the enhanced description. Do not ignore related ticket information.",
         "If child tickets are not found in the input folder but should exist, use the terminal (cli) command to fetch them: dmtools jira_search_by_jql <<EOF\n{\n  \"jql\": \"parent = TICKET-XXX\"\n}\nEOF"

@@ -1,5 +1,6 @@
 {
   "projectStartDate": "2024-01-01",
+  "projectReschedulingDate": "2025-12-18",
   "sprintDurationDays": 10,
   "teams": [
     {
@@ -10,7 +11,7 @@
       "members": ["BA User 1", "BA User 2"],
       "matchRules": {
         "issueTypes": ["Story"],
-        "statuses": ["To Do", "In Progress", "Done", "CANCELLED"]
+        "statuses": ["To Do", "IN ANALYSIS", "On Hold / Blocked", "Review In Progress"]
       }
     },
     {
@@ -22,7 +23,18 @@
       "matchRules": {
         "issueTypes": ["Story"],
         "jiraTeam": ["PSME-FE"],
-        "statuses": ["To Do", "In Progress", "Done", "CANCELLED"]
+        "statuses": [
+          "READY FOR DEV",
+          "In Progress",
+          "Blocked",
+          "TO REVIEW",
+          "CODE REVIEW",
+          "PO APPROVED",
+          "To Do",
+          "IN ANALYSIS",
+          "On Hold / Blocked",
+          "Review In Progress"
+        ]
       }
     },
     {
@@ -34,7 +46,18 @@
       "matchRules": {
         "issueTypes": ["Story"],
         "jiraTeam": ["PSME-SFMC"],
-        "statuses": ["To Do", "In Progress", "Done", "CANCELLED"]
+        "statuses": [
+          "READY FOR DEV",
+          "In Progress",
+          "Blocked",
+          "TO REVIEW",
+          "CODE REVIEW",
+          "PO APPROVED",
+          "To Do",
+          "IN ANALYSIS",
+          "On Hold / Blocked",
+          "Review In Progress"
+        ]
       }
     },
     {
@@ -46,7 +69,18 @@
       "matchRules": {
         "issueTypes": ["Story"],
         "jiraTeam": ["PSME-CRM"],
-        "statuses": ["To Do", "In Progress", "Done", "CANCELLED"]
+        "statuses": [
+          "READY FOR DEV",
+          "In Progress",
+          "Blocked",
+          "TO REVIEW",
+          "CODE REVIEW",
+          "PO APPROVED",
+          "To Do",
+          "IN ANALYSIS",
+          "On Hold / Blocked",
+          "Review In Progress"
+        ]
       }
     },
     {
@@ -58,7 +92,18 @@
       "matchRules": {
         "issueTypes": ["Story"],
         "jiraTeam": ["PSME-BE"],
-        "statuses": ["To Do", "In Progress", "Done", "CANCELLED"]
+        "statuses": [
+          "READY FOR DEV",
+          "In Progress",
+          "Blocked",
+          "TO REVIEW",
+          "CODE REVIEW",
+          "PO APPROVED",
+          "To Do",
+          "IN ANALYSIS",
+          "On Hold / Blocked",
+          "Review In Progress"
+        ]
       }
     },
     {
@@ -70,7 +115,18 @@
       "matchRules": {
         "issueTypes": ["Story"],
         "jiraTeam": ["PSME-Data"],
-        "statuses": ["To Do", "In Progress", "Done", "CANCELLED"]
+        "statuses": [
+          "READY FOR DEV",
+          "In Progress",
+          "Blocked",
+          "TO REVIEW",
+          "CODE REVIEW",
+          "PO APPROVED",
+          "To Do",
+          "IN ANALYSIS",
+          "On Hold / Blocked",
+          "Review In Progress"
+        ]
       }
     },
     {
@@ -81,7 +137,23 @@
       "members": ["QA User 1", "QA User 2"],
       "matchRules": {
         "issueTypes": ["Story"],
-        "statuses": ["To Do", "In Progress", "Done", "CANCELLED"]
+        "statuses": [
+          "READY FOR QA",
+          "TEST IN PROGRESS",
+          "READY TO DEPLOY",
+          "ACCEPTANCE BLOCKED",
+          "BA ACCEPTANCE",
+          "READY FOR DEV",
+          "In Progress",
+          "Blocked",
+          "TO REVIEW",
+          "CODE REVIEW",
+          "PO APPROVED",
+          "To Do",
+          "IN ANALYSIS",
+          "On Hold / Blocked",
+          "Review In Progress"
+        ]
       }
     }
   ]

@@ -7,10 +7,10 @@ export type EstimateType = 'story-points' | 'days-hours';
 export interface TeamConfig {
   /** Type of estimation used by the team */
   estimateType: EstimateType;
-  
+
   /** Hours per day for conversion (default: 8) */
   hoursPerDay?: number;
-  
+
   /** Valid story point values (only used when estimateType is 'story-points') */
   validStoryPoints?: number[];
 }
@@ -63,32 +63,41 @@ export interface ChangeHistoryConfig {
  * that are used by the scheduler component for accurate schedule calculations.
  */
 export interface ScheduleConfig {
-  /** 
+  /**
    * Project start date in ISO format (YYYY-MM-DD).
    * Example: "2024-02-01"
    */
   projectStartDate: string;
-  
-  /** 
+
+  /**
+   * Optional project rescheduling date in ISO format (YYYY-MM-DD).
+   * When provided, schedule calculations should start from this date
+   * instead of the original projectStartDate (for remaining work).
+   *
+   * Example: "2025-12-18"
+   */
+  projectReschedulingDate?: string;
+
+  /**
    * Sprint duration in days. Must be a positive number.
    * Example: 10
    */
   sprintDurationDays: number;
-  
-  /** 
+
+  /**
    * Team velocity (story points per sprint). Must be a positive number.
    * Example: 20
    */
   velocity: number;
-  
-  /** 
+
+  /**
    * Optional array of non-working days (holidays) in ISO format (YYYY-MM-DD).
    * Weekends (Saturday, Sunday) are automatically excluded.
    * Example: ["2024-12-25", "2024-01-01"]
    */
   nonWorkingDays?: string[];
-  
-  /** 
+
+  /**
    * Optional change history extraction configuration.
    * If provided, change history will be extracted and exported to CSV.
    */
@@ -101,6 +110,7 @@ export interface ScheduleConfig {
  */
 export interface RawScheduleConfig {
   projectStartDate?: unknown;
+  projectReschedulingDate?: unknown;
   sprintDurationDays?: unknown;
   velocity?: unknown;
   nonWorkingDays?: unknown;

@@ -106,17 +106,20 @@ export function calculateSchedule(
     throw new Error(`Invalid sprint duration: ${config.sprintDurationDays}. Sprint duration must be greater than zero.`);
   }
 
-  // Validate project start date
-  const projectStartDate = new Date(config.projectStartDate);
-  if (isNaN(projectStartDate.getTime())) {
-    throw new Error(`Invalid project start date: ${config.projectStartDate}. Expected ISO format (YYYY-MM-DD).`);
+  // Determine effective start date: use projectReschedulingDate if provided, otherwise projectStartDate
+  const effectiveStartDate = config.projectReschedulingDate || config.projectStartDate;
+
+  // Validate effective start date
+  const parsedStartDate = new Date(effectiveStartDate);
+  if (isNaN(parsedStartDate.getTime())) {
+    throw new Error(`Invalid project start date: ${effectiveStartDate}. Expected ISO format (YYYY-MM-DD).`);
   }
 
   // Initialize working days calendar
   const workingDaysCalendar = new WorkingDaysCalendar(config.nonWorkingDays || []);
 
-  // Ensure project start date is a working day
-  let currentDate = workingDaysCalendar.nextWorkingDay(config.projectStartDate);
+  // Ensure effective start date is a working day
+  let currentDate = workingDaysCalendar.nextWorkingDay(effectiveStartDate);
 
   const scheduledTasks: ScheduledTask[] = [];
 
@@ -137,10 +140,10 @@ export function calculateSchedule(
     );
 
     // Determine start date (ensure it's a working day)
-    // For first task, use project start date (adjusted to working day)
+    // For first task, use effective start date (adjusted to working day)
     // For subsequent tasks, use previous task's end date (which is already a working day)
     const startDate = i === 0 
-      ? workingDaysCalendar.nextWorkingDay(config.projectStartDate)
+      ? workingDaysCalendar.nextWorkingDay(effectiveStartDate)
       : workingDaysCalendar.nextWorkingDay(currentDate);
 
     // Calculate end date using working days

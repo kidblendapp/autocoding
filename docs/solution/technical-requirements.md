@@ -59,6 +59,8 @@ The Gantt Schedule Calculation System is a Node.js/TypeScript application design
 *   **Schedule Calculator:**
     *   `calculateDuration()`: Pure function implementing formula `(Estimate / Velocity) * SprintDuration`
     *   `calculateSchedule()`: Processes tasks sequentially, calculating start and end dates
+        *   Uses `projectStartDate` as the initial anchor date
+        *   If `projectReschedulingDate` is provided in configuration, uses that as the **effective** start date when re-planning remaining work
 *   **Working Days Calculator:**
     *   `WorkingDaysCalendar`: Encapsulates working day logic
     *   `isWorkingDay()`: Checks if a date is a working day

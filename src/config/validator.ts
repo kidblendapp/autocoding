@@ -37,6 +37,7 @@ export interface ValidationResult {
  */
 export function validateConfig(rawConfig: RawScheduleConfig): ValidationResult {
   const errors: ValidationError[] = [];
+  let projectReschedulingDate: string | undefined = undefined;
 
   // Check for required fields
   if (rawConfig.projectStartDate === undefined || rawConfig.projectStartDate === null) {
@@ -100,6 +101,49 @@ export function validateConfig(rawConfig: RawScheduleConfig): ValidationResult {
             field: 'projectStartDate',
             message: `projectStartDate is not a valid date: ${projectStartDate}`,
           });
+        }
+      }
+    }
+  }
+
+  // Validate optional projectReschedulingDate format (ISO date: YYYY-MM-DD)
+  if (rawConfig.projectReschedulingDate !== undefined && rawConfig.projectReschedulingDate !== null) {
+    const rescheduleDate = rawConfig.projectReschedulingDate;
+
+    if (typeof rescheduleDate !== 'string') {
+      errors.push({
+        field: 'projectReschedulingDate',
+        message: 'projectReschedulingDate must be a string in ISO format (YYYY-MM-DD)',
+      });
+    } else {
+      const isoDateRegex = /^\d{4}-\d{2}-\d{2}$/;
+      if (!isoDateRegex.test(rescheduleDate)) {
+        errors.push({
+          field: 'projectReschedulingDate',
+          message: 'projectReschedulingDate must be in ISO format: YYYY-MM-DD (e.g., "2025-12-18")',
+        });
+      } else {
+        const date = new Date(rescheduleDate);
+        if (isNaN(date.getTime())) {
+          errors.push({
+            field: 'projectReschedulingDate',
+            message: `projectReschedulingDate is not a valid date: ${rescheduleDate}`,
+          });
+        } else {
+          const [year, month, day] = rescheduleDate.split('-').map(Number);
+          const expectedDate = new Date(year, month - 1, day);
+          if (
+            expectedDate.getFullYear() !== year ||
+            expectedDate.getMonth() !== month - 1 ||
+            expectedDate.getDate() !== day
+          ) {
+            errors.push({
+              field: 'projectReschedulingDate',
+              message: `projectReschedulingDate is not a valid date: ${rescheduleDate}`,
+            });
+          } else {
+            projectReschedulingDate = rescheduleDate;
+          }
         }
       }
     }
@@ -291,16 +335,22 @@ export function validateConfig(rawConfig: RawScheduleConfig): ValidationResult {
   }
 
   // All validations passed, return validated config
+  const config: ScheduleConfig = {
+    projectStartDate: projectStartDate as string,
+    sprintDurationDays: sprintDurationDays as number,
+    velocity: velocity as number,
+    nonWorkingDays: nonWorkingDays,
+    changeHistory: changeHistory,
+  };
+
+  if (projectReschedulingDate !== undefined) {
+    config.projectReschedulingDate = projectReschedulingDate;
+  }
+
   return {
     valid: true,
     errors: [],
-    config: {
-      projectStartDate: projectStartDate as string,
-      sprintDurationDays: sprintDurationDays as number,
-      velocity: velocity as number,
-      nonWorkingDays: nonWorkingDays,
-      changeHistory: changeHistory,
-    },
+    config,
   };
 }
 

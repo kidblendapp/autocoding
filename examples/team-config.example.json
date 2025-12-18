@@ -3,34 +3,86 @@
   "sprintDurationDays": 10,
   "teams": [
     {
-      "id": "team-frontend",
-      "name": "Frontend Team",
-      "velocity": 30,
+      "id": "team-ba",
+      "name": "BA Team",
+      "velocity": 10,
       "velocityPeriod": "sprint",
-      "members": ["Alice", "Bob", "Charlie"],
+      "members": ["BA User 1", "BA User 2"],
       "matchRules": {
-        "components": ["UI", "Frontend"]
+        "issueTypes": ["Story"],
+        "statuses": ["To Do", "In Progress", "Done", "CANCELLED"]
       }
     },
     {
-      "id": "team-backend",
-      "name": "Backend Team",
-      "velocity": 25,
+      "id": "team-fe",
+      "name": "PSME-FE Dev Team",
+      "velocity": 20,
       "velocityPeriod": "sprint",
-      "members": ["Dave", "Eve"],
+      "members": ["FE Dev 1", "FE Dev 2"],
       "matchRules": {
-        "labels": ["backend", "api"]
+        "issueTypes": ["Story"],
+        "jiraTeam": ["PSME-FE"],
+        "statuses": ["To Do", "In Progress", "Done", "CANCELLED"]
       }
     },
     {
-      "id": "team-maintenance",
-      "name": "SRE / Maintenance",
-      "capacityPerDayHours": 16,
-      "estimationType": "hours",
+      "id": "team-sfmc",
+      "name": "PSME-SFMC Dev Team",
+      "velocity": 20,
+      "velocityPeriod": "sprint",
+      "members": ["SFMC Dev 1", "SFMC Dev 2"],
       "matchRules": {
-        "issueTypes": ["Bug", "Task"]
+        "issueTypes": ["Story"],
+        "jiraTeam": ["PSME-SFMC"],
+        "statuses": ["To Do", "In Progress", "Done", "CANCELLED"]
+      }
+    },
+    {
+      "id": "team-crm",
+      "name": "PSME-CRM Dev Team",
+      "velocity": 20,
+      "velocityPeriod": "sprint",
+      "members": ["CRM Dev 1", "CRM Dev 2"],
+      "matchRules": {
+        "issueTypes": ["Story"],
+        "jiraTeam": ["PSME-CRM"],
+        "statuses": ["To Do", "In Progress", "Done", "CANCELLED"]
+      }
+    },
+    {
+      "id": "team-be",
+      "name": "PSME-BE Dev Team",
+      "velocity": 20,
+      "velocityPeriod": "sprint",
+      "members": ["BE Dev 1", "BE Dev 2"],
+      "matchRules": {
+        "issueTypes": ["Story"],
+        "jiraTeam": ["PSME-BE"],
+        "statuses": ["To Do", "In Progress", "Done", "CANCELLED"]
+      }
+    },
+    {
+      "id": "team-data",
+      "name": "PSME-Data Dev Team",
+      "velocity": 20,
+      "velocityPeriod": "sprint",
+      "members": ["Data Dev 1", "Data Dev 2"],
+      "matchRules": {
+        "issueTypes": ["Story"],
+        "jiraTeam": ["PSME-Data"],
+        "statuses": ["To Do", "In Progress", "Done", "CANCELLED"]
+      }
+    },
+    {
+      "id": "team-qa",
+      "name": "QA Team",
+      "velocity": 15,
+      "velocityPeriod": "sprint",
+      "members": ["QA User 1", "QA User 2"],
+      "matchRules": {
+        "issueTypes": ["Story"],
+        "statuses": ["To Do", "In Progress", "Done", "CANCELLED"]
       }
     }
   ]
 }
-

@@ -36,6 +36,7 @@ export interface JiraTicket {
   summary: string;
   issueType?: string;
   status?: string;
+  team?: string;
   assignee?: string;
   reporter?: string;
   creator?: string;
@@ -197,6 +198,7 @@ export async function extractJiraTickets(config: JiraConfig, includeHistory: boo
       'issuetype',
       'status',
       'statusCategory',
+      'customfield_10001', // Team (e.g., PSME-Data)
       'assignee',
       'reporter',
       'creator',
@@ -334,6 +336,23 @@ export async function extractJiraTickets(config: JiraConfig, includeHistory: boo
         component = fields.components.map((c: any) => c.name).join(', ');
       }
       
+      // Extract Team (customfield_10001)
+      let team: string | undefined;
+      const teamField = (fields as any).customfield_10001;
+      if (teamField) {
+        if (Array.isArray(teamField)) {
+          if (teamField.length > 0) {
+            team = teamField
+              .map((t: any) => t?.title || t?.name || t?.displayName || String(t))
+              .join(', ');
+          }
+        } else if (typeof teamField === 'object') {
+          team = teamField.title || teamField.name || teamField.displayName;
+        } else {
+          team = String(teamField);
+        }
+      }
+
       // Extract story points
       let storyPoints: number | undefined;
       if (fields.customfield_10052 !== null && fields.customfield_10052 !== undefined) {
@@ -435,6 +454,7 @@ export async function extractJiraTickets(config: JiraConfig, includeHistory: boo
         summary: fields.summary || '',
         issueType: fields.issuetype?.name,
         status: fields.status?.name,
+        team,
         statusCategory: fields.statusCategory?.name,
         assignee,
         reporter,
@@ -519,6 +539,7 @@ export function exportTicketsToCsv(tickets: JiraTicket[], outputPath: string, in
     'Status Category',
     'Priority',
     'Assignee',
+    'Team',
     'Reporter',
     'Creator',
     'Story Points',
@@ -562,7 +583,7 @@ export function exportTicketsToCsv(tickets: JiraTicket[], outputPath: string, in
       return str;
     };
     
-    return [
+    const row: string[] = [
       escapeCsv(ticket.key),
       escapeCsv(ticket.summary),
       escapeCsv(ticket.issueType),
@@ -570,6 +591,7 @@ export function exportTicketsToCsv(tickets: JiraTicket[], outputPath: string, in
       escapeCsv(ticket.statusCategory),
       escapeCsv(ticket.priority),
       escapeCsv(ticket.assignee),
+      escapeCsv(ticket.team),
       escapeCsv(ticket.reporter),
       escapeCsv(ticket.creator),
       escapeCsv(ticket.storyPoints),

@@ -25,7 +25,8 @@ function createAuthHeader(email: string, apiToken: string): string {
 async function inspectTicket() {
   const config = loadJiraConfig('jira-config.json');
   const baseUrl = config.jiraPath.replace(/\/$/, '');
-  const ticketKey = 'PSME-2777';
+  // Allow passing ticket key via CLI argument, fallback to default
+  const ticketKey = process.argv[2] || 'PSME-2777';
   const apiUrl = `${baseUrl}/rest/api/3/issue/${ticketKey}`;
   const authHeader = createAuthHeader(config.jiraEmail, config.jiraApiToken);
   
@@ -71,8 +72,9 @@ async function inspectTicket() {
     
     // Write full response to file for reference
     const fs = require('fs');
-    fs.writeFileSync('outputs/psme-160-fields.json', JSON.stringify(data, null, 2));
-    console.log(`\n✅ Full ticket data saved to outputs/psme-160-fields.json (replaced with ${ticketKey} data)`);
+    const outputPath = `outputs/${ticketKey.toLowerCase()}-fields.json`;
+    fs.writeFileSync(outputPath, JSON.stringify(data, null, 2));
+    console.log(`\n✅ Full ticket data saved to ${outputPath}`);
     
   } catch (error) {
     console.error('Error:', error);

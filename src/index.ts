@@ -5,12 +5,39 @@
 
 import { ingestCsv } from './cli/commands/ingest-csv';
 import { extractJira } from './cli/commands/extract-jira';
+import { generateGantt } from './cli/commands/generate-gantt';
 
 // Simple CLI argument parsing
 const args = process.argv.slice(2);
 
 // Check for command type
-if (args.includes('--extract-jira')) {
+if (args.includes('--generate-gantt')) {
+  // Gantt chart generation command
+  const inputIndex = args.indexOf('--input');
+  const outputIndex = args.indexOf('--output');
+  const open = args.includes('--open');
+  
+  const input = inputIndex !== -1 && inputIndex < args.length - 1 
+    ? args[inputIndex + 1] 
+    : undefined;
+  
+  const output = outputIndex !== -1 && outputIndex < args.length - 1 
+    ? args[outputIndex + 1] 
+    : undefined;
+  
+  generateGantt({
+    input,
+    output,
+    open,
+  })
+    .then(() => {
+      process.exit(0);
+    })
+    .catch((error) => {
+      console.error('\n❌ Gantt chart generation failed:', error.message);
+      process.exit(1);
+    });
+} else if (args.includes('--extract-jira')) {
   // JIRA extraction command
   const configIndex = args.indexOf('--config');
   const outputIndex = args.indexOf('--output');
@@ -44,6 +71,7 @@ if (args.includes('--extract-jira')) {
     console.error('Usage:');
     console.error('  CSV ingestion: node dist/index.js --input <csv-file-path> [--quiet]');
     console.error('  JIRA extraction: node dist/index.js --extract-jira [--config <config-file>] [--output <output-file>] [--history]');
+    console.error('  Gantt chart: node dist/index.js --generate-gantt [--input <csv-file>] [--output <html-file>] [--open]');
     process.exit(1);
   }
 

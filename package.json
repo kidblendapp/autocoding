@@ -8,10 +8,13 @@
     "example": "examples"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && npm run copy:html",
+    "copy:html": "node -e \"const fs=require('fs');const path=require('path');const src=path.join('src','visualization','gantt-viewer.html');const dst=path.join('dist','visualization','gantt-viewer.html');if(fs.existsSync(src)){fs.mkdirSync(path.dirname(dst),{recursive:true});fs.copyFileSync(src,dst);}\"",
     "test": "vitest run",
     "test:watch": "vitest",
-    "start": "node dist/index.js"
+    "start": "node dist/index.js",
+    "gantt:generate": "node dist/index.js --generate-gantt",
+    "gantt:view": "node dist/index.js --generate-gantt --open"
   },
   "repository": {
     "type": "git",
@@ -27,7 +30,8 @@
   "homepage": "https://github.com/kidblendapp/autocoding#readme",
   "dependencies": {
     "csv-parse": "^5.5.6",
-    "exceljs": "^4.4.0"
+    "exceljs": "^4.4.0",
+    "vis-timeline": "^7.7.3"
   },
   "devDependencies": {
     "@types/node": "^24.10.2",

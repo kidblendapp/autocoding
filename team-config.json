@@ -7,7 +7,7 @@
     {
       "id": "team-ba",
       "name": "BA Team",
-      "velocity": 10,
+      "velocity": 30,
       "velocityPeriod": "sprint",
       "members": ["BA User 1", "BA User 2"],
       "matchRules": {
@@ -56,7 +56,7 @@
         "jiraTeam": ["PSME-SFMC"],
         "components": [],
         "labels": [],
-        "summaryText": ["SFMC"],
+        "summaryText": ["SFMC","[Martketing]"],
         "statuses": [
           "READY FOR DEV",
           "In Progress",
@@ -80,9 +80,9 @@
       "matchRules": {
         "issueTypes": ["Story"],
         "jiraTeam": ["PSME-CRM"],
-        "components": [],
+        "components": ["CRM"],
         "labels": [],
-        "summaryText": ["CRM"],
+        "summaryText": ["CRM","[D365]"],
         "statuses": [
           "READY FOR DEV",
           "In Progress",
@@ -108,7 +108,7 @@
         "jiraTeam": ["PSME-BE"],
         "components": [],
         "labels": [],
-        "summaryText": ["[BE]"],
+        "summaryText": ["[BE]", "[Backend]"],
         "statuses": [
           "READY FOR DEV",
           "In Progress",
@@ -132,7 +132,7 @@
       "matchRules": {
         "issueTypes": ["Story"],
         "jiraTeam": ["PSME-Data"],
-        "components": [],
+        "components": ["Data"],
         "labels": [],
         "summaryText": ["[Data]"],
         "statuses": [
@@ -152,7 +152,7 @@
     {
       "id": "team-qa",
       "name": "QA Team",
-      "velocity": 15,
+      "velocity": 30,
       "velocityPeriod": "sprint",
       "members": ["QA User 1", "QA User 2"],
       "matchRules": {

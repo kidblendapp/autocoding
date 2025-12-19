@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gantt Chart - Team Schedule</title>
+  
+  <!-- vis-timeline CSS -->
+  <link href="https://unpkg.com/vis-timeline@7.7.3/styles/vis-timeline-graph2d.min.css" rel="stylesheet" type="text/css" />
+  
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background-color: #f5f5f5;
+    }
+    
+    .container {
+      max-width: 100%;
+      background-color: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      padding: 20px;
+    }
+    
+    h1 {
+      margin-top: 0;
+      color: #333;
+      font-size: 24px;
+    }
+    
+    #timeline {
+      width: 100%;
+      height: 600px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+    
+    /* Role-based color coding */
+    .vis-item.role-ba {
+      background-color: #4A90E2;
+      border-color: #357ABD;
+      color: white;
+    }
+    
+    .vis-item.role-dev {
+      background-color: #50C878;
+      border-color: #3FA863;
+      color: white;
+    }
+    
+    .vis-item.role-qa {
+      background-color: #FF8C42;
+      border-color: #E6732A;
+      color: white;
+    }
+    
+    .vis-item.vis-selected {
+      border-color: #FFD700;
+      border-width: 2px;
+    }
+    
+    .vis-timeline {
+      border-color: #ddd;
+    }
+    
+    .vis-time-axis .vis-text {
+      color: #666;
+    }
+    
+    .vis-labelset .vis-label {
+      background-color: #f9f9f9;
+      border-color: #ddd;
+      color: #333;
+      font-weight: 500;
+    }
+    
+    /* Sprint group styling (parent groups) */
+    .vis-labelset .vis-label.sprint-group {
+      background-color: #e8f4f8;
+      font-weight: 600;
+      font-size: 14px;
+      padding: 8px;
+    }
+    
+    /* Team group styling (child groups) */
+    .vis-labelset .vis-label.team-group {
+      background-color: #f9f9f9;
+      font-weight: 500;
+      padding-left: 24px;
+      font-size: 13px;
+    }
+    
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: #666;
+    }
+    
+    .error {
+      background-color: #fee;
+      border: 1px solid #fcc;
+      border-radius: 4px;
+      padding: 15px;
+      color: #c33;
+      margin: 20px 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Gantt Chart - Team Schedule</h1>
+    <div id="timeline"></div>
+  </div>
+
+  <!-- vis-timeline JavaScript -->
+  <script type="text/javascript" src="https://unpkg.com/vis-timeline@7.7.3/standalone/umd/vis-timeline-graph2d.min.js"></script>
+  
+  <script>
+    // Gantt data will be embedded here by the CLI command
+    const ganttData = {{GANTT_DATA}};
+    
+    // Initialize timeline when DOM is ready
+    document.addEventListener('DOMContentLoaded', function() {
+      const container = document.getElementById('timeline');
+      
+      if (!ganttData || !ganttData.items || !ganttData.groups) {
+        container.innerHTML = '<div class="error">Error: Invalid Gantt data. Please ensure the CSV file was processed correctly.</div>';
+        return;
+      }
+      
+      if (ganttData.items.length === 0) {
+        container.innerHTML = '<div class="loading">No schedule items found in the data.</div>';
+        return;
+      }
+      
+      try {
+        // Create items dataset
+        const items = new vis.DataSet(ganttData.items);
+        
+        // Create groups dataset
+        const groups = new vis.DataSet(ganttData.groups);
+        
+        // Timeline options
+        const options = {
+          stack: false,
+          editable: false,
+          selectable: true,
+          zoomable: true,
+          moveable: true,
+          orientation: 'top',
+          showCurrentTime: true,
+          start: null, // Auto-fit to data
+          end: null,   // Auto-fit to data
+          min: null,   // No minimum
+          max: null,   // No maximum
+          zoomMin: 1000 * 60 * 60 * 24,      // 1 day minimum zoom
+          zoomMax: 1000 * 60 * 60 * 24 * 365, // 1 year maximum zoom
+          format: {
+            minorLabels: {
+              minute: 'HH:mm',
+              hour: 'HH:mm',
+              weekday: 'ddd D',
+              day: 'D',
+              week: 'w',
+              month: 'MMM'
+            },
+            majorLabels: {
+              minute: 'ddd D MMMM',
+              hour: 'ddd D MMMM',
+              weekday: 'MMMM YYYY',
+              day: 'MMMM YYYY',
+              week: 'MMMM YYYY',
+              month: 'YYYY'
+            }
+          }
+        };
+        
+        // Create timeline
+        const timeline = new vis.Timeline(container, items, groups, options);
+        
+        // Auto-fit timeline to show all data
+        timeline.fit();
+        
+        // Add click handler for item selection
+        timeline.on('select', function(properties) {
+          if (properties.items.length > 0) {
+            const item = items.get(properties.items[0]);
+            if (item && item.title) {
+              // Show tooltip or log details
+              console.log('Selected item:', item);
+            }
+          }
+        });
+        
+      } catch (error) {
+        container.innerHTML = '<div class="error">Error initializing timeline: ' + error.message + '</div>';
+        console.error('Timeline initialization error:', error);
+      }
+    });
+  </script>
+</body>
+</html>
+

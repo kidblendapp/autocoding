@@ -37,6 +37,7 @@ interface TeamSegmentRow {
    * Ticket-level estimate in Story Points (same for all BA/Dev/QA segments of a ticket).
    */
   storyPoints?: number;
+  latestSprint?: string;
   start: string; // Local datetime string "YYYY-MM-DD HH:mm"
   end: string;   // Local datetime string "YYYY-MM-DD HH:mm"
 }
@@ -80,6 +81,11 @@ interface VelocityContext {
   baVelocity?: number;
   qaVelocity?: number;
   jiraTeamVelocities: Record<string, number>;
+}
+
+interface SprintInfo {
+  endDate?: string;
+  completeDate?: string;
 }
 
 /**
@@ -205,6 +211,7 @@ const HOURS_PER_STORY_POINT = 8;
 // Input/Output paths
 const INPUT_CSV_PATH = 'outputs/jira-export.csv';
 const OUTPUT_CSV_PATH = 'outputs/jira-team-schedule.csv';
+const SPRINTS_CSV_PATH = 'outputs/jira-export-sprints.csv';
 
 /**
  * Simple helper to extract a field from a CSV row with alternative names.
@@ -225,6 +232,95 @@ function extractField(
   }
 
   return undefined;
+}
+
+/**
+ * Loads sprint data from sprints CSV and builds a lookup map.
+ * Returns a Map: sprintName -> SprintInfo
+ */
+function loadSprintMap(): Map<string, SprintInfo> {
+  const sprintMap = new Map<string, SprintInfo>();
+
+  try {
+    const sprintsContent = readFileSync(SPRINTS_CSV_PATH, 'utf-8');
+    const sprintRecords = parse(sprintsContent, {
+      columns: true,
+      skip_empty_lines: true,
+      trim: true,
+      relax_column_count: true,
+    }) as CsvRow[];
+
+    for (const sprintRow of sprintRecords) {
+      const sprintName = sprintRow['Name'] || '';
+      const endDate = sprintRow['End Date'] || undefined;
+      const completeDate = sprintRow['Complete Date'] || undefined;
+
+      if (sprintName) {
+        sprintMap.set(sprintName, {
+          endDate,
+          completeDate,
+        });
+      }
+    }
+
+    console.log(`Loaded ${sprintMap.size} sprints from ${SPRINTS_CSV_PATH}`);
+  } catch (error) {
+    console.warn(
+      `Warning: Could not load sprints CSV from ${SPRINTS_CSV_PATH}. Sprint-based ordering will be limited.`
+    );
+  }
+
+  return sprintMap;
+}
+
+/**
+ * Extracts the latest sprint name from a comma-separated sprint field.
+ * Returns the last sprint name in the list (most recent), or undefined if empty.
+ */
+function getLatestSprint(sprintField: string | undefined): string | undefined {
+  if (!sprintField || sprintField.trim() === '') {
+    return undefined;
+  }
+
+  const sprints = sprintField.split(',').map((s) => s.trim()).filter((s) => s.length > 0);
+  return sprints.length > 0 ? sprints[sprints.length - 1] : undefined;
+}
+
+/**
+ * Determines if a ticket is completed.
+ * Returns true if ticket has Resolution Date OR Status is "Done".
+ */
+function isCompletedTicket(row: CsvRow): boolean {
+  const resolutionDate = extractField(row, 'Resolution Date', ['resolutionDate', 'Resolution Date']);
+  const status = extractField(row, 'Status', ['status']);
+
+  // Check if has Resolution Date
+  if (resolutionDate && resolutionDate.trim() !== '') {
+    return true;
+  }
+
+  // Check if Status is "Done" (case-insensitive)
+  if (status && status.toLowerCase() === 'done') {
+    return true;
+  }
+
+  return false;
+}
+
+/**
+ * Gets the sprint end date for a sprint name from the sprint map.
+ * Returns the endDate string or undefined if sprint not found.
+ */
+function getSprintEndDate(
+  sprintName: string | undefined,
+  sprintMap: Map<string, SprintInfo>
+): string | undefined {
+  if (!sprintName) {
+    return undefined;
+  }
+
+  const sprintInfo = sprintMap.get(sprintName);
+  return sprintInfo?.endDate;
 }
 
 /**
@@ -575,6 +671,75 @@ async function main() {
     return;
   }
 
+  // Load sprint map for lookup
+  const sprintMap = loadSprintMap();
+
+  // Sort records: completed tickets first (by Resolution Date), then non-completed with sprints (by sprint End Date), then non-completed without sprints
+  const sortedRecords = [...records].sort((a, b) => {
+    const aCompleted = isCompletedTicket(a);
+    const bCompleted = isCompletedTicket(b);
+
+    // Completed tickets come first
+    if (aCompleted && !bCompleted) {
+      return -1;
+    }
+    if (!aCompleted && bCompleted) {
+      return 1;
+    }
+
+    // Both completed: sort by Resolution Date ascending
+    if (aCompleted && bCompleted) {
+      const aResolutionDate = extractField(a, 'Resolution Date', ['resolutionDate', 'Resolution Date']) || '';
+      const bResolutionDate = extractField(b, 'Resolution Date', ['resolutionDate', 'Resolution Date']) || '';
+      
+      if (aResolutionDate && bResolutionDate) {
+        return aResolutionDate.localeCompare(bResolutionDate);
+      }
+      if (aResolutionDate) {
+        return -1;
+      }
+      if (bResolutionDate) {
+        return 1;
+      }
+      return 0;
+    }
+
+    // Both non-completed: check for sprints
+    const aSprintField = extractField(a, 'Sprint', ['sprint']);
+    const bSprintField = extractField(b, 'Sprint', ['sprint']);
+    const aLatestSprint = getLatestSprint(aSprintField);
+    const bLatestSprint = getLatestSprint(bSprintField);
+
+    // Tickets with sprints come before tickets without sprints
+    if (aLatestSprint && !bLatestSprint) {
+      return -1;
+    }
+    if (!aLatestSprint && bLatestSprint) {
+      return 1;
+    }
+
+    // Both have sprints: sort by sprint End Date ascending
+    if (aLatestSprint && bLatestSprint) {
+      const aSprintEndDate = getSprintEndDate(aLatestSprint, sprintMap) || '';
+      const bSprintEndDate = getSprintEndDate(bLatestSprint, sprintMap) || '';
+
+      if (aSprintEndDate && bSprintEndDate) {
+        return aSprintEndDate.localeCompare(bSprintEndDate);
+      }
+      if (aSprintEndDate) {
+        return -1;
+      }
+      if (bSprintEndDate) {
+        return 1;
+      }
+      // If sprint end dates not found, maintain order
+      return 0;
+    }
+
+    // Both non-completed without sprints: maintain original order
+    return 0;
+  });
+
   // Load team configuration and velocity context
   const teamsConfig = loadTeamsConfigFromFile();
   const velocityContext = buildVelocityContext(teamsConfig);
@@ -589,7 +754,7 @@ async function main() {
 
   const rows: TeamSegmentRow[] = [];
 
-  records.forEach((row, index) => {
+  sortedRecords.forEach((row, index) => {
     const rowNumber = index + 2; // header is row 1
 
     const issueKey = extractField(row, 'Issue Key', ['ID', 'Id', 'id']) || '';
@@ -599,6 +764,10 @@ async function main() {
       extractField(row, 'Issue Type', ['IssueType', 'issueType']) || '';
     const status =
       extractField(row, 'Status', ['status']) || '';
+    
+    // Extract latest sprint for this ticket
+    const sprintField = extractField(row, 'Sprint', ['sprint']);
+    const latestSprint = getLatestSprint(sprintField);
     
     // Find matching team using Team, Component, Label, or Summary text
     const jiraTeam = findMatchingTeam(row, teamsConfig);
@@ -657,6 +826,7 @@ async function main() {
       executionTeam: 'BA Team',
       estimateHours: baHours,
       storyPoints,
+      latestSprint,
       start: formatDateTimeLocal(baStart),
       end: formatDateTimeLocal(baEnd),
     });
@@ -685,6 +855,7 @@ async function main() {
       executionTeam: devTeamName,
       estimateHours: devHours,
       storyPoints,
+      latestSprint,
       start: formatDateTimeLocal(devStart),
       end: formatDateTimeLocal(devEnd),
     });
@@ -709,6 +880,7 @@ async function main() {
       executionTeam: 'QA Team',
       estimateHours: qaHours,
       storyPoints,
+      latestSprint,
       start: formatDateTimeLocal(qaStart),
       end: formatDateTimeLocal(qaEnd),
     });
@@ -726,6 +898,7 @@ async function main() {
     'Execution Team',
     'Estimate Hours',
     'Story Points',
+    'Latest Sprint',
     'Start',
     'End',
   ];
@@ -749,6 +922,7 @@ async function main() {
       escape(r.executionTeam),
       escape(r.estimateHours),
       r.storyPoints !== undefined ? escape(r.storyPoints) : '',
+      r.latestSprint !== undefined ? escape(r.latestSprint) : '',
       escape(r.start),
       escape(r.end),
     ].join(',');

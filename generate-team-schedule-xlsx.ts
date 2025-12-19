@@ -5,7 +5,8 @@
  * Input:
  *   - outputs/jira-team-schedule.csv
  *     Columns: Issue Key, Summary, Issue Type, Status, Jira Team,
- *              Role, Execution Team, Estimate Hours, Start, End
+ *              Role, Execution Team, Estimate Hours, Story Points,
+ *              Latest Sprint, Start, End
  *
  * Output:
  *   - outputs/jira-team-schedule.xlsx
@@ -73,6 +74,7 @@ async function main() {
     { header: 'Role', key: 'role', width: 8 },
     { header: 'Execution Team', key: 'executionTeam', width: 18 },
     { header: 'Estimate Hours', key: 'estimateHours', width: 14 },
+    { header: 'Latest Sprint', key: 'latestSprint', width: 30 },
     {
       header: 'Start',
       key: 'start',
@@ -102,6 +104,7 @@ async function main() {
     const jiraTeam = row['Jira Team'] || '';
     const role = row['Role'] || '';
     const executionTeam = row['Execution Team'] || '';
+    const latestSprint = row['Latest Sprint'] || '';
 
     const estimateHoursRaw = row['Estimate Hours'];
     const estimateHours = estimateHoursRaw
@@ -129,6 +132,7 @@ async function main() {
       role,
       executionTeam,
       estimateHours: isNaN(estimateHours) ? null : estimateHours,
+      latestSprint: latestSprint || null,
       start,
       end,
       durationHours,

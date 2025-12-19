@@ -30,11 +30,11 @@ interface TeamSegmentRow {
   issueType: string;
   status: string;
   jiraTeam: string;
-  role: 'BA' | 'Dev' | 'QA';
+  role: string; // Dynamic role name from workSequence
   executionTeam: string;
   estimateHours: number;
   /**
-   * Ticket-level estimate in Story Points (same for all BA/Dev/QA segments of a ticket).
+   * Ticket-level estimate in Story Points (same for all role segments of a ticket).
    */
   storyPoints?: number;
   latestSprint?: string;
@@ -48,9 +48,25 @@ interface TicketEstimate {
   baseHours: number;
 }
 
+interface SubtaskMatchCriteria {
+  titleTags?: string[];
+  components?: string[];
+  labels?: string[];
+}
+
+interface RoleConfig {
+  role: string;
+  estimateMethod: 'percentage' | 'subtasks';
+  percentage?: number; // Required if estimateMethod is 'percentage'
+  subtaskMatch?: SubtaskMatchCriteria; // Required if estimateMethod is 'subtasks'
+  statuses: string[];
+  executionTeam: string;
+}
+
 interface TeamConfig {
   id: string;
   name: string;
+  includeInSchedule?: boolean; // Default: true
   velocity?: number;
   velocityPeriod?: string;
   members?: string[];
@@ -62,6 +78,7 @@ interface TeamConfig {
     labels?: string[];
     summaryText?: string[];
   };
+  workSequence?: RoleConfig[];
 }
 
 interface TeamsConfig {
@@ -85,7 +102,19 @@ interface TeamsConfig {
    * Example: "epicSprint"
    */
   ganttGrouping?: 'epicSprint' | 'sprintTeam';
-  teams?: TeamConfig[];
+  teams?: TeamConfig[] | Record<string, Omit<TeamConfig, 'id'>>;
+  /**
+   * Work types - can be array (backward compatibility) or object with meaningful keys
+   * Array: ["PSME-FE", "PSME-BE"]
+   * Object: { "PSME-FE": { "name": "PSME-FE" }, ... }
+   */
+  workTypes?: string[] | Record<string, { name: string }>;
+  /**
+   * Mapping of work types to their work sequences.
+   * Key: work type name (e.g., "PSME-FE")
+   * Value: array of role configurations
+   */
+  workTypeSequences?: Record<string, RoleConfig[]>;
 }
 
 interface VelocityContext {
@@ -116,6 +145,25 @@ function loadTeamsConfigFromFile(): TeamsConfig {
 }
 
 /**
+ * Converts teams from object or array format to array format for processing.
+ */
+function getTeamsArray(teams: TeamsConfig['teams']): TeamConfig[] {
+  if (!teams) {
+    return [];
+  }
+  
+  if (Array.isArray(teams)) {
+    return teams;
+  }
+  
+  // Convert object to array, adding id from key
+  return Object.entries(teams).map(([id, team]) => ({
+    ...team,
+    id,
+  }));
+}
+
+/**
  * Builds a velocity context map from the teams configuration.
  */
 function buildVelocityContext(config: TeamsConfig): VelocityContext {
@@ -124,7 +172,7 @@ function buildVelocityContext(config: TeamsConfig): VelocityContext {
       ? config.sprintDurationDays
       : 10;
 
-  const teams = config.teams || [];
+  const teams = getTeamsArray(config.teams);
   const velocities = teams
     .map((t) => t.velocity)
     .filter((v): v is number => typeof v === 'number' && v > 0);
@@ -166,22 +214,29 @@ function buildVelocityContext(config: TeamsConfig): VelocityContext {
 }
 
 /**
- * Resolves the effective velocity for a specific segment (BA, Dev, QA) and Jira team.
+ * Resolves the effective velocity for a specific role and Jira team.
  */
 function getVelocityForSegment(
-  role: 'BA' | 'Dev' | 'QA',
+  role: string,
   jiraTeam: string,
-  ctx: VelocityContext
+  ctx: VelocityContext,
+  roleVelocities?: Record<string, number>
 ): number {
-  if (role === 'BA') {
-    return ctx.baVelocity ?? ctx.defaultVelocity;
+  // Check role-specific velocities first
+  if (roleVelocities && roleVelocities[role]) {
+    return roleVelocities[role];
   }
 
-  if (role === 'QA') {
-    return ctx.qaVelocity ?? ctx.defaultVelocity;
+  // Legacy support for BA/QA roles
+  if (role === 'BA' && ctx.baVelocity) {
+    return ctx.baVelocity;
   }
 
-  // Dev
+  if (role === 'QA' && ctx.qaVelocity) {
+    return ctx.qaVelocity;
+  }
+
+  // For Dev role or if jiraTeam is specified, use team velocity
   if (jiraTeam && ctx.jiraTeamVelocities[jiraTeam]) {
     return ctx.jiraTeamVelocities[jiraTeam];
   }
@@ -213,13 +268,60 @@ function scaleHoursWithVelocity(
   return effortHours * (sprintDays / v);
 }
 
-// Effort split per ticket (must sum to 1.0)
-const BA_SHARE = 0.25;
-const QA_SHARE = 0.30;
-const DEV_SHARE = 1 - BA_SHARE - QA_SHARE; // 0.45
-
 // Assumed hours per Story Point when only Story Points are available
 const HOURS_PER_STORY_POINT = 8;
+
+// Default work sequence for backward compatibility
+const DEFAULT_WORK_SEQUENCE: RoleConfig[] = [
+  {
+    role: 'BA',
+    estimateMethod: 'percentage',
+    percentage: 0.25,
+    statuses: ['To Do', 'IN ANALYSIS', 'On Hold / Blocked', 'Review In Progress'],
+    executionTeam: 'BA Team',
+  },
+  {
+    role: 'Dev',
+    estimateMethod: 'percentage',
+    percentage: 0.45,
+    statuses: [
+      'READY FOR DEV',
+      'In Progress',
+      'Blocked',
+      'TO REVIEW',
+      'CODE REVIEW',
+      'PO APPROVED',
+      'To Do',
+      'IN ANALYSIS',
+      'On Hold / Blocked',
+      'Review In Progress',
+    ],
+    executionTeam: 'Dev Team',
+  },
+  {
+    role: 'QA',
+    estimateMethod: 'percentage',
+    percentage: 0.30,
+    statuses: [
+      'READY FOR QA',
+      'TEST IN PROGRESS',
+      'READY TO DEPLOY',
+      'ACCEPTANCE BLOCKED',
+      'BA ACCEPTANCE',
+      'READY FOR DEV',
+      'In Progress',
+      'Blocked',
+      'TO REVIEW',
+      'CODE REVIEW',
+      'PO APPROVED',
+      'To Do',
+      'IN ANALYSIS',
+      'On Hold / Blocked',
+      'Review In Progress',
+    ],
+    executionTeam: 'QA Team',
+  },
+];
 
 // Input/Output paths
 const INPUT_CSV_PATH = 'outputs/jira-export.csv';
@@ -506,11 +608,14 @@ function findMatchingTeam(
   const labels = extractField(row, 'Labels', ['labels']) || '';
   const summary = extractField(row, 'Summary', ['Title', 'title']) || '';
 
-  const teams = teamsConfig.teams || [];
+  const teams = getTeamsArray(teamsConfig.teams);
+
+  // Filter teams by includeInSchedule flag (default: true)
+  const includedTeams = teams.filter(team => team.includeInSchedule !== false);
 
   // First, try to match by Team field (jiraTeam) - if present
   if (jiraTeam && jiraTeam.trim() !== '') {
-    for (const team of teams) {
+    for (const team of includedTeams) {
       const teamJiraTeams = team.matchRules?.jiraTeam;
       if (Array.isArray(teamJiraTeams) && teamJiraTeams.includes(jiraTeam)) {
         return jiraTeam;
@@ -520,7 +625,7 @@ function findMatchingTeam(
 
   // If Team is empty or doesn't match, try Labels
   if (labels && labels.trim() !== '') {
-    for (const team of teams) {
+    for (const team of includedTeams) {
       const teamLabels = team.matchRules?.labels;
       if (Array.isArray(teamLabels) && teamLabels.length > 0) {
         // Labels field may contain comma-separated values
@@ -546,7 +651,7 @@ function findMatchingTeam(
   // If Labels don't match or are empty, try Summary text
   if (summary && summary.trim() !== '') {
     const summaryLower = summary.toLowerCase();
-    for (const team of teams) {
+    for (const team of includedTeams) {
       const teamSummaryTexts = team.matchRules?.summaryText;
       if (Array.isArray(teamSummaryTexts) && teamSummaryTexts.length > 0) {
         const matches = teamSummaryTexts.some(st => 
@@ -565,7 +670,7 @@ function findMatchingTeam(
 
   // If SummaryText doesn't match, try Component (only if none of the above matched)
   if (component && component.trim() !== '') {
-    for (const team of teams) {
+    for (const team of includedTeams) {
       const teamComponents = team.matchRules?.components;
       if (Array.isArray(teamComponents) && teamComponents.length > 0) {
         // Component field may contain comma-separated values
@@ -850,6 +955,135 @@ function getTicketEstimate(row: CsvRow, rowNumber: number): TicketEstimate {
 }
 
 /**
+ * Builds a map of parent tickets to their subtasks.
+ * Returns Map<parentKey, subtaskRows[]>
+ */
+function buildSubtaskMap(allRecords: CsvRow[]): Map<string, CsvRow[]> {
+  const subtaskMap = new Map<string, CsvRow[]>();
+
+  for (const row of allRecords) {
+    const issueType = extractField(row, 'Issue Type', ['IssueType', 'issueType']) || '';
+    const parentId = extractField(row, 'Parent Id', ['ParentId', 'parentId', 'Parent']) || '';
+    const issueKey = extractField(row, 'Issue Key', ['ID', 'Id', 'id']) || '';
+
+    // Check if this is a subtask (issue type is "Sub-task" or has a parent)
+    if ((issueType === 'Sub-task' || parentId) && parentId && parentId.trim() !== '') {
+      const parentKey = parentId.trim();
+      
+      if (parentKey && parentKey !== issueKey) {
+        if (!subtaskMap.has(parentKey)) {
+          subtaskMap.set(parentKey, []);
+        }
+        subtaskMap.get(parentKey)!.push(row);
+      }
+    }
+  }
+
+  return subtaskMap;
+}
+
+/**
+ * Finds subtasks that match the given criteria.
+ * Matching logic: ANY criteria matches (title tag OR component OR label)
+ */
+function findMatchingSubtasks(
+  parentRow: CsvRow,
+  subtaskRows: CsvRow[],
+  matchCriteria: SubtaskMatchCriteria
+): CsvRow[] {
+  const matching: CsvRow[] = [];
+
+  for (const subtask of subtaskRows) {
+    let matches = false;
+
+    // Check title tags
+    if (matchCriteria.titleTags && matchCriteria.titleTags.length > 0) {
+      const summary = extractField(subtask, 'Summary', ['Title', 'title']) || '';
+      for (const tag of matchCriteria.titleTags) {
+        if (summary.includes(tag)) {
+          matches = true;
+          break;
+        }
+      }
+    }
+
+    // Check components
+    if (!matches && matchCriteria.components && matchCriteria.components.length > 0) {
+      const component = extractField(subtask, 'Component', ['component']) || '';
+      for (const comp of matchCriteria.components) {
+        if (component === comp || component.includes(comp)) {
+          matches = true;
+          break;
+        }
+      }
+    }
+
+    // Check labels
+    if (!matches && matchCriteria.labels && matchCriteria.labels.length > 0) {
+      const labels = extractField(subtask, 'Labels', ['labels']) || '';
+      const labelArray = labels.split(',').map(l => l.trim());
+      for (const label of matchCriteria.labels) {
+        if (labelArray.includes(label)) {
+          matches = true;
+          break;
+        }
+      }
+    }
+
+    if (matches) {
+      matching.push(subtask);
+    }
+  }
+
+  return matching;
+}
+
+/**
+ * Calculates the estimate for a role based on the role configuration.
+ */
+function calculateRoleEstimate(
+  roleConfig: RoleConfig,
+  baseHours: number,
+  parentRow: CsvRow,
+  subtaskMap: Map<string, CsvRow[]>
+): number {
+  if (roleConfig.estimateMethod === 'percentage') {
+    if (roleConfig.percentage === undefined) {
+      return 0;
+    }
+    return baseHours * roleConfig.percentage;
+  } else if (roleConfig.estimateMethod === 'subtasks') {
+    if (!roleConfig.subtaskMatch) {
+      return 0;
+    }
+
+    const parentKey = extractField(parentRow, 'Issue Key', ['ID', 'Id', 'id']) || '';
+    const subtasks = subtaskMap.get(parentKey) || [];
+
+    if (subtasks.length === 0) {
+      return 0;
+    }
+
+    const matchingSubtasks = findMatchingSubtasks(parentRow, subtasks, roleConfig.subtaskMatch);
+
+    if (matchingSubtasks.length === 0) {
+      return 0;
+    }
+
+    // Sum estimates from matching subtasks
+    let totalHours = 0;
+    for (const subtask of matchingSubtasks) {
+      const estimate = getTicketEstimate(subtask, 0);
+      totalHours += estimate.baseHours;
+    }
+
+    return totalHours;
+  }
+
+  return 0;
+}
+
+/**
  * Main execution function.
  */
 async function main() {
@@ -928,16 +1162,47 @@ async function main() {
     return 0;
   });
 
+  // Build subtask map for subtask-based estimates
+  const subtaskMap = buildSubtaskMap(records);
+
   // Load velocity context (teamsConfig already loaded above)
   const velocityContext = buildVelocityContext(teamsConfig);
 
   // Base start datetime for all teams
   const projectStart = loadProjectStartDateTime(teamsConfig);
 
-  // Per-team cursors
-  let baCursor = new Date(projectStart.getTime());
-  let qaCursor = new Date(projectStart.getTime());
-  const devCursors: Record<string, Date> = {};
+  // Role-based cursors (replaces hardcoded baCursor, qaCursor, devCursors)
+  const roleCursors: Record<string, Date> = {};
+
+  // Initialize role cursors for all unique roles across all work types
+  const allRoles = new Set<string>();
+  const workTypeSequences = teamsConfig.workTypeSequences || {};
+  
+  // Initialize from workTypeSequences (new structure)
+  if (Object.keys(workTypeSequences).length > 0) {
+    for (const workType in workTypeSequences) {
+      const workSequence = workTypeSequences[workType];
+      for (const roleConfig of workSequence) {
+        allRoles.add(roleConfig.role);
+        if (!roleCursors[roleConfig.role]) {
+          roleCursors[roleConfig.role] = new Date(projectStart.getTime());
+        }
+      }
+    }
+  } else {
+    // Fallback to team.workSequence (backward compatibility)
+    const teams = getTeamsArray(teamsConfig.teams);
+    const includedTeams = teams.filter(team => team.includeInSchedule !== false);
+    for (const team of includedTeams) {
+      const workSequence = team.workSequence || DEFAULT_WORK_SEQUENCE;
+      for (const roleConfig of workSequence) {
+        allRoles.add(roleConfig.role);
+        if (!roleCursors[roleConfig.role]) {
+          roleCursors[roleConfig.role] = new Date(projectStart.getTime());
+        }
+      }
+    }
+  }
 
   const rows: TeamSegmentRow[] = [];
 
@@ -959,9 +1224,6 @@ async function main() {
     // Extract epic link
     const epicLink = extractField(row, 'Epic Link', ['EpicLink', 'epicLink', 'Epic']);
     
-    // Find matching team using Team, Component, Label, or Summary text
-    const jiraTeam = findMatchingTeam(row, teamsConfig);
-
     if (!issueKey) {
       return;
     }
@@ -976,6 +1238,82 @@ async function main() {
       return;
     }
 
+    // Find matching team using Team, Component, Label, or Summary text
+    const jiraTeam = findMatchingTeam(row, teamsConfig);
+
+    // Get teams array for matching
+    const teams = getTeamsArray(teamsConfig.teams);
+    const includedTeams = teams.filter(team => team.includeInSchedule !== false);
+
+    // Find the matching team configuration
+    let matchingTeam: TeamConfig | undefined;
+    
+    if (jiraTeam) {
+      // Try to find team by jiraTeam match
+      matchingTeam = includedTeams.find(team => {
+        const teamJiraTeams = team.matchRules?.jiraTeam;
+        return Array.isArray(teamJiraTeams) && teamJiraTeams.includes(jiraTeam);
+      });
+    }
+
+    // If not found by jiraTeam, try other match rules
+    if (!matchingTeam) {
+      const component = extractField(row, 'Component', ['component']) || '';
+      const labels = extractField(row, 'Labels', ['labels']) || '';
+      const summary = extractField(row, 'Summary', ['Title', 'title']) || '';
+
+      for (const team of includedTeams) {
+        const matchRules = team.matchRules;
+        if (!matchRules) continue;
+
+        // Check labels
+        if (labels && matchRules.labels && Array.isArray(matchRules.labels) && matchRules.labels.length > 0) {
+          const labelList = labels.split(',').map(l => l.trim());
+          const matches = labelList.some(l =>
+            matchRules.labels!.some(tl =>
+              l.toLowerCase() === tl.toLowerCase() ||
+              l.toLowerCase().includes(tl.toLowerCase()) ||
+              tl.toLowerCase().includes(l.toLowerCase())
+            )
+          );
+          if (matches) {
+            matchingTeam = team;
+            break;
+          }
+        }
+
+        // Check summary text
+        if (!matchingTeam && summary && matchRules.summaryText && Array.isArray(matchRules.summaryText) && matchRules.summaryText.length > 0) {
+          const summaryLower = summary.toLowerCase();
+          const matches = matchRules.summaryText.some(st => summaryLower.includes(st.toLowerCase()));
+          if (matches) {
+            matchingTeam = team;
+            break;
+          }
+        }
+
+        // Check components
+        if (!matchingTeam && component && matchRules.components && Array.isArray(matchRules.components) && matchRules.components.length > 0) {
+          const componentList = component.split(',').map(c => c.trim());
+          const matches = componentList.some(c =>
+            matchRules.components!.some(tc =>
+              c.toLowerCase() === tc.toLowerCase() ||
+              c.toLowerCase().includes(tc.toLowerCase()) ||
+              tc.toLowerCase().includes(c.toLowerCase())
+            )
+          );
+          if (matches) {
+            matchingTeam = team;
+            break;
+          }
+        }
+      }
+    }
+
+    if (!matchingTeam) {
+      return; // Skip if no matching team found
+    }
+
     const estimate = getTicketEstimate(row, rowNumber);
     const baseHours = estimate.baseHours;
     const storyPoints = estimate.storyPoints;
@@ -984,100 +1322,77 @@ async function main() {
       return;
     }
 
-    const baHoursRaw = baseHours * BA_SHARE;
-    const qaHoursRaw = baseHours * QA_SHARE;
-    let devHoursRaw = baseHours * DEV_SHARE;
-
-    // Round to 2 decimals for output, fix any small negative due to rounding
-    const baHours = Math.max(0, Number(baHoursRaw.toFixed(2)));
-    const qaHours = Math.max(0, Number(qaHoursRaw.toFixed(2)));
-    devHoursRaw = Math.max(0, devHoursRaw);
-    const devHours = Math.max(
-      0,
-      Number(devHoursRaw.toFixed(2))
-    );
-
-    // BA segment
-    const baStart = new Date(baCursor.getTime());
-    const baVelocity = getVelocityForSegment('BA', jiraTeam, velocityContext);
-    const baDurationHours = scaleHoursWithVelocity(
-      baHours,
-      baVelocity,
-      velocityContext
-    );
-    const baEnd = addWorkingHours(baStart, baDurationHours);
-    rows.push({
-      issueKey,
-      summary,
-      issueType,
-      status,
-      jiraTeam,
-      role: 'BA',
-      executionTeam: 'BA Team',
-      estimateHours: baHours,
-      storyPoints,
-      latestSprint,
-      epicLink,
-      start: formatDateTimeLocal(baStart),
-      end: formatDateTimeLocal(baEnd),
-    });
-    baCursor = baEnd;
-
-    // Dev segment (per JIRA Team)
-    const devTeamName = jiraTeam || 'Dev Team';
-    if (!devCursors[devTeamName]) {
-      devCursors[devTeamName] = new Date(projectStart.getTime());
+    // Get work sequence from workTypeSequences based on jiraTeam (new structure)
+    // or fallback to team.workSequence (backward compatibility)
+    let workSequence: RoleConfig[] | undefined;
+    const workTypeSequences = teamsConfig.workTypeSequences || {};
+    
+    if (jiraTeam && workTypeSequences[jiraTeam]) {
+      // Use work type sequence if jiraTeam matches a work type
+      workSequence = workTypeSequences[jiraTeam];
+    } else if (matchingTeam.workSequence) {
+      // Fallback to team's workSequence (backward compatibility)
+      workSequence = matchingTeam.workSequence;
+    } else {
+      // Use default sequence
+      workSequence = DEFAULT_WORK_SEQUENCE;
     }
-    const devStart = new Date(devCursors[devTeamName].getTime());
-    const devVelocity = getVelocityForSegment('Dev', jiraTeam, velocityContext);
-    const devDurationHours = scaleHoursWithVelocity(
-      devHours,
-      devVelocity,
-      velocityContext
-    );
-    const devEnd = addWorkingHours(devStart, devDurationHours);
-    rows.push({
-      issueKey,
-      summary,
-      issueType,
-      status,
-      jiraTeam,
-      role: 'Dev',
-      executionTeam: devTeamName,
-      estimateHours: devHours,
-      storyPoints,
-      latestSprint,
-      epicLink,
-      start: formatDateTimeLocal(devStart),
-      end: formatDateTimeLocal(devEnd),
-    });
-    devCursors[devTeamName] = devEnd;
 
-    // QA segment
-    const qaStart = new Date(qaCursor.getTime());
-    const qaVelocity = getVelocityForSegment('QA', jiraTeam, velocityContext);
-    const qaDurationHours = scaleHoursWithVelocity(
-      qaHours,
-      qaVelocity,
-      velocityContext
-    );
-    const qaEnd = addWorkingHours(qaStart, qaDurationHours);
-    rows.push({
-      issueKey,
-      summary,
-      issueType,
-      status,
-      jiraTeam,
-      role: 'QA',
-      executionTeam: 'QA Team',
-      estimateHours: qaHours,
-      storyPoints,
-      latestSprint,
-      epicLink,
-      start: formatDateTimeLocal(qaStart),
-      end: formatDateTimeLocal(qaEnd),
-    });
-    qaCursor = qaEnd;
+    // Process each role in the work sequence
+    for (const roleConfig of workSequence) {
+      // Check if ticket status matches role's statuses
+      if (!status || !roleConfig.statuses.includes(status)) {
+        continue; // Skip this role if status doesn't match
+      }
+
+      // Calculate role estimate
+      const roleHours = calculateRoleEstimate(roleConfig, baseHours, row, subtaskMap);
+
+      if (roleHours <= 0) {
+        continue; // Skip if no estimate
+      }
+
+      // Round to 2 decimals
+      const roleHoursRounded = Math.max(0, Number(roleHours.toFixed(2)));
+
+      // Get cursor for this role
+      const roleCursor = roleCursors[roleConfig.role] || new Date(projectStart.getTime());
+      if (!roleCursors[roleConfig.role]) {
+        roleCursors[roleConfig.role] = new Date(projectStart.getTime());
+      }
+
+      // Calculate duration with velocity
+      const roleVelocity = getVelocityForSegment(roleConfig.role, jiraTeam, velocityContext);
+      const roleDurationHours = scaleHoursWithVelocity(
+        roleHoursRounded,
+        roleVelocity,
+        velocityContext
+      );
+
+      // Calculate start and end times
+      const roleStart = new Date(roleCursor.getTime());
+      const roleEnd = addWorkingHours(roleStart, roleDurationHours);
+
+      // Add row for this role segment
+      rows.push({
+        issueKey,
+        summary,
+        issueType,
+        status,
+        jiraTeam,
+        role: roleConfig.role,
+        executionTeam: roleConfig.executionTeam,
+        estimateHours: roleHoursRounded,
+        storyPoints,
+        latestSprint,
+        epicLink,
+        start: formatDateTimeLocal(roleStart),
+        end: formatDateTimeLocal(roleEnd),
+      });
+
+      // Update cursor for this role
+      roleCursors[roleConfig.role] = roleEnd;
+    }
   });
 
   // Generate CSV output

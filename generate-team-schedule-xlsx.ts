@@ -450,7 +450,8 @@ function createGanttViewSheet(workbook: ExcelJS.Workbook, scheduleSheet: ExcelJS
 
     // Apply fill to date columns where formula returns TRUE
     dates.forEach((_, dateIdx) => {
-      const col = String.fromCharCode(69 + dateIdx);
+      const colNum = 5 + dateIdx; // Column E is 5
+      const col = getColumnLetter(colNum);
       const cell = ganttSheet.getRow(rowIdx).getCell(col);
       
       // Set a formula that will be used for conditional formatting

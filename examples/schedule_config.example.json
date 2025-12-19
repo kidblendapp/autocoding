@@ -1,15 +1,15 @@
 {
-  "projectStartDate": "2025-07-01",
-  "projectReschedulingDate": "2025-12-22",
+  "projectStartDate": "2026-01-01",
+  "projectReschedulingDate": "2026-12-22",
   "sprintDurationDays": 10,
   "plannedIssueTypes": ["Story"],
-  "fixVersions": ["PSME MVP 1.0"],
+  "fixVersions": ["PSME MVP 1.0", "PSME MVP 2.0", "PSME Release 1.0"],
   "ganttGrouping": "epicSprint",
   "teams": {
     "team-ba": {
       "name": "BA Team",
       "includeInSchedule": false,
-      "velocity": 30,
+      "velocity": 10,
       "velocityPeriod": "sprint",
       "members": ["BA User 1", "BA User 2"],
       "matchRules": {
@@ -154,7 +154,7 @@
     "team-qa": {
       "name": "QA Team",
       "includeInSchedule": false,
-      "velocity": 30,
+      "velocity": 15,
       "velocityPeriod": "sprint",
       "members": ["QA User 1", "QA User 2"],
       "matchRules": {
@@ -203,22 +203,49 @@
   "workTypeSequences": {
     "PSME-FE": [
       {
+        "role": "BA",
+        "estimateMethod": "percentage",
+        "percentage": 0.25,
+        "statuses": ["To Do", "IN ANALYSIS", "On Hold / Blocked", "Review In Progress"],
+        "executionTeam": "BA Team"
+      },
+      {
+        "role": "SA",
+        "estimateMethod": "subtasks",
+        "subtaskMatch": {
+          "titleTags": ["[SA]", "[Solution]"],
+          "components": ["Solution Design"],
+          "labels": ["solution-design"]
+        },
+        "statuses": ["To Do", "IN ANALYSIS"],
+        "executionTeam": "SA Team"
+      },
+      {
         "role": "Dev",
         "estimateMethod": "percentage",
-        "percentage": 1.0,
+        "percentage": 0.45,
         "statuses": [
           "READY FOR DEV",
           "In Progress",
           "Blocked",
           "TO REVIEW",
           "CODE REVIEW",
-          "PO APPROVED",
-          "To Do",
-          "IN ANALYSIS",
-          "On Hold / Blocked",
-          "Review In Progress"
+          "PO APPROVED"
         ],
         "executionTeam": "PSME-FE Dev Team"
+      },
+      {
+        "role": "QA",
+        "estimateMethod": "percentage",
+        "percentage": 0.30,
+        "statuses": [
+          "READY FOR QA",
+          "TEST IN PROGRESS",
+          "READY TO DEPLOY",
+          "ACCEPTANCE BLOCKED",
+          "BA ACCEPTANCE"
+        ],
+        "executionTeam": "QA Team"
       }
     ],
     "PSME-BE": [

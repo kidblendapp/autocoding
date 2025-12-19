@@ -38,6 +38,7 @@ interface TeamSegmentRow {
    */
   storyPoints?: number;
   latestSprint?: string;
+  epicLink?: string;
   start: string; // Local datetime string "YYYY-MM-DD HH:mm"
   end: string;   // Local datetime string "YYYY-MM-DD HH:mm"
 }
@@ -77,6 +78,13 @@ interface TeamsConfig {
    * Example: ["PSME MVP 1.0"]
    */
   fixVersions?: string[];
+  /**
+   * Gantt chart grouping type. Determines how tasks are grouped in the Gantt visualization.
+   * - "epicSprint": Group by Epic, then by Sprint (default)
+   * - "sprintTeam": Group by Sprint, then by Team (legacy)
+   * Example: "epicSprint"
+   */
+  ganttGrouping?: 'epicSprint' | 'sprintTeam';
   teams?: TeamConfig[];
 }
 
@@ -948,6 +956,9 @@ async function main() {
     const sprintField = extractField(row, 'Sprint', ['sprint']);
     const latestSprint = getLatestSprint(sprintField);
     
+    // Extract epic link
+    const epicLink = extractField(row, 'Epic Link', ['EpicLink', 'epicLink', 'Epic']);
+    
     // Find matching team using Team, Component, Label, or Summary text
     const jiraTeam = findMatchingTeam(row, teamsConfig);
 
@@ -1006,6 +1017,7 @@ async function main() {
       estimateHours: baHours,
       storyPoints,
       latestSprint,
+      epicLink,
       start: formatDateTimeLocal(baStart),
       end: formatDateTimeLocal(baEnd),
     });
@@ -1035,6 +1047,7 @@ async function main() {
       estimateHours: devHours,
       storyPoints,
       latestSprint,
+      epicLink,
       start: formatDateTimeLocal(devStart),
       end: formatDateTimeLocal(devEnd),
     });
@@ -1060,6 +1073,7 @@ async function main() {
       estimateHours: qaHours,
       storyPoints,
       latestSprint,
+      epicLink,
       start: formatDateTimeLocal(qaStart),
       end: formatDateTimeLocal(qaEnd),
     });
@@ -1078,6 +1092,7 @@ async function main() {
     'Estimate Hours',
     'Story Points',
     'Latest Sprint',
+    'Epic Link',
     'Start',
     'End',
   ];
@@ -1102,6 +1117,7 @@ async function main() {
       escape(r.estimateHours),
       r.storyPoints !== undefined ? escape(r.storyPoints) : '',
       r.latestSprint !== undefined ? escape(r.latestSprint) : '',
+      r.epicLink !== undefined ? escape(r.epicLink) : '',
       escape(r.start),
       escape(r.end),
     ].join(',');

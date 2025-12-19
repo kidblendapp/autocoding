@@ -26,6 +26,7 @@ export interface TeamSegmentRow {
   storyPoints?: number;
   originalEstimate?: number;
   latestSprint?: string;
+  epicLink?: string;
   start: string; // Local datetime string "YYYY-MM-DD HH:mm"
   end: string;   // Local datetime string "YYYY-MM-DD HH:mm"
 }
@@ -190,10 +191,133 @@ function extractSprintNumber(sprintName: string): number {
 }
 
 /**
+ * Creates nested groups structure: Epic (parent) → Sprint (child).
+ * 
+ * @param rows - Array of team segment rows
+ * @returns Object containing parent groups (epics) and all groups (epics + sprints)
+ */
+export function createEpicSprintGroups(rows: TeamSegmentRow[]): {
+  allGroups: GanttGroup[];
+  epicToSprintMap: Map<string, Set<string>>;
+} {
+  // Map: epic name -> set of sprints in that epic
+  const epicToSprintMap = new Map<string, Set<string>>();
+  
+  // Collect all epics and sprints
+  for (const row of rows) {
+    const epicName = row.epicLink || 'No Epic';
+    const sprintName = row.latestSprint || 'No Sprint';
+    
+    if (!epicToSprintMap.has(epicName)) {
+      epicToSprintMap.set(epicName, new Set<string>());
+    }
+    
+    epicToSprintMap.get(epicName)!.add(sprintName);
+  }
+  
+  // Load sprint dates for sorting
+  const sprintDates = loadSprintDates();
+  
+  // Helper to extract sprint number for sorting
+  const extractSprintNumber = (sprintName: string): number => {
+    const match = sprintName.match(/\bSp\s+(\d+)\b/i);
+    if (match && match[1]) {
+      return parseInt(match[1], 10);
+    }
+    return Infinity;
+  };
+  
+  // Sort sprints within each epic
+  const sortedEpicSprints = new Map<string, string[]>();
+  epicToSprintMap.forEach((sprints, epicName) => {
+    const sprintArray = Array.from(sprints);
+    const sprintsWithSprint = sprintArray.filter(s => s !== 'No Sprint');
+    
+    // Sort sprints by completion date or sprint number
+    const sortedSprintNames = sprintsWithSprint.sort((a, b) => {
+      const aDate = sprintDates.get(a);
+      const bDate = sprintDates.get(b);
+      
+      if (aDate && bDate) {
+        return aDate.localeCompare(bDate);
+      }
+      
+      if (aDate && !bDate) return -1;
+      if (!aDate && bDate) return 1;
+      
+      const aNum = extractSprintNumber(a);
+      const bNum = extractSprintNumber(b);
+      
+      if (aNum !== Infinity && bNum !== Infinity) {
+        return aNum - bNum;
+      }
+      
+      return a.localeCompare(b);
+    });
+    
+    // Add "No Sprint" at the end if it exists
+    const sortedSprintNamesFinal = [...sortedSprintNames, ...(sprintArray.includes('No Sprint') ? ['No Sprint'] : [])];
+    sortedEpicSprints.set(epicName, sortedSprintNamesFinal);
+  });
+  
+  // Sort epics alphabetically (or by some other criteria)
+  const sortedEpicNames = Array.from(epicToSprintMap.keys()).sort();
+  // Put "No Epic" at the end
+  const epicNamesFinal = [
+    ...sortedEpicNames.filter(e => e !== 'No Epic'),
+    ...(sortedEpicNames.includes('No Epic') ? ['No Epic'] : [])
+  ];
+  
+  const allGroups: GanttGroup[] = [];
+  const sprintGroups: GanttGroup[] = [];
+  
+  // First pass: Create child groups (sprints) and collect their IDs
+  const epicGroupData: Array<{ epicId: string; epicName: string; sprintIds: string[] }> = [];
+  
+  for (const epicName of epicNamesFinal) {
+    const epicId = `epic-${epicName}`;
+    const sprints = sortedEpicSprints.get(epicName) || [];
+    const sprintIds: string[] = [];
+    
+    // Create child groups (sprints) for this epic
+    for (const sprint of sprints) {
+      const sprintId = `${epicId}-sprint-${sprint}`;
+      sprintIds.push(sprintId);
+      sprintGroups.push({
+        id: sprintId,
+        content: sprint,
+        className: 'sprint-group',
+      });
+    }
+    
+    epicGroupData.push({ epicId, epicName, sprintIds });
+  }
+  
+  // Second pass: Create parent groups (epics) with nestedGroups reference
+  for (const { epicId, epicName, sprintIds } of epicGroupData) {
+    allGroups.push({
+      id: epicId,
+      content: epicName,
+      nestedGroups: sprintIds,
+      className: 'epic-group',
+    });
+  }
+  
+  // Add all sprint groups after epic groups (vis-timeline needs parent groups first)
+  allGroups.push(...sprintGroups);
+  
+  return {
+    allGroups,
+    epicToSprintMap,
+  };
+}
+
+/**
  * Creates nested groups structure: Sprint (parent) → Team (child).
  * 
  * @param rows - Array of team segment rows
  * @returns Object containing parent groups (sprints) and all groups (sprints + teams)
+ * @deprecated Use createEpicSprintGroups instead for Epic → Sprint grouping
  */
 export function createNestedGroups(rows: TeamSegmentRow[]): {
   allGroups: GanttGroup[];
@@ -364,6 +488,7 @@ export function readScheduleCsv(csvPath: string): TeamSegmentRow[] {
       const storyPointsStr = record['Story Points'] || record['storyPoints'] || '';
       const originalEstimateStr = record['Original Estimate'] || record['originalEstimate'] || '';
       const latestSprint = record['Latest Sprint'] || record['latestSprint'] || '';
+      const epicLink = record['Epic Link'] || record['EpicLink'] || record['epicLink'] || '';
       const start = record['Start'] || record['start'] || '';
       const end = record['End'] || record['end'] || '';
 
@@ -410,6 +535,7 @@ export function readScheduleCsv(csvPath: string): TeamSegmentRow[] {
         storyPoints: storyPoints !== undefined && !isNaN(storyPoints) ? storyPoints : undefined,
         originalEstimate: originalEstimate !== undefined && !isNaN(originalEstimate) ? originalEstimate : undefined,
         latestSprint: latestSprint || undefined,
+        epicLink: epicLink || undefined,
         start,
         end,
       });
@@ -426,13 +552,17 @@ export function readScheduleCsv(csvPath: string): TeamSegmentRow[] {
 }
 
 /**
- * Transforms CSV schedule data into Gantt chart format with nested groups (Sprint → Team).
+ * Transforms CSV schedule data into Gantt chart format with configurable grouping.
  * 
  * @param csvPath - Path to CSV schedule file
+ * @param groupingType - Grouping type: "epicSprint" (Epic → Sprint) or "sprintTeam" (Sprint → Team)
  * @returns Gantt chart data structure
  * @throws Error if CSV cannot be read or transformed
  */
-export function transformScheduleToGanttData(csvPath: string): GanttData {
+export function transformScheduleToGanttData(
+  csvPath: string,
+  groupingType: 'epicSprint' | 'sprintTeam' = 'epicSprint'
+): GanttData {
   logger.info(`Reading schedule CSV from ${csvPath}`);
   
   const rows = readScheduleCsv(csvPath);
@@ -445,32 +575,64 @@ export function transformScheduleToGanttData(csvPath: string): GanttData {
     };
   }
 
-  logger.info(`Processing ${rows.length} schedule rows`);
+  logger.info(`Processing ${rows.length} schedule rows with grouping type: ${groupingType}`);
 
-  // Create nested groups structure (Sprint → Team)
-  const { allGroups, sprintToTeamMap } = createNestedGroups(rows);
-  logger.info(`Created ${allGroups.length} groups (${sprintToTeamMap.size} sprints with teams)`);
-
-  // Transform rows to Gantt items, assigning them to sprint-team combination groups
-  const items: GanttItem[] = [];
+  let allGroups: GanttGroup[];
+  let items: GanttItem[] = [];
   const errors: Array<{ row: TeamSegmentRow; error: string }> = [];
 
-  for (const row of rows) {
-    try {
-      // Determine sprint name (use "No Sprint" if empty)
-      const sprintName = row.latestSprint || 'No Sprint';
-      const sprintId = `sprint-${sprintName}`;
-      
-      // Create group ID: sprint-team combination
-      const groupId = `${sprintId}-team-${row.executionTeam}`;
-      
-      // Parse row with the group ID
-      const item = parseTeamSegmentRow(row, groupId);
-      items.push(item);
-    } catch (error) {
-      const errorMsg = error instanceof Error ? error.message : String(error);
-      errors.push({ row, error: errorMsg });
-      logger.warn(`Failed to parse row for ${row.issueKey}-${row.role}: ${errorMsg}`);
+  if (groupingType === 'epicSprint') {
+    // Create nested groups structure (Epic → Sprint)
+    const { allGroups: epicSprintGroups, epicToSprintMap } = createEpicSprintGroups(rows);
+    allGroups = epicSprintGroups;
+    logger.info(`Created ${allGroups.length} groups (${epicToSprintMap.size} epics with sprints)`);
+
+    // Transform rows to Gantt items, assigning them to epic-sprint combination groups
+    for (const row of rows) {
+      try {
+        // Determine epic name (use "No Epic" if empty)
+        const epicName = row.epicLink || 'No Epic';
+        const epicId = `epic-${epicName}`;
+        
+        // Determine sprint name (use "No Sprint" if empty)
+        const sprintName = row.latestSprint || 'No Sprint';
+        
+        // Create group ID: epic-sprint combination
+        const groupId = `${epicId}-sprint-${sprintName}`;
+        
+        // Parse row with the group ID
+        const item = parseTeamSegmentRow(row, groupId);
+        items.push(item);
+      } catch (error) {
+        const errorMsg = error instanceof Error ? error.message : String(error);
+        errors.push({ row, error: errorMsg });
+        logger.warn(`Failed to parse row for ${row.issueKey}-${row.role}: ${errorMsg}`);
+      }
+    }
+  } else {
+    // Create nested groups structure (Sprint → Team) - legacy grouping
+    const { allGroups: sprintTeamGroups, sprintToTeamMap } = createNestedGroups(rows);
+    allGroups = sprintTeamGroups;
+    logger.info(`Created ${allGroups.length} groups (${sprintToTeamMap.size} sprints with teams)`);
+
+    // Transform rows to Gantt items, assigning them to sprint-team combination groups
+    for (const row of rows) {
+      try {
+        // Determine sprint name (use "No Sprint" if empty)
+        const sprintName = row.latestSprint || 'No Sprint';
+        const sprintId = `sprint-${sprintName}`;
+        
+        // Create group ID: sprint-team combination
+        const groupId = `${sprintId}-team-${row.executionTeam}`;
+        
+        // Parse row with the group ID
+        const item = parseTeamSegmentRow(row, groupId);
+        items.push(item);
+      } catch (error) {
+        const errorMsg = error instanceof Error ? error.message : String(error);
+        errors.push({ row, error: errorMsg });
+        logger.warn(`Failed to parse row for ${row.issueKey}-${row.role}: ${errorMsg}`);
+      }
     }
   }
 

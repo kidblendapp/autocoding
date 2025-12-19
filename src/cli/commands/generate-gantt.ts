@@ -76,8 +76,24 @@ export async function generateGantt(options: GenerateGanttOptions = {}): Promise
 
     logger.info(`Reading schedule data from ${inputPath}`);
 
+    // Load grouping type from schedule_config.json if available
+    let groupingType: 'epicSprint' | 'sprintTeam' = 'epicSprint'; // Default
+    try {
+      const configPath = 'schedule_config.json';
+      if (existsSync(configPath)) {
+        const configContent = readFileSync(configPath, 'utf-8');
+        const config = JSON.parse(configContent) as { ganttGrouping?: 'epicSprint' | 'sprintTeam' };
+        if (config.ganttGrouping) {
+          groupingType = config.ganttGrouping;
+          logger.info(`Using Gantt grouping from config: ${groupingType}`);
+        }
+      }
+    } catch (error) {
+      logger.warn(`Could not load Gantt grouping from config, using default: ${error instanceof Error ? error.message : String(error)}`);
+    }
+
     // Transform CSV to Gantt data
-    const ganttData = transformScheduleToGanttData(inputPath);
+    const ganttData = transformScheduleToGanttData(inputPath, groupingType);
 
     if (ganttData.items.length === 0) {
       logger.warn('No schedule items found in CSV file');

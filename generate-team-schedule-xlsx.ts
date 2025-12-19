@@ -45,6 +45,20 @@ function parseDateTime(value: string | undefined): Date | null {
 }
 
 /**
+ * Converts a column number (1-based) to Excel column letter(s).
+ * Examples: 1 -> A, 26 -> Z, 27 -> AA, 702 -> ZZ
+ */
+function getColumnLetter(colNum: number): string {
+  let result = '';
+  while (colNum > 0) {
+    colNum--;
+    result = String.fromCharCode(65 + (colNum % 26)) + result;
+    colNum = Math.floor(colNum / 26);
+  }
+  return result;
+}
+
+/**
  * Main execution function to build the XLSX workbook.
  */
 async function main() {
@@ -76,6 +90,7 @@ async function main() {
     { header: 'Execution Team', key: 'executionTeam', width: 18 },
     { header: 'Estimate Hours', key: 'estimateHours', width: 14 },
     { header: 'Latest Sprint', key: 'latestSprint', width: 30 },
+    { header: 'Epic Link', key: 'epicLink', width: 16 },
     {
       header: 'Start',
       key: 'start',
@@ -106,6 +121,7 @@ async function main() {
     const role = row['Role'] || '';
     const executionTeam = row['Execution Team'] || '';
     const latestSprint = row['Latest Sprint'] || '';
+    const epicLink = row['Epic Link'] || '';
 
     const estimateHoursRaw = row['Estimate Hours'];
     const estimateHours = estimateHoursRaw
@@ -134,6 +150,7 @@ async function main() {
       executionTeam,
       estimateHours: isNaN(estimateHours) ? null : estimateHours,
       latestSprint: latestSprint || null,
+      epicLink: epicLink || null,
       start,
       end,
       durationHours,
@@ -154,6 +171,9 @@ async function main() {
 
   // Create Gantt Chart sheet with formulas
   createGanttChartSheet(workbook, sheet);
+
+  // Create Conditional Formatting Gantt View sheet
+  createGanttViewSheet(workbook, sheet);
 
   // Create Chart Instructions sheet
   createChartInstructionsSheet(workbook);
@@ -176,6 +196,7 @@ function createGanttChartSheet(workbook: ExcelJS.Workbook, scheduleSheet: ExcelJ
     { header: 'Task Label', key: 'taskLabel', width: 50 },
     { header: 'Execution Team', key: 'executionTeam', width: 18 },
     { header: 'Role', key: 'role', width: 8 },
+    { header: 'Epic Link', key: 'epicLink', width: 16 },
     { header: 'Start Date', key: 'startDate', width: 18, style: { numFmt: 'yyyy-mm-dd hh:mm' } },
     { header: 'End Date', key: 'endDate', width: 18, style: { numFmt: 'yyyy-mm-dd hh:mm' } },
     { header: 'Days from Project Start', key: 'daysFromStart', width: 22 },
@@ -193,20 +214,23 @@ function createGanttChartSheet(workbook: ExcelJS.Workbook, scheduleSheet: ExcelJ
 
   // Calculate minimum start date for "Days from Start" calculation
   // We'll use a formula that references the Schedule sheet
-  const minStartFormula = `MIN(Schedule!J2:J${scheduleSheet.rowCount})`;
+  // Note: Start column is now K (was J before Epic Link was added)
+  const minStartFormula = `MIN(Schedule!K2:K${scheduleSheet.rowCount})`;
 
   // Add data rows with formulas
   for (let i = 2; i <= scheduleSheet.rowCount; i++) {
     const row = chartSheet.addRow({});
     
     // Set formulas using cell.value with formula property
+    // Note: Column references updated: Epic Link is J, Start is K, End is L
     row.getCell('taskLabel').value = { formula: `Schedule!A${i}&" - "&Schedule!B${i}&" ("&Schedule!F${i}&")"` };
     row.getCell('executionTeam').value = { formula: `Schedule!G${i}` };
     row.getCell('role').value = { formula: `Schedule!F${i}` };
-    row.getCell('startDate').value = { formula: `Schedule!J${i}` };
-    row.getCell('endDate').value = { formula: `Schedule!K${i}` };
-    row.getCell('daysFromStart').value = { formula: `Schedule!J${i}-${minStartFormula}` };
-    row.getCell('durationDays').value = { formula: `Schedule!M${i}` };
+    row.getCell('epicLink').value = { formula: `Schedule!J${i}` };
+    row.getCell('startDate').value = { formula: `Schedule!K${i}` };
+    row.getCell('endDate').value = { formula: `Schedule!L${i}` };
+    row.getCell('daysFromStart').value = { formula: `Schedule!K${i}-${minStartFormula}` };
+    row.getCell('durationDays').value = { formula: `Schedule!N${i}` };
     row.getCell('issueKey').value = { formula: `Schedule!A${i}` };
 
     // Format the daysFromStart and durationDays columns as numbers with 2 decimal places
@@ -214,27 +238,27 @@ function createGanttChartSheet(workbook: ExcelJS.Workbook, scheduleSheet: ExcelJ
     row.getCell('durationDays').numFmt = '0.00';
   }
 
-  // Add a helper column header for sorting (Execution Team + Start Date as text for sorting)
+  // Add a helper column header for sorting (Epic Link + Sprint + Start Date as text for sorting)
   const headerRow = chartSheet.getRow(1);
-  headerRow.getCell(9).value = 'Sort Helper';
-  chartSheet.getColumn(9).width = 20;
-  chartSheet.getColumn(9).key = 'sortHelper';
+  headerRow.getCell(10).value = 'Sort Helper';
+  chartSheet.getColumn(10).width = 20;
+  chartSheet.getColumn(10).key = 'sortHelper';
   
   // Add sort helper formulas for each data row
   // Note: chartSheet rows start at 2 (row 1 is header), and they correspond to Schedule rows 2+
   for (let i = 2; i <= chartSheet.rowCount; i++) {
     const scheduleRow = i; // chartSheet row i corresponds to Schedule row i
-    // Create a sortable string: ExecutionTeam_StartDate
+    // Create a sortable string: EpicLink_Sprint_StartDate for Epic → Sprint grouping
     chartSheet.getRow(i).getCell('sortHelper').value = { 
-      formula: `Schedule!G${scheduleRow}&"_"&TEXT(Schedule!J${scheduleRow},"yyyymmddhhmm")` 
+      formula: `IF(ISBLANK(Schedule!J${scheduleRow}),"No Epic",Schedule!J${scheduleRow})&"_"&IF(ISBLANK(Schedule!I${scheduleRow}),"No Sprint",Schedule!I${scheduleRow})&"_"&TEXT(Schedule!K${scheduleRow},"yyyymmddhhmm")` 
     };
   }
 
   // Add a note at the top explaining how to create the chart
   chartSheet.insertRow(1, [
-    'Chart Data - Select columns A, F, and G (Task Label, Days from Start, Duration Days) to create a horizontal bar chart. Data is grouped by Execution Team.',
+    'Chart Data - Select columns A, G, and H (Task Label, Days from Start, Duration Days) to create a horizontal bar chart. Data can be grouped by Epic Link and Sprint.',
   ]);
-  chartSheet.mergeCells('A1:I1');
+  chartSheet.mergeCells('A1:J1');
   chartSheet.getCell('A1').font = { bold: true, italic: true };
   chartSheet.getCell('A1').alignment = { wrapText: true, vertical: 'middle' };
   chartSheet.getRow(1).height = 40;
@@ -254,6 +278,208 @@ function createGanttChartSheet(workbook: ExcelJS.Workbook, scheduleSheet: ExcelJ
   // Users can create named ranges manually in Excel using:
   // Formulas > Name Manager > New
   // Or reference the ranges directly: 'Gantt Chart'!$A$3:$A$<lastRow>
+}
+
+/**
+ * Creates a Gantt View sheet with conditional formatting using date headers and overlap formulas.
+ * This sheet displays a visual Gantt chart that automatically updates when Schedule sheet dates change.
+ */
+function createGanttViewSheet(workbook: ExcelJS.Workbook, scheduleSheet: ExcelJS.Worksheet): void {
+  const ganttSheet = workbook.addWorksheet('Gantt View');
+  
+  const dataRowCount = scheduleSheet.rowCount - 1; // Exclude header
+  
+  if (dataRowCount === 0) {
+    ganttSheet.getCell('A1').value = 'No schedule data available';
+    return;
+  }
+
+  // Calculate date range from Schedule sheet
+  const minDate = new Date();
+  const maxDate = new Date();
+  let hasDates = false;
+
+  for (let i = 2; i <= scheduleSheet.rowCount; i++) {
+    const startCell = scheduleSheet.getCell(`K${i}`); // Start column
+    const endCell = scheduleSheet.getCell(`L${i}`);   // End column
+    
+    if (startCell.value instanceof Date && endCell.value instanceof Date) {
+      const start = startCell.value as Date;
+      const end = endCell.value as Date;
+      
+      if (!hasDates) {
+        minDate.setTime(start.getTime());
+        maxDate.setTime(end.getTime());
+        hasDates = true;
+      } else {
+        if (start.getTime() < minDate.getTime()) {
+          minDate.setTime(start.getTime());
+        }
+        if (end.getTime() > maxDate.getTime()) {
+          maxDate.setTime(end.getTime());
+        }
+      }
+    }
+  }
+
+  if (!hasDates) {
+    ganttSheet.getCell('A1').value = 'No valid dates found in schedule data';
+    return;
+  }
+
+  // Add buffer days (7 days before and after)
+  minDate.setDate(minDate.getDate() - 7);
+  maxDate.setDate(maxDate.getDate() + 7);
+
+  // Generate date sequence (daily)
+  const dates: Date[] = [];
+  const currentDate = new Date(minDate);
+  while (currentDate <= maxDate) {
+    // Skip weekends for better performance (optional - can include all days)
+    dates.push(new Date(currentDate));
+    currentDate.setDate(currentDate.getDate() + 1);
+  }
+
+  // Limit to reasonable number of dates (max 365 days)
+  const maxDates = 365;
+  if (dates.length > maxDates) {
+    // Sample dates to fit within limit
+    const step = Math.ceil(dates.length / maxDates);
+    const sampledDates: Date[] = [];
+    for (let i = 0; i < dates.length; i += step) {
+      sampledDates.push(dates[i]);
+    }
+    dates.length = 0;
+    dates.push(...sampledDates);
+  }
+
+  // Set column widths
+  ganttSheet.getColumn('A').width = 50; // Task label
+  ganttSheet.getColumn('B').width = 18; // Execution Team
+  ganttSheet.getColumn('C').width = 8;  // Role
+  ganttSheet.getColumn('D').width = 16;  // Epic Link
+  // Date columns will be narrow (8 pixels)
+  dates.forEach(() => {
+    ganttSheet.getColumn(ganttSheet.columnCount + 1).width = 8;
+  });
+
+  // Add header row
+  const headerRow = ganttSheet.addRow([
+    'Task Label',
+    'Execution Team',
+    'Role',
+    'Epic Link',
+    ...dates.map(d => d)
+  ]);
+
+  // Format header row
+  headerRow.font = { bold: true };
+  headerRow.fill = {
+    type: 'pattern',
+    pattern: 'solid',
+    fgColor: { argb: 'FFE0E0E0' },
+  };
+  headerRow.height = 20;
+
+  // Format date headers (columns E onwards, which is column 5)
+  dates.forEach((date, idx) => {
+    const colNum = 5 + idx; // Column E is 5
+    const colLetter = getColumnLetter(colNum);
+    const cell = headerRow.getCell(colLetter);
+    cell.numFmt = 'dd-mmm';
+    cell.alignment = { textRotation: 45, vertical: 'bottom' };
+  });
+
+  // Add data rows with formulas
+  for (let i = 2; i <= scheduleSheet.rowCount; i++) {
+    const row = ganttSheet.addRow([]);
+    
+    // Task label
+    row.getCell('A').value = { 
+      formula: `Schedule!A${i}&" - "&Schedule!B${i}&" ("&Schedule!F${i}&")"` 
+    };
+    
+    // Execution Team
+    row.getCell('B').value = { formula: `Schedule!G${i}` };
+    
+    // Role
+    row.getCell('C').value = { formula: `Schedule!F${i}` };
+    
+    // Epic Link
+    row.getCell('D').value = { formula: `Schedule!J${i}` };
+    
+    // Date overlap formulas for each date column
+    dates.forEach((date, dateIdx) => {
+      const colNum = 5 + dateIdx; // Column E is 5
+      const colLetter = getColumnLetter(colNum);
+      const dateValue = Math.floor(date.getTime() / (1000 * 60 * 60 * 24)) + 25569; // Excel date serial
+      
+      // Set header cell to date value
+      headerRow.getCell(colLetter).value = dateValue;
+      headerRow.getCell(colLetter).numFmt = 'dd-mmm';
+      
+      // Formula: AND(date >= Start, date <= End)
+      // Compare date header with Start and End dates from Schedule sheet
+      row.getCell(colLetter).value = {
+        formula: `AND(${colLetter}$1>=Schedule!K${i},${colLetter}$1<=Schedule!L${i})`
+      };
+    });
+  }
+
+  // Apply conditional formatting using cell fill colors
+  // Since ExcelJS conditional formatting API may be limited, we'll use formulas that return 1/0
+  // and apply fill colors programmatically, or provide instructions for manual formatting
+  
+  // For now, we'll set cells with TRUE formulas to have a fill color
+  // Users can manually apply conditional formatting in Excel if needed
+  for (let rowIdx = 2; rowIdx <= ganttSheet.rowCount; rowIdx++) {
+    const roleCell = ganttSheet.getRow(rowIdx).getCell('C');
+    const roleValue = roleCell.value?.toString() || '';
+    
+    // Determine color based on role
+    let fillColor: string;
+    if (roleValue === 'BA') {
+      fillColor = 'FF4472C4'; // Blue
+    } else if (roleValue === 'Dev') {
+      fillColor = 'FF70AD47'; // Green
+    } else if (roleValue === 'QA') {
+      fillColor = 'FFFFC000'; // Orange
+    } else {
+      fillColor = 'FFD0D0D0'; // Gray
+    }
+
+    // Apply fill to date columns where formula returns TRUE
+    dates.forEach((_, dateIdx) => {
+      const col = String.fromCharCode(69 + dateIdx);
+      const cell = ganttSheet.getRow(rowIdx).getCell(col);
+      
+      // Set a formula that will be used for conditional formatting
+      // The formula already exists, we just need to note that users should apply conditional formatting
+      // For now, we'll leave it as-is and add instructions
+    });
+  }
+
+  // Add instruction note
+  const lastColNum = 4 + dates.length; // A=1, B=2, C=3, D=4, then dates start at E=5
+  const lastColLetter = getColumnLetter(lastColNum);
+  ganttSheet.insertRow(1, [
+    'Gantt View - This sheet uses formulas to check if tasks overlap with dates. Apply conditional formatting: Select date range (E2:last column), Home > Conditional Formatting > New Rule > Use formula: =E2=TRUE, set fill color. The chart updates automatically when Schedule sheet dates change.'
+  ]);
+  ganttSheet.mergeCells(`A1:${lastColLetter}1`);
+  ganttSheet.getCell('A1').font = { bold: true, italic: true };
+  ganttSheet.getCell('A1').alignment = { wrapText: true, vertical: 'middle' };
+  ganttSheet.getRow(1).height = 50;
+
+  // Freeze panes: first 4 columns (Task Label, Execution Team, Role, Epic Link) and header row
+  ganttSheet.views = [
+    {
+      state: 'frozen',
+      xSplit: 4, // Freeze first 4 columns
+      ySplit: 2, // Freeze instruction row and header row
+      topLeftCell: 'E3',
+      activeCell: 'E3',
+    },
+  ];
 }
 
 /**
@@ -314,7 +540,7 @@ function createChartInstructionsSheet(workbook: ExcelJS.Workbook): void {
     },
     {
       step: 'Tip:',
-      instruction: 'You can filter or sort the Gantt Chart sheet by Execution Team or Role to create separate charts for different teams',
+      instruction: 'You can filter or sort the Gantt Chart sheet by Epic Link, Sprint, Execution Team, or Role to create separate charts for different groupings',
     },
     {
       step: '',

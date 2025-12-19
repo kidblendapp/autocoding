@@ -4,6 +4,7 @@
   "sprintDurationDays": 10,
   "plannedIssueTypes": ["Story"],
   "fixVersions": ["PSME MVP 1.0"],
+  "ganttGrouping": "epicSprint",
   "teams": [
     {
       "id": "team-ba",

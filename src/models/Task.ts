@@ -33,4 +33,16 @@ export interface Task {
   
   /** Optional epic link (e.g., "PROJ-100") */
   epicLink?: string;
+
+  /**
+   * Optional BA effort estimate derived from the main estimate.
+   * Represents the share of work attributed to Business Analysis.
+   */
+  baEstimate?: number;
+
+  /**
+   * Optional QA effort estimate derived from the main estimate.
+   * Represents the share of work attributed to Quality Assurance.
+   */
+  qaEstimate?: number;
 }

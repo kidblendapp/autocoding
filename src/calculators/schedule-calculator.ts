@@ -123,6 +123,32 @@ export function calculateSchedule(
 
   const scheduledTasks: ScheduledTask[] = [];
 
+  // Status groups for BA and QA effort calculation
+  const BA_STATUSES = new Set<string>([
+    'To Do',
+    'IN ANALYSIS',
+    'On Hold / Blocked',
+    'Review In Progress',
+  ]);
+
+  const QA_STATUSES = new Set<string>([
+    'READY FOR QA',
+    'TEST IN PROGRESS',
+    'READY TO DEPLOY',
+    'ACCEPTANCE BLOCKED',
+    'BA ACCEPTANCE',
+    'READY FOR DEV',
+    'In Progress',
+    'Blocked',
+    'TO REVIEW',
+    'CODE REVIEW',
+    'PO APPROVED',
+    'To Do',
+    'IN ANALYSIS',
+    'On Hold / Blocked',
+    'Review In Progress',
+  ]);
+
   // Process tasks sequentially
   for (let i = 0; i < tasks.length; i++) {
     const task = tasks[i];
@@ -139,6 +165,20 @@ export function calculateSchedule(
       config.sprintDurationDays
     );
 
+    // Derive BA/QA effort shares for qualifying Story tasks
+    let baEstimate: number | undefined;
+    let qaEstimate: number | undefined;
+
+    if (task.issueType === 'Story' && task.status && task.estimate > 0) {
+      if (BA_STATUSES.has(task.status)) {
+        baEstimate = +(task.estimate * 0.25);
+      }
+
+      if (QA_STATUSES.has(task.status)) {
+        qaEstimate = +(task.estimate * 0.30);
+      }
+    }
+
     // Determine start date (ensure it's a working day)
     // For first task, use effective start date (adjusted to working day)
     // For subsequent tasks, use previous task's end date (which is already a working day)
@@ -152,6 +192,8 @@ export function calculateSchedule(
     // Create scheduled task
     const scheduledTask: ScheduledTask = {
       ...task,
+      ...(baEstimate !== undefined && { baEstimate }),
+      ...(qaEstimate !== undefined && { qaEstimate }),
       calculatedStartDate: startDate,
       calculatedEndDate: endDate,
     };

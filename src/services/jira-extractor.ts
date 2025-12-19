@@ -352,7 +352,7 @@ export async function extractJiraTickets(config: JiraConfig, includeHistory: boo
           team = String(teamField);
         }
       }
-
+      
       // Extract story points
       let storyPoints: number | undefined;
       if (fields.customfield_10052 !== null && fields.customfield_10052 !== undefined) {

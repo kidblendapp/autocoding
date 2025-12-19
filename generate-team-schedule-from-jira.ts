@@ -288,19 +288,13 @@ function getLatestSprint(sprintField: string | undefined): string | undefined {
 
 /**
  * Determines if a ticket is completed.
- * Returns true if ticket has Resolution Date OR Status is "Done".
+ * Returns true if ticket's Status Category is "DONE".
  */
 function isCompletedTicket(row: CsvRow): boolean {
-  const resolutionDate = extractField(row, 'Resolution Date', ['resolutionDate', 'Resolution Date']);
-  const status = extractField(row, 'Status', ['status']);
+  const statusCategory = extractField(row, 'Status Category', ['statusCategory', 'Status Category']);
 
-  // Check if has Resolution Date
-  if (resolutionDate && resolutionDate.trim() !== '') {
-    return true;
-  }
-
-  // Check if Status is "Done" (case-insensitive)
-  if (status && status.toLowerCase() === 'done') {
+  // Check if Status Category is "DONE" (case-insensitive)
+  if (statusCategory && statusCategory.toUpperCase() === 'DONE') {
     return true;
   }
 
@@ -480,14 +474,15 @@ function loadProjectStartDateTime(config: TeamsConfig): Date {
 }
 
 /**
- * Finds the matching team for a ticket based on Team, Component, Label, and Summary text.
+ * Finds the matching team for a ticket based on Team, Label, Summary text, and Component.
  * Priority order:
- * 1. Team field (if present and matches)
- * 2. Component (if Team is empty or doesn't match)
- * 3. Label (if Component doesn't match)
- * 4. Summary text (if Label doesn't match)
+ * 1. Team field (jiraTeam) - if present and matches
+ * 2. Labels - if Team is empty or doesn't match
+ * 3. Summary text - if Labels don't match or are empty
+ * 4. Component - only if none of the above matched
  *
  * Returns the team's jiraTeam value (first match from jiraTeam array) or empty string if no match.
+ * Stops checking once the first match is found.
  */
 function findMatchingTeam(
   row: CsvRow,
@@ -500,7 +495,7 @@ function findMatchingTeam(
 
   const teams = teamsConfig.teams || [];
 
-  // First, try to match by Team field (if present)
+  // First, try to match by Team field (jiraTeam) - if present
   if (jiraTeam && jiraTeam.trim() !== '') {
     for (const team of teams) {
       const teamJiraTeams = team.matchRules?.jiraTeam;
@@ -510,7 +505,52 @@ function findMatchingTeam(
     }
   }
 
-  // If Team is empty or doesn't match, try Component
+  // If Team is empty or doesn't match, try Labels
+  if (labels && labels.trim() !== '') {
+    for (const team of teams) {
+      const teamLabels = team.matchRules?.labels;
+      if (Array.isArray(teamLabels) && teamLabels.length > 0) {
+        // Labels field may contain comma-separated values
+        const labelList = labels.split(',').map(l => l.trim());
+        const matches = labelList.some(l => 
+          teamLabels.some(tl => 
+            l.toLowerCase() === tl.toLowerCase() || 
+            l.toLowerCase().includes(tl.toLowerCase()) ||
+            tl.toLowerCase().includes(l.toLowerCase())
+          )
+        );
+        if (matches) {
+          const teamJiraTeams = team.matchRules?.jiraTeam;
+          if (Array.isArray(teamJiraTeams) && teamJiraTeams.length > 0) {
+            return teamJiraTeams[0];
+          }
+          return team.name;
+        }
+      }
+    }
+  }
+
+  // If Labels don't match or are empty, try Summary text
+  if (summary && summary.trim() !== '') {
+    const summaryLower = summary.toLowerCase();
+    for (const team of teams) {
+      const teamSummaryTexts = team.matchRules?.summaryText;
+      if (Array.isArray(teamSummaryTexts) && teamSummaryTexts.length > 0) {
+        const matches = teamSummaryTexts.some(st => 
+          summaryLower.includes(st.toLowerCase())
+        );
+        if (matches) {
+          const teamJiraTeams = team.matchRules?.jiraTeam;
+          if (Array.isArray(teamJiraTeams) && teamJiraTeams.length > 0) {
+            return teamJiraTeams[0];
+          }
+          return team.name;
+        }
+      }
+    }
+  }
+
+  // If SummaryText doesn't match, try Component (only if none of the above matched)
   if (component && component.trim() !== '') {
     for (const team of teams) {
       const teamComponents = team.matchRules?.components;
@@ -536,53 +576,196 @@ function findMatchingTeam(
     }
   }
 
-  // If Component doesn't match, try Label
-  if (labels && labels.trim() !== '') {
-    for (const team of teams) {
-      const teamLabels = team.matchRules?.labels;
-      if (Array.isArray(teamLabels) && teamLabels.length > 0) {
-        // Labels field may contain comma-separated values
-        const labelList = labels.split(',').map(l => l.trim());
-        const matches = labelList.some(l => 
-          teamLabels.some(tl => 
-            l.toLowerCase() === tl.toLowerCase() || 
-            l.toLowerCase().includes(tl.toLowerCase()) ||
-            tl.toLowerCase().includes(l.toLowerCase())
-          )
-        );
-        if (matches) {
-          const teamJiraTeams = team.matchRules?.jiraTeam;
-          if (Array.isArray(teamJiraTeams) && teamJiraTeams.length > 0) {
-            return teamJiraTeams[0];
-          }
-          return team.name;
-        }
-      }
-    }
-  }
-
-  // If Label doesn't match, try Summary text
-  if (summary && summary.trim() !== '') {
-    const summaryLower = summary.toLowerCase();
-    for (const team of teams) {
-      const teamSummaryTexts = team.matchRules?.summaryText;
-      if (Array.isArray(teamSummaryTexts) && teamSummaryTexts.length > 0) {
-        const matches = teamSummaryTexts.some(st => 
-          summaryLower.includes(st.toLowerCase())
-        );
-        if (matches) {
-          const teamJiraTeams = team.matchRules?.jiraTeam;
-          if (Array.isArray(teamJiraTeams) && teamJiraTeams.length > 0) {
-            return teamJiraTeams[0];
-          }
-          return team.name;
-        }
-      }
-    }
-  }
-
   // No match found, return original jiraTeam or empty
   return jiraTeam;
+}
+
+/**
+ * Interface for fake sprint information.
+ */
+interface FakeSprint {
+  name: string;
+  startDate: string;
+  endDate: string;
+  assignedTickets: CsvRow[];
+}
+
+/**
+ * Generates fake sprints for tickets without sprints and assigns tickets to them.
+ * Returns array of fake sprints and updates the records with assigned sprint names.
+ */
+function generateFakeSprints(
+  records: CsvRow[],
+  sprintMap: Map<string, SprintInfo>,
+  teamsConfig: TeamsConfig
+): FakeSprint[] {
+  // Find latest sprint end date
+  let latestEndDate: Date | null = null;
+  let latestSprintNumber = 0;
+
+  sprintMap.forEach((sprintInfo, sprintName) => {
+    if (sprintInfo.endDate) {
+      const endDate = new Date(sprintInfo.endDate);
+      if (!latestEndDate || endDate > latestEndDate) {
+        latestEndDate = endDate;
+      }
+    }
+    
+    // Extract sprint number from name (e.g., "PSME Sp 10" -> 10)
+    const match = sprintName.match(/\bSp\s+(\d+)\b/i);
+    if (match && match[1]) {
+      const sprintNum = parseInt(match[1], 10);
+      if (sprintNum > latestSprintNumber) {
+        latestSprintNumber = sprintNum;
+      }
+    }
+  });
+
+  // If no sprints found, start from project rescheduling date or start date
+  if (!latestEndDate) {
+    const projectStart = teamsConfig.projectReschedulingDate || teamsConfig.projectStartDate || '2025-12-22';
+    latestEndDate = new Date(projectStart);
+    latestEndDate.setHours(9, 0, 0, 0);
+  }
+
+  // Find all tickets without sprints
+  const ticketsWithoutSprints: CsvRow[] = [];
+  for (const row of records) {
+    const sprintField = extractField(row, 'Sprint', ['sprint']);
+    const latestSprint = getLatestSprint(sprintField);
+    if (!latestSprint) {
+      ticketsWithoutSprints.push(row);
+    }
+  }
+
+  if (ticketsWithoutSprints.length === 0) {
+    console.log('No tickets without sprints found. Skipping fake sprint generation.');
+    return [];
+  }
+
+  console.log(`Found ${ticketsWithoutSprints.length} tickets without sprints. Generating fake sprints...`);
+
+  // Group tickets by team and calculate total story points per team
+  const teamTickets = new Map<string, Array<{ row: CsvRow; storyPoints: number }>>();
+  const velocityContext = buildVelocityContext(teamsConfig);
+  const sprintDurationDays = velocityContext.sprintDurationDays;
+
+  for (const row of ticketsWithoutSprints) {
+    const jiraTeam = findMatchingTeam(row, teamsConfig) || 'Unknown';
+    const estimate = getTicketEstimate(row, 0);
+    const storyPoints = estimate.storyPoints || 0;
+
+    if (!teamTickets.has(jiraTeam)) {
+      teamTickets.set(jiraTeam, []);
+    }
+    teamTickets.get(jiraTeam)!.push({ row, storyPoints });
+  }
+
+  // Generate fake sprints for each team
+  const fakeSprints: FakeSprint[] = [];
+  let currentSprintNumber = latestSprintNumber + 1;
+  let currentStartDate = new Date(latestEndDate.getTime());
+  
+  // Move to next working day
+  currentStartDate.setDate(currentStartDate.getDate() + 1);
+  while (isWeekend(currentStartDate)) {
+    currentStartDate.setDate(currentStartDate.getDate() + 1);
+  }
+  currentStartDate.setHours(9, 0, 0, 0);
+
+  // Track the latest sprint end date across all teams to ensure sequential sprints
+  let globalLatestEndDate = new Date(currentStartDate.getTime());
+
+  teamTickets.forEach((tickets, jiraTeam) => {
+    const teamVelocity = velocityContext.jiraTeamVelocities[jiraTeam] || velocityContext.defaultVelocity;
+    const totalStoryPoints = tickets.reduce((sum, t) => sum + t.storyPoints, 0);
+    const sprintsNeeded = Math.ceil(totalStoryPoints / teamVelocity);
+
+    console.log(`Team ${jiraTeam}: ${totalStoryPoints} story points, ${teamVelocity} velocity → ${sprintsNeeded} sprints needed`);
+
+    let remainingTickets = [...tickets];
+    let currentCapacity = 0;
+    let currentSprintTickets: CsvRow[] = [];
+
+    for (let sprintIdx = 0; sprintIdx < sprintsNeeded || remainingTickets.length > 0; sprintIdx++) {
+      // Calculate sprint dates - start from global latest end date
+      const sprintStart = new Date(globalLatestEndDate.getTime());
+      sprintStart.setDate(sprintStart.getDate() + 1);
+      while (isWeekend(sprintStart)) {
+        sprintStart.setDate(sprintStart.getDate() + 1);
+      }
+      sprintStart.setHours(9, 0, 0, 0);
+      
+      const sprintEnd = new Date(sprintStart);
+      
+      // Add sprint duration (working days)
+      let workingDaysAdded = 0;
+      while (workingDaysAdded < sprintDurationDays) {
+        sprintEnd.setDate(sprintEnd.getDate() + 1);
+        if (!isWeekend(sprintEnd)) {
+          workingDaysAdded++;
+        }
+      }
+      sprintEnd.setHours(18, 0, 0, 0);
+
+      // Assign tickets to this sprint
+      while (remainingTickets.length > 0 && currentCapacity < teamVelocity) {
+        const ticket = remainingTickets[0];
+        const ticketSP = ticket.storyPoints;
+        
+        if (currentCapacity + ticketSP <= teamVelocity || currentSprintTickets.length === 0) {
+          // Add ticket to current sprint
+          currentSprintTickets.push(ticket.row);
+          currentCapacity += ticketSP;
+          remainingTickets.shift();
+        } else {
+          // Ticket doesn't fit, start new sprint
+          break;
+        }
+      }
+
+      if (currentSprintTickets.length > 0) {
+        const sprintName = `PSME Sp ${currentSprintNumber} (${formatSprintDate(sprintStart)}-${formatSprintDate(sprintEnd)})`;
+        
+        // Assign sprint to tickets
+        for (const ticketRow of currentSprintTickets) {
+          // Update the Sprint field in the row
+          const existingSprint = extractField(ticketRow, 'Sprint', ['sprint']) || '';
+          ticketRow['Sprint'] = existingSprint ? `${existingSprint}, ${sprintName}` : sprintName;
+        }
+
+        fakeSprints.push({
+          name: sprintName,
+          startDate: sprintStart.toISOString(),
+          endDate: sprintEnd.toISOString(),
+          assignedTickets: currentSprintTickets,
+        });
+
+        console.log(`  Created ${sprintName}: ${currentSprintTickets.length} tickets, ${currentCapacity} story points`);
+      }
+
+      // Prepare for next sprint
+      currentSprintNumber++;
+      
+      // Update global latest end date for next sprint
+      globalLatestEndDate = new Date(sprintEnd.getTime());
+      
+      currentCapacity = 0;
+      currentSprintTickets = [];
+    }
+  });
+
+  console.log(`Generated ${fakeSprints.length} fake sprints for tickets without sprints.`);
+  return fakeSprints;
+}
+
+/**
+ * Formats a date for sprint name (e.g., "12/22").
+ */
+function formatSprintDate(date: Date): string {
+  const month = date.getMonth() + 1;
+  const day = date.getDate();
+  return `${month}/${day}`;
 }
 
 /**
@@ -674,37 +857,29 @@ async function main() {
   // Load sprint map for lookup
   const sprintMap = loadSprintMap();
 
-  // Sort records: completed tickets first (by Resolution Date), then non-completed with sprints (by sprint End Date), then non-completed without sprints
-  const sortedRecords = [...records].sort((a, b) => {
-    const aCompleted = isCompletedTicket(a);
-    const bCompleted = isCompletedTicket(b);
+  // Load team configuration first (needed for fake sprint generation)
+  const teamsConfig = loadTeamsConfigFromFile();
 
-    // Completed tickets come first
-    if (aCompleted && !bCompleted) {
-      return -1;
-    }
-    if (!aCompleted && bCompleted) {
-      return 1;
-    }
+  // Filter out completed tickets (Status Category = "DONE")
+  const nonCompletedRecords = records.filter((row) => !isCompletedTicket(row));
 
-    // Both completed: sort by Resolution Date ascending
-    if (aCompleted && bCompleted) {
-      const aResolutionDate = extractField(a, 'Resolution Date', ['resolutionDate', 'Resolution Date']) || '';
-      const bResolutionDate = extractField(b, 'Resolution Date', ['resolutionDate', 'Resolution Date']) || '';
-      
-      if (aResolutionDate && bResolutionDate) {
-        return aResolutionDate.localeCompare(bResolutionDate);
-      }
-      if (aResolutionDate) {
-        return -1;
-      }
-      if (bResolutionDate) {
-        return 1;
-      }
-      return 0;
-    }
+  // Generate fake sprints for tickets without sprints
+  const fakeSprints = generateFakeSprints(nonCompletedRecords, sprintMap, teamsConfig);
+  // Add fake sprints to sprint map
+  for (const fakeSprint of fakeSprints) {
+    sprintMap.set(fakeSprint.name, {
+      endDate: fakeSprint.endDate,
+      completeDate: fakeSprint.endDate, // Use end date as completion date for fake sprints
+    });
+  }
 
-    // Both non-completed: check for sprints
+  console.log(
+    `Filtered out ${records.length - nonCompletedRecords.length} completed tickets. Processing ${nonCompletedRecords.length} non-completed tickets.`
+  );
+
+  // Sort non-completed records: tickets with sprints first (by sprint End Date), then tickets without sprints
+  const sortedRecords = [...nonCompletedRecords].sort((a, b) => {
+    // Check for sprints
     const aSprintField = extractField(a, 'Sprint', ['sprint']);
     const bSprintField = extractField(b, 'Sprint', ['sprint']);
     const aLatestSprint = getLatestSprint(aSprintField);
@@ -740,8 +915,7 @@ async function main() {
     return 0;
   });
 
-  // Load team configuration and velocity context
-  const teamsConfig = loadTeamsConfigFromFile();
+  // Load velocity context (teamsConfig already loaded above)
   const velocityContext = buildVelocityContext(teamsConfig);
 
   // Base start datetime for all teams

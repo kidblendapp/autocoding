@@ -205,6 +205,7 @@ export async function extractJiraTickets(config: JiraConfig, includeHistory: boo
       'priority',
       'components',
       'parent',
+      'issuelinks', // Issue link relationships (for finding Feature parents)
       'labels',
       'fixVersions',
       'versions',
@@ -221,7 +222,8 @@ export async function extractJiraTickets(config: JiraConfig, includeHistory: boo
       'customfield_10410', // Original Estimate
       'customfield_10016',
       'customfield_10002',
-      'customfield_10014', // Epic Link
+      'customfield_10014', // Epic Link (legacy, may be null)
+      'customfield_10008', // Epic Link (actual field used in PSME project)
       'customfield_10011',
       'customfield_10010', // Sprint
       'customfield_10098', // Date field
@@ -377,15 +379,48 @@ export async function extractJiraTickets(config: JiraConfig, includeHistory: boo
       }
       
       // Extract parent ID
+      // Priority: Check for Feature type inwardIssue links first, then fall back to parent field
       let parentId: string | undefined;
-      if (fields.parent) {
+      
+      // Check for Feature type inwardIssue links (e.g., "Work item split" relationships)
+      if (fields.issuelinks && Array.isArray(fields.issuelinks)) {
+        for (const link of fields.issuelinks) {
+          if (link.inwardIssue && link.inwardIssue.fields && link.inwardIssue.fields.issuetype) {
+            const issueTypeName = link.inwardIssue.fields.issuetype.name;
+            if (issueTypeName === 'Feature') {
+              parentId = link.inwardIssue.key;
+              break; // Use first Feature found
+            }
+          }
+        }
+      }
+      
+      // Fall back to parent field if no Feature link found
+      if (!parentId && fields.parent) {
         parentId = fields.parent.key;
       }
       
       // Extract epic link
+      // Try customfield_10008 first (used in PSME project), then fallback to customfield_10014
       let epicLink: string | undefined;
-      if (fields.customfield_10014) {
-        epicLink = fields.customfield_10014;
+      
+      // Primary: customfield_10008 (Epic Link field used in PSME)
+      if (fields.customfield_10008) {
+        if (typeof fields.customfield_10008 === 'string') {
+          epicLink = fields.customfield_10008;
+        } else if (fields.customfield_10008.key) {
+          epicLink = fields.customfield_10008.key;
+        }
+      }
+      // Fallback: customfield_10014 (legacy Epic Link field)
+      else if (fields.customfield_10014) {
+        if (typeof fields.customfield_10014 === 'string') {
+          epicLink = fields.customfield_10014;
+        } else if (fields.customfield_10014.key) {
+          epicLink = fields.customfield_10014.key;
+        } else if (fields.customfield_10014.toString) {
+          epicLink = fields.customfield_10014.toString();
+        }
       }
       
       // Extract reporter

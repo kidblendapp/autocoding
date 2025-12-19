@@ -8,6 +8,11 @@ import { extractJiraTickets, exportTicketsToCsv, exportSprintsToCsv, type JiraCo
 import { logger } from './src/utils/logger';
 import { existsSync, readFileSync } from 'fs';
 
+interface ScheduleConfig {
+  fixVersions?: string[];
+  plannedIssueTypes?: string[];
+}
+
 /**
  * Loads JIRA configuration from a JSON file.
  */
@@ -39,6 +44,25 @@ function loadJiraConfig(configPath: string): JiraConfig {
 }
 
 /**
+ * Loads schedule configuration from schedule_config.json if it exists.
+ */
+function loadScheduleConfig(): ScheduleConfig | null {
+  const scheduleConfigPath = 'schedule_config.json';
+  if (!existsSync(scheduleConfigPath)) {
+    return null;
+  }
+  
+  try {
+    const configContent = readFileSync(scheduleConfigPath, 'utf-8');
+    const config = JSON.parse(configContent) as ScheduleConfig;
+    return config;
+  } catch (error) {
+    logger.warn(`Failed to load schedule config: ${error instanceof Error ? error.message : String(error)}`);
+    return null;
+  }
+}
+
+/**
  * Main execution function.
  */
 async function main() {
@@ -54,6 +78,19 @@ async function main() {
     // Load config from jira-config.json
     const configPath = 'jira-config.json';
     const jiraConfig = loadJiraConfig(configPath);
+    
+    // Load schedule config to get fixVersions and issueTypes filters
+    const scheduleConfig = loadScheduleConfig();
+    if (scheduleConfig) {
+      if (scheduleConfig.fixVersions && scheduleConfig.fixVersions.length > 0) {
+        jiraConfig.fixVersions = scheduleConfig.fixVersions;
+        console.log(`Filtering by fix versions: ${scheduleConfig.fixVersions.join(', ')}`);
+      }
+      if (scheduleConfig.plannedIssueTypes && scheduleConfig.plannedIssueTypes.length > 0) {
+        jiraConfig.issueTypes = scheduleConfig.plannedIssueTypes;
+        console.log(`Filtering by issue types: ${scheduleConfig.plannedIssueTypes.join(', ')}`);
+      }
+    }
     
     console.log(`Extracting all tickets from project: ${jiraConfig.projectName}`);
     logger.info(`Extracting tickets from project: ${jiraConfig.projectName}`);

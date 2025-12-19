@@ -72,6 +72,11 @@ interface TeamsConfig {
    * Example: ["Story"]
    */
   plannedIssueTypes?: string[];
+  /**
+   * List of Fix Versions that should be included in the schedule.
+   * Example: ["PSME MVP 1.0"]
+   */
+  fixVersions?: string[];
   teams?: TeamConfig[];
 }
 
@@ -89,11 +94,11 @@ interface SprintInfo {
 }
 
 /**
- * Loads team configuration (velocity, sprint duration, etc.) from team-config.json.
+ * Loads team configuration (velocity, sprint duration, etc.) from schedule_config.json.
  */
 function loadTeamsConfigFromFile(): TeamsConfig {
   try {
-    const raw = readFileSync('team-config.json', 'utf-8');
+    const raw = readFileSync('schedule_config.json', 'utf-8');
     const parsed = JSON.parse(raw) as TeamsConfig;
     return parsed;
   } catch {

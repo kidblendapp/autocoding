@@ -3,6 +3,7 @@
   "projectReschedulingDate": "2025-12-22",
   "sprintDurationDays": 10,
   "plannedIssueTypes": ["Story"],
+  "fixVersions": ["PSME MVP 1.0"],
   "teams": [
     {
       "id": "team-ba",
@@ -182,3 +183,6 @@
     }
   ]
 }
+
+
+

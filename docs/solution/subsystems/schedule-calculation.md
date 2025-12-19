@@ -120,7 +120,7 @@ The Gantt chart generation process (`generate-team-schedule-from-jira.ts`) imple
 #### Velocity-Based Duration Scaling
 - Duration formula: `durationHours = effortHours × (sprintDays / velocity)`
 - Each team/role can have different velocity values
-- Velocity context loaded from `team-config.json`
+- Velocity context loaded from `schedule_config.json`
 - Default velocity used if team-specific velocity not configured
 
 #### Output Format

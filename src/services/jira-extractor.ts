@@ -12,6 +12,16 @@ export interface JiraConfig {
   jiraEmail: string;
   jiraApiToken: string;
   projectName: string;
+  /**
+   * Optional list of Fix Versions to filter tickets.
+   * If provided, only tickets with these fix versions will be included.
+   */
+  fixVersions?: string[];
+  /**
+   * Optional list of Issue Types to filter tickets.
+   * If provided, only tickets with these issue types will be included.
+   */
+  issueTypes?: string[];
 }
 
 export interface FieldHistory {
@@ -175,6 +185,32 @@ async function getTicketHistory(
 }
 
 /**
+ * Builds a base JQL query with filters for fix versions and issue types.
+ * 
+ * @param config - JIRA configuration
+ * @returns Base JQL query string
+ */
+function buildBaseJql(config: JiraConfig): string {
+  let jql = `project = ${config.projectName}`;
+  
+  // Add fix version filter if specified
+  if (config.fixVersions && config.fixVersions.length > 0) {
+    const fixVersionList = config.fixVersions.map(v => `"${v}"`).join(', ');
+    jql += ` AND fixVersion in (${fixVersionList})`;
+  }
+  
+  // Add issue type filter if specified
+  if (config.issueTypes && config.issueTypes.length > 0) {
+    const issueTypeList = config.issueTypes.map(t => `"${t}"`).join(', ');
+    jql += ` AND issuetype in (${issueTypeList})`;
+  }
+  
+  jql += ` ORDER BY key ASC`;
+  
+  return jql;
+}
+
+/**
  * Extracts all tickets from a JIRA project.
  * 
  * @param config - JIRA configuration
@@ -185,11 +221,19 @@ async function getTicketHistory(
 export async function extractJiraTickets(config: JiraConfig, includeHistory: boolean = false): Promise<JiraTicket[]> {
   logger.info(`Extracting tickets from project: ${config.projectName}`);
   
+  if (config.fixVersions && config.fixVersions.length > 0) {
+    logger.info(`Filtering by fix versions: ${config.fixVersions.join(', ')}`);
+  }
+  
+  if (config.issueTypes && config.issueTypes.length > 0) {
+    logger.info(`Filtering by issue types: ${config.issueTypes.join(', ')}`);
+  }
+  
   try {
-    // Build JQL query to get all tickets from the project
-    let currentJql = `project = ${config.projectName} ORDER BY key ASC`;
+    // Build base JQL query with filters
+    const baseJql = buildBaseJql(config);
     
-    logger.info(`Executing JQL query: ${currentJql}`);
+    logger.info(`Executing JQL query: ${baseJql}`);
     
     // Prepare fields to fetch - comprehensive list based on PSME-160 inspection
     const fields = [
@@ -249,15 +293,27 @@ export async function extractJiraTickets(config: JiraConfig, includeHistory: boo
       // Build JQL with key range for pagination
       let batchJql: string;
       if (batchNumber === 0) {
-        // First batch: get first 100 tickets
-        batchJql = `project = ${config.projectName} ORDER BY key ASC`;
+        // First batch: use base JQL query
+        batchJql = baseJql;
       } else {
-        // Subsequent batches: use key range
+        // Subsequent batches: use key range with filters
         const lowerBound = batchNumber * batchSize;
         const upperBound = (batchNumber + 1) * batchSize;
         const lowerKey = `"${config.projectName}-${lowerBound}"`;
         const upperKey = `"${config.projectName}-${upperBound}"`;
-        batchJql = `project = ${config.projectName} AND issueKey > ${lowerKey} AND issueKey <= ${upperKey} ORDER BY key ASC`;
+        
+        // Build base query without ORDER BY for combining
+        let baseQuery = `project = ${config.projectName}`;
+        if (config.fixVersions && config.fixVersions.length > 0) {
+          const fixVersionList = config.fixVersions.map(v => `"${v}"`).join(', ');
+          baseQuery += ` AND fixVersion in (${fixVersionList})`;
+        }
+        if (config.issueTypes && config.issueTypes.length > 0) {
+          const issueTypeList = config.issueTypes.map(t => `"${t}"`).join(', ');
+          baseQuery += ` AND issuetype in (${issueTypeList})`;
+        }
+        
+        batchJql = `${baseQuery} AND issueKey > ${lowerKey} AND issueKey <= ${upperKey} ORDER BY key ASC`;
       }
       
       const requestBody: any = {

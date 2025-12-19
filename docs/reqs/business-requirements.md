@@ -37,6 +37,11 @@ This project aims to deliver a "Gantt Schedule Calculation System" that automate
 
 ### 4.4. Reporting & Visualization
 *   **US-8:** As a stakeholder, I want to view a Gantt chart showing the sequence of Epics and their predicted delivery dates.
+*   **US-8.1:** As a PM, I want to generate a per-team schedule CSV that splits each ticket into BA, Dev, and QA segments with calculated start and end timestamps.
+*   **US-8.2:** As a PM, I want the system to calculate sequential schedules where BA and QA segments are sequential across all tickets, while Dev segments are sequential per JIRA team (enabling parallel development streams).
+*   **US-8.3:** As a PM, I want the system to respect working hours (09:00-13:00 and 14:00-18:00, Monday-Friday) when calculating task durations.
+*   **US-8.4:** As a PM, I want the system to apply velocity-based duration scaling so that task durations reflect team capacity.
+*   **US-8.5:** As a PM, I want to export the schedule to Excel format (XLSX) with formatted date columns and duration calculations for easy Gantt chart creation.
 *   **US-9:** As a PM, I want to see a warning if a task has no estimate or team assigned.
 
 ### 4.5. Change History Tracking

@@ -35,6 +35,19 @@ The Schedule Calculation subsystem calculates realistic start and end dates for 
    - Preserves all original task fields
    - Includes calculated start and end dates
 
+5. **Gantt Chart Schedule Generator** (`generate-team-schedule-from-jira.ts`)
+   - Generates per-team schedule with BA/Dev/QA segments
+   - Splits ticket effort: BA (25%), Dev (45%), QA (30%)
+   - Calculates sequential schedules per team using working hours
+   - Applies velocity-based duration scaling
+   - Outputs CSV with start/end timestamps for Gantt visualization
+
+6. **Excel Gantt Generator** (`generate-team-schedule-xlsx.ts`)
+   - Converts team schedule CSV to Excel format
+   - Adds calculated duration columns (Hours, Days)
+   - Formats date/time columns for Gantt chart creation
+   - Freezes header row for navigation
+
 ## Implementation Details
 
 ### Duration Calculation Formula
@@ -78,6 +91,43 @@ The `addWorkingDays()` method implements:
 - All dates are in ISO format (YYYY-MM-DD)
 - Calculated dates stored as `calculatedStartDate` and `calculatedEndDate`
 - Date arithmetic handles month/year boundaries and leap years
+
+### Gantt Chart Schedule Generation
+
+The Gantt chart generation process (`generate-team-schedule-from-jira.ts`) implements a specialized scheduling model:
+
+#### Effort Splitting
+- Each ticket is split into three role-based segments:
+  - **BA (Business Analysis)**: 25% of base hours
+  - **Dev (Development)**: 45% of base hours
+  - **QA (Quality Assurance)**: 30% of base hours
+- Base hours derived from Story Points (1 SP = 8 hours) or Original Estimate
+
+#### Sequential Scheduling Model
+- **BA Segments**: Sequential across all tickets (single BA team stream)
+- **Dev Segments**: Sequential per JIRA team (parallel development streams)
+  - Each JIRA team maintains its own cursor
+  - Enables parallel development work across teams
+- **QA Segments**: Sequential across all tickets (single QA team stream)
+
+#### Working Hours Calculation
+- Working days: Monday-Friday (weekends excluded)
+- Working hours: 09:00-13:00 and 14:00-18:00
+- Lunch break: 13:00-14:00 (non-working time)
+- Tasks starting outside working hours are normalized to next working time
+- Tasks ending outside working hours are moved to next working day
+
+#### Velocity-Based Duration Scaling
+- Duration formula: `durationHours = effortHours × (sprintDays / velocity)`
+- Each team/role can have different velocity values
+- Velocity context loaded from `team-config.json`
+- Default velocity used if team-specific velocity not configured
+
+#### Output Format
+- CSV format: `outputs/jira-team-schedule.csv`
+- Columns: Issue Key, Summary, Issue Type, Status, Jira Team, Role, Execution Team, Estimate Hours, Story Points, Start, End
+- Start/End in format: "YYYY-MM-DD HH:mm"
+- Excel format: `outputs/jira-team-schedule.xlsx` with additional duration columns
 
 ## API/Interface Specifications
 
@@ -155,7 +205,12 @@ class WorkingDaysCalendar {
 
 ## Related Files
 
-- Implementation: `src/calculators/schedule-calculator.ts`, `src/calculators/working-days-calculator.ts`, `src/output/output-generator.ts`
+- Implementation: 
+  - `src/calculators/schedule-calculator.ts` - Basic linear schedule calculation
+  - `src/calculators/working-days-calculator.ts` - Working days logic
+  - `src/output/output-generator.ts` - JSON output generation
+  - `generate-team-schedule-from-jira.ts` - Gantt chart schedule generation
+  - `generate-team-schedule-xlsx.ts` - Excel Gantt chart export
 - Tests: `src/calculators/__tests__/schedule-calculator.test.ts`, `src/calculators/__tests__/working-days-calculator.test.ts`, `src/output/__tests__/output-generator.test.ts`
 
 ## Backward Compatibility

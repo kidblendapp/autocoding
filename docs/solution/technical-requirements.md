@@ -98,7 +98,27 @@ The Gantt Schedule Calculation System is a Node.js/TypeScript application design
     *   Includes calculated start and end dates in ISO format
 *   **Format:** JSON object representing the timeline.
     *   Start Date, End Date, Assigned Team/Resource.
-*   **Visualization Support:** Structured to easily map to libraries like `vis-timeline` or D3 Gantt charts.
+    *   Structured to easily map to libraries like `vis-timeline` or D3 Gantt charts.
+*   **Gantt Chart Schedule Generator** (`generate-team-schedule-from-jira.ts`):
+    *   Generates per-team schedule with BA/Dev/QA segments
+    *   Splits ticket effort: BA (25%), Dev (45%), QA (30%)
+    *   Calculates sequential schedules per team using working hours (09:00-13:00, 14:00-18:00, Mon-Fri)
+    *   Applies velocity-based duration scaling: `durationHours = effortHours × (sprintDays / velocity)`
+    *   Sequential scheduling model:
+        *   BA segments: Sequential across all tickets (single stream)
+        *   Dev segments: Sequential per JIRA team (parallel streams)
+        *   QA segments: Sequential across all tickets (single stream)
+    *   Outputs CSV: `outputs/jira-team-schedule.csv` with columns:
+        *   Issue Key, Summary, Issue Type, Status, Jira Team
+        *   Role (BA/Dev/QA), Execution Team
+        *   Estimate Hours, Story Points
+        *   Start, End (datetime format "YYYY-MM-DD HH:mm")
+*   **Excel Gantt Generator** (`generate-team-schedule-xlsx.ts`):
+    *   Converts team schedule CSV to Excel format using ExcelJS
+    *   Adds calculated duration columns (Duration Hours, Duration Days)
+    *   Formats date/time columns for Gantt chart creation
+    *   Freezes header row for easy navigation
+    *   Outputs: `outputs/jira-team-schedule.xlsx` ready for Gantt visualization in Excel, Microsoft Project, or other tools
 
 ## 4. Scenario Handling Details
 

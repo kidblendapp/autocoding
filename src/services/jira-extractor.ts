@@ -281,13 +281,13 @@ export async function extractJiraTickets(config: JiraConfig, includeHistory: boo
     // Create authorization header
     const authHeader = createAuthHeader(config.jiraEmail, config.jiraApiToken);
     
-    // Fetch all tickets with pagination using JQL key ranges
-    // Pattern: project = PSME AND issueKey > "PSME-100" AND issueKey <= "PSME-200"
+    // Fetch all tickets with pagination using last key from previous batch
+    // This allows continuing past gaps in sequential key numbering
     let allIssues: any[] = [];
     const maxResults = 100; // JIRA API max is 100 per request
     let batchNumber = 0;
     let hasMore = true;
-    const batchSize = 100; // Process in batches of 100 keys
+    let lastKey: string | null = null; // Track the last key from previous batch
     
     while (hasMore) {
       // Build JQL with key range for pagination
@@ -296,11 +296,12 @@ export async function extractJiraTickets(config: JiraConfig, includeHistory: boo
         // First batch: use base JQL query
         batchJql = baseJql;
       } else {
-        // Subsequent batches: use key range with filters
-        const lowerBound = batchNumber * batchSize;
-        const upperBound = (batchNumber + 1) * batchSize;
-        const lowerKey = `"${config.projectName}-${lowerBound}"`;
-        const upperKey = `"${config.projectName}-${upperBound}"`;
+        // Subsequent batches: use last key from previous batch to continue
+        if (!lastKey) {
+          // Should not happen, but break if no last key
+          hasMore = false;
+          break;
+        }
         
         // Build base query without ORDER BY for combining
         let baseQuery = `project = ${config.projectName}`;
@@ -313,7 +314,8 @@ export async function extractJiraTickets(config: JiraConfig, includeHistory: boo
           baseQuery += ` AND issuetype in (${issueTypeList})`;
         }
         
-        batchJql = `${baseQuery} AND issueKey > ${lowerKey} AND issueKey <= ${upperKey} ORDER BY key ASC`;
+        // Use last key to continue pagination past gaps
+        batchJql = `${baseQuery} AND issueKey > "${lastKey}" ORDER BY key ASC`;
       }
       
       const requestBody: any = {
@@ -326,7 +328,7 @@ export async function extractJiraTickets(config: JiraConfig, includeHistory: boo
         requestBody.fields = fields;
       }
       
-      logger.info(`Fetching batch ${batchNumber + 1} (keys ${batchNumber * batchSize + 1} to ${(batchNumber + 1) * batchSize})...`);
+      logger.info(`Fetching batch ${batchNumber + 1}${lastKey ? ` (after ${lastKey})` : ' (first batch)'}...`);
       logger.info(`JQL: ${batchJql}`);
       
       const response = await fetch(apiUrl, {
@@ -355,17 +357,27 @@ export async function extractJiraTickets(config: JiraConfig, includeHistory: boo
       const returned = data.issues?.length || 0;
       if (data.issues && Array.isArray(data.issues)) {
         allIssues = allIssues.concat(data.issues);
+        
+        // Update lastKey to the last issue key in this batch
+        if (returned > 0) {
+          const lastIssue = data.issues[returned - 1];
+          lastKey = lastIssue.key || null;
+        }
       }
       
       const total = data.total || 0;
-      logger.info(`Fetched ${returned} tickets (${allIssues.length} total so far${total > 0 ? `, ${total} total in this batch` : ''})`);
+      logger.info(`Fetched ${returned} tickets (${allIssues.length} total so far${total > 0 ? `, ${total} total available` : ''})`);
       
-      // Continue pagination until no tickets are returned
+      // Continue pagination until no tickets are returned or we got fewer than maxResults
       if (returned === 0) {
         // No results in this batch, we've reached the end
+        logger.info('Empty batch encountered. Stopping pagination.');
+        hasMore = false;
+      } else if (returned < maxResults) {
+        // Got fewer than maxResults, this is likely the last batch
         hasMore = false;
       } else {
-        // Got results, continue to next batch
+        // Got full batch, continue to next batch
         batchNumber++;
       }
       

@@ -79,18 +79,10 @@ async function main() {
     const configPath = 'jira-config.json';
     const jiraConfig = loadJiraConfig(configPath);
     
-    // Load schedule config to get fixVersions and issueTypes filters
-    const scheduleConfig = loadScheduleConfig();
-    if (scheduleConfig) {
-      if (scheduleConfig.fixVersions && scheduleConfig.fixVersions.length > 0) {
-        jiraConfig.fixVersions = scheduleConfig.fixVersions;
-        console.log(`Filtering by fix versions: ${scheduleConfig.fixVersions.join(', ')}`);
-      }
-      if (scheduleConfig.plannedIssueTypes && scheduleConfig.plannedIssueTypes.length > 0) {
-        jiraConfig.issueTypes = scheduleConfig.plannedIssueTypes;
-        console.log(`Filtering by issue types: ${scheduleConfig.plannedIssueTypes.join(', ')}`);
-      }
-    }
+    // Do not apply any filters from schedule_config.json during JIRA extraction
+    // Filters (fixVersions, issueTypes) should only be applied when generating schedule
+    // Extract all ticket types and all statuses without filtering
+    console.log('Extracting all ticket types and all statuses (no filters applied)');
     
     console.log(`Extracting all tickets from project: ${jiraConfig.projectName}`);
     logger.info(`Extracting tickets from project: ${jiraConfig.projectName}`);

@@ -1,0 +1,440 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Team Estimate Configuration",
+  "description": "Configuration for multi-team estimate generation supporting three estimation cases",
+  "type": "object",
+  "required": ["version", "defaultPreset", "presets", "teams", "estimationRules", "taskSequencing", "uiSettings"],
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "JSON Schema reference"
+    },
+    "version": {
+      "type": "string",
+      "description": "Configuration version"
+    },
+    "description": {
+      "type": "string",
+      "description": "Configuration description"
+    },
+    "presets": {
+      "type": "object",
+      "description": "Predefined coefficient presets",
+      "additionalProperties": {
+        "$ref": "#/definitions/EstimatePreset"
+      }
+    },
+    "defaultPreset": {
+      "type": "string",
+      "description": "Default preset name"
+    },
+    "teams": {
+      "type": "object",
+      "description": "Team definitions",
+      "additionalProperties": {
+        "$ref": "#/definitions/TeamEstimateConfig"
+      }
+    },
+    "estimationRules": {
+      "type": "object",
+      "required": ["case1_storyOnly", "case2_hybrid", "case3_subtasksOnly"],
+      "properties": {
+        "case1_storyOnly": {
+          "$ref": "#/definitions/EstimationRule"
+        },
+        "case2_hybrid": {
+          "$ref": "#/definitions/EstimationRule"
+        },
+        "case3_subtasksOnly": {
+          "$ref": "#/definitions/EstimationRule"
+      }
+      }
+    },
+    "taskSequencing": {
+      "$ref": "#/definitions/TaskSequencing"
+    },
+    "uiSettings": {
+      "$ref": "#/definitions/UISettings"
+    }
+  },
+  "definitions": {
+    "TeamCoefficient": {
+      "type": "object",
+      "required": ["method", "value"],
+      "properties": {
+        "method": {
+          "type": "string",
+          "enum": ["percentage", "hoursPerPoint"]
+        },
+        "value": {
+          "type": "number",
+          "minimum": 0
+        },
+        "description": {
+          "type": "string"
+        },
+        "overrideDefault": {
+          "type": "boolean"
+        }
+      }
+    },
+    "SubtaskMatchCriteria": {
+      "type": "object",
+      "properties": {
+        "components": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "labels": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "summaryTags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "issueTypes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "HybridEstimationConfig": {
+      "type": "object",
+      "required": ["matchCriteria", "fallbackToCoefficient"],
+      "properties": {
+        "matchCriteria": {
+          "$ref": "#/definitions/SubtaskMatchCriteria"
+        },
+        "fallbackToCoefficient": {
+          "type": "boolean"
+        },
+        "fallbackCoefficient": {
+          "$ref": "#/definitions/TeamCoefficient"
+        }
+      }
+    },
+    "EstimatePreset": {
+      "type": "object",
+      "required": ["name", "teamCoefficients"],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "teamCoefficients": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/TeamCoefficient"
+          }
+        }
+      }
+    },
+    "TeamEstimateConfig": {
+      "type": "object",
+      "required": ["id", "name", "type", "velocity", "velocityPeriod", "includeInSchedule", "defaultCoefficient"],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string"
+        },
+        "velocity": {
+          "type": "number",
+          "minimum": 0
+        },
+        "velocityPeriod": {
+          "type": "string"
+        },
+        "includeInSchedule": {
+          "type": "boolean"
+        },
+        "defaultCoefficient": {
+          "$ref": "#/definitions/TeamCoefficient"
+        }
+      }
+    },
+    "EstimationRule": {
+      "type": "object",
+      "required": ["name", "description", "enabled", "calculationMethod"],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "enabled": {
+          "type": "boolean"
+        },
+        "calculationMethod": {
+          "type": "string",
+          "enum": ["coefficients", "hybrid", "subtasks"]
+        },
+        "teamCoefficients": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/TeamCoefficient"
+          }
+        },
+        "subtaskMatching": {
+          "type": "object",
+          "additionalProperties": {
+            "oneOf": [
+              {
+                "$ref": "#/definitions/HybridEstimationConfig"
+              },
+              {
+                "$ref": "#/definitions/SubtaskMatchCriteria"
+              }
+            ]
+          }
+        },
+        "storyEstimateUsage": {
+          "type": "object",
+          "properties": {
+            "applyToTeamsWithoutSubtasks": {
+              "type": "boolean"
+            },
+            "applyAsValidation": {
+              "type": "boolean"
+            },
+            "validationTolerance": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            }
+          }
+        },
+        "missingEstimateHandling": {
+          "type": "object",
+          "properties": {
+            "defaultValue": {
+              "type": "number",
+              "minimum": 0
+            },
+            "warnOnMissing": {
+              "type": "boolean"
+            },
+            "skipSubtask": {
+              "type": "boolean"
+            }
+          }
+        }
+      }
+    },
+    "ExecutionModeConfig": {
+      "type": "object",
+      "required": ["name", "description", "parallelism"],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "parallelism": {
+          "oneOf": [
+            {
+              "type": "string",
+              "enum": ["unlimited"]
+            },
+            {
+              "type": "number",
+              "minimum": 1
+            }
+          ]
+        }
+      }
+    },
+    "TaskDependency": {
+      "type": "object",
+      "required": ["role", "teamId", "dependencies", "canRunInParallel"],
+      "properties": {
+        "role": {
+          "type": "string"
+        },
+        "teamId": {
+          "type": "string"
+        },
+        "dependencies": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "canRunInParallel": {
+          "type": "boolean"
+        }
+      }
+    },
+    "TeamSequencingConfig": {
+      "type": "object",
+      "required": ["mode"],
+      "properties": {
+        "mode": {
+          "type": "string",
+          "enum": ["sequential", "parallel", "limitedParallel"]
+        },
+        "description": {
+          "type": "string"
+        },
+        "maxParallelTasks": {
+          "type": "number",
+          "minimum": 1
+        }
+      }
+    },
+    "DependencyRule": {
+      "type": "object",
+      "required": ["name", "description", "enabled"],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "enabled": {
+          "type": "boolean"
+        },
+        "completionThreshold": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      }
+    },
+    "TaskSequencing": {
+      "type": "object",
+      "required": ["defaultMode", "executionModes", "teamSequencing", "workTypeSequences", "dependencyRules"],
+      "properties": {
+        "defaultMode": {
+          "type": "string",
+          "enum": ["sequential", "parallel", "limitedParallel"]
+        },
+        "executionModes": {
+          "type": "object",
+          "required": ["sequential", "parallel", "limitedParallel"],
+          "properties": {
+            "sequential": {
+              "$ref": "#/definitions/ExecutionModeConfig"
+            },
+            "parallel": {
+              "$ref": "#/definitions/ExecutionModeConfig"
+            },
+            "limitedParallel": {
+              "$ref": "#/definitions/ExecutionModeConfig"
+            }
+          }
+        },
+        "teamSequencing": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/TeamSequencingConfig"
+          }
+        },
+        "workTypeSequences": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "required": ["executionOrder"],
+            "properties": {
+              "executionOrder": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/definitions/TaskDependency"
+                }
+              }
+            }
+          }
+        },
+        "dependencyRules": {
+          "type": "object",
+          "required": ["strict", "soft"],
+          "properties": {
+            "strict": {
+              "$ref": "#/definitions/DependencyRule"
+            },
+            "soft": {
+              "$ref": "#/definitions/DependencyRule"
+            }
+          }
+        }
+      }
+    },
+    "UIValidationSettings": {
+      "type": "object",
+      "required": ["validateCoefficientSum", "coefficientSumTolerance", "warnOnOverEstimation", "overEstimationThreshold"],
+      "properties": {
+        "validateCoefficientSum": {
+          "type": "boolean"
+        },
+        "coefficientSumTolerance": {
+          "type": "number",
+          "minimum": 0
+        },
+        "warnOnOverEstimation": {
+          "type": "boolean"
+        },
+        "overEstimationThreshold": {
+          "type": "number",
+          "minimum": 1
+        }
+      }
+    },
+    "UIDisplayOptions": {
+      "type": "object",
+      "required": ["showEstimateBreakdown", "showCalculationMethod", "showSequencingDiagram", "showTeamTimeline"],
+      "properties": {
+        "showEstimateBreakdown": {
+          "type": "boolean"
+        },
+        "showCalculationMethod": {
+          "type": "boolean"
+        },
+        "showSequencingDiagram": {
+          "type": "boolean"
+        },
+        "showTeamTimeline": {
+          "type": "boolean"
+        }
+      }
+    },
+    "UISettings": {
+      "type": "object",
+      "required": ["presetsVisible", "allowCustomCoefficients", "allowCustomSequencing", "validation", "displayOptions"],
+      "properties": {
+        "presetsVisible": {
+          "type": "boolean"
+        },
+        "allowCustomCoefficients": {
+          "type": "boolean"
+        },
+        "allowCustomSequencing": {
+          "type": "boolean"
+        },
+        "validation": {
+          "$ref": "#/definitions/UIValidationSettings"
+        },
+        "displayOptions": {
+          "$ref": "#/definitions/UIDisplayOptions"
+        }
+      }
+    }
+  }
+}

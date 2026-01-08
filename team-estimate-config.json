@@ -1,0 +1,391 @@
+{
+  "$schema": "./schemas/team-estimate-config.schema.json",
+  "version": "1.0.0",
+  "description": "Configuration for multi-team estimate generation supporting three estimation cases",
+  
+  "presets": {
+    "standard-agile": {
+      "name": "Standard Agile Team",
+      "description": "Standard BA/Dev/QA team structure with percentage-based estimates",
+      "teamCoefficients": {
+        "BA": {
+          "method": "percentage",
+          "value": 0.25,
+          "description": "25% of story estimate"
+        },
+        "Dev": {
+          "method": "percentage",
+          "value": 0.50,
+          "description": "50% of story estimate"
+        },
+        "QA": {
+          "method": "percentage",
+          "value": 0.25,
+          "description": "25% of story estimate"
+        }
+      }
+    },
+    "hours-per-point": {
+      "name": "Hours per Story Point",
+      "description": "Fixed hours per story point for each team",
+      "teamCoefficients": {
+        "BA": {
+          "method": "hoursPerPoint",
+          "value": 2.0,
+          "description": "2 hours per story point"
+        },
+        "Dev": {
+          "method": "hoursPerPoint",
+          "value": 4.0,
+          "description": "4 hours per story point"
+        },
+        "QA": {
+          "method": "hoursPerPoint",
+          "value": 2.0,
+          "description": "2 hours per story point"
+        }
+      }
+    },
+    "multi-team": {
+      "name": "Multi-Team Development",
+      "description": "Multiple dev teams (FE, BE, Data) with shared BA/QA",
+      "teamCoefficients": {
+        "BA": {
+          "method": "percentage",
+          "value": 0.20,
+          "description": "20% of story estimate"
+        },
+        "FE": {
+          "method": "percentage",
+          "value": 0.30,
+          "description": "30% of story estimate"
+        },
+        "BE": {
+          "method": "percentage",
+          "value": 0.30,
+          "description": "30% of story estimate"
+        },
+        "QA": {
+          "method": "percentage",
+          "value": 0.20,
+          "description": "20% of story estimate"
+        }
+      }
+    }
+  },
+
+  "defaultPreset": "standard-agile",
+
+  "teams": {
+    "team-ba": {
+      "id": "team-ba",
+      "name": "BA Team",
+      "type": "BA",
+      "velocity": 30,
+      "velocityPeriod": "sprint",
+      "includeInSchedule": false,
+      "defaultCoefficient": {
+        "method": "percentage",
+        "value": 0.25
+      }
+    },
+    "team-fe": {
+      "id": "team-fe",
+      "name": "PSME-FE Dev Team",
+      "type": "Dev",
+      "velocity": 12,
+      "velocityPeriod": "sprint",
+      "includeInSchedule": true,
+      "defaultCoefficient": {
+        "method": "percentage",
+        "value": 0.50
+      }
+    },
+    "team-be": {
+      "id": "team-be",
+      "name": "PSME-BE Dev Team",
+      "type": "Dev",
+      "velocity": 10,
+      "velocityPeriod": "sprint",
+      "includeInSchedule": true,
+      "defaultCoefficient": {
+        "method": "percentage",
+        "value": 0.50
+      }
+    },
+    "team-data": {
+      "id": "team-data",
+      "name": "PSME-Data Dev Team",
+      "type": "Dev",
+      "velocity": 5,
+      "velocityPeriod": "sprint",
+      "includeInSchedule": true,
+      "defaultCoefficient": {
+        "method": "percentage",
+        "value": 0.30
+      }
+    },
+    "team-qa": {
+      "id": "team-qa",
+      "name": "QA Team",
+      "type": "QA",
+      "velocity": 30,
+      "velocityPeriod": "sprint",
+      "includeInSchedule": false,
+      "defaultCoefficient": {
+        "method": "percentage",
+        "value": 0.25
+      }
+    }
+  },
+
+  "estimationRules": {
+    "case1_storyOnly": {
+      "name": "Case 1: Story-Level Estimate Only",
+      "description": "All work estimated at story level, derive team estimates using coefficients",
+      "enabled": true,
+      "calculationMethod": "coefficients",
+      "teamCoefficients": {
+        "BA": {
+          "method": "percentage",
+          "value": 0.25,
+          "overrideDefault": false
+        },
+        "Dev": {
+          "method": "percentage",
+          "value": 0.50,
+          "overrideDefault": false
+        },
+        "QA": {
+          "method": "percentage",
+          "value": 0.25,
+          "overrideDefault": false
+        }
+      }
+    },
+    "case2_hybrid": {
+      "name": "Case 2: Hybrid (Story + Subtasks)",
+      "description": "Part of work in story, part in subtasks",
+      "enabled": true,
+      "calculationMethod": "hybrid",
+      "subtaskMatching": {
+        "BA": {
+          "matchCriteria": {
+            "components": [],
+            "labels": ["BA", "Analysis"],
+            "summaryTags": ["[BA]", "[Analysis]"],
+            "issueTypes": ["Sub-task", "Task"]
+          },
+          "fallbackToCoefficient": true,
+          "fallbackCoefficient": {
+            "method": "percentage",
+            "value": 0.25
+          }
+        },
+        "Dev": {
+          "matchCriteria": {
+            "components": ["FE", "BE", "Data"],
+            "labels": ["Dev", "Development"],
+            "summaryTags": ["[FE]", "[BE]", "[Dev]"],
+            "issueTypes": ["Sub-task", "Task"]
+          },
+          "fallbackToCoefficient": true,
+          "fallbackCoefficient": {
+            "method": "percentage",
+            "value": 0.50
+          }
+        },
+        "QA": {
+          "matchCriteria": {
+            "components": [],
+            "labels": ["QA", "Testing"],
+            "summaryTags": ["[QA]", "[Test]"],
+            "issueTypes": ["Sub-task", "Task"]
+          },
+          "fallbackToCoefficient": true,
+          "fallbackCoefficient": {
+            "method": "percentage",
+            "value": 0.25
+          }
+        }
+      },
+      "storyEstimateUsage": {
+        "applyToTeamsWithoutSubtasks": true,
+        "applyAsValidation": false,
+        "validationTolerance": 0.20
+      }
+    },
+    "case3_subtasksOnly": {
+      "name": "Case 3: Subtasks Only",
+      "description": "All work estimated in subtasks",
+      "enabled": true,
+      "calculationMethod": "subtasks",
+      "subtaskMatching": {
+        "BA": {
+          "matchCriteria": {
+            "components": [],
+            "labels": ["BA", "Analysis"],
+            "summaryTags": ["[BA]", "[Analysis]"],
+            "issueTypes": ["Sub-task", "Task"]
+          }
+        },
+        "Dev": {
+          "matchCriteria": {
+            "components": ["FE", "BE", "Data"],
+            "labels": ["Dev", "Development"],
+            "summaryTags": ["[FE]", "[BE]", "[Dev]"],
+            "issueTypes": ["Sub-task", "Task"]
+          }
+        },
+        "QA": {
+          "matchCriteria": {
+            "components": [],
+            "labels": ["QA", "Testing"],
+            "summaryTags": ["[QA]", "[Test]"],
+            "issueTypes": ["Sub-task", "Task"]
+          }
+        }
+      },
+      "missingEstimateHandling": {
+        "defaultValue": 0,
+        "warnOnMissing": true,
+        "skipSubtask": false
+      }
+    }
+  },
+
+  "taskSequencing": {
+    "defaultMode": "sequential",
+    "executionModes": {
+      "sequential": {
+        "name": "Sequential Execution",
+        "description": "Tasks execute one after another",
+        "parallelism": 1
+      },
+      "parallel": {
+        "name": "Parallel Execution",
+        "description": "Tasks can execute simultaneously",
+        "parallelism": "unlimited"
+      },
+      "limitedParallel": {
+        "name": "Limited Parallel Execution",
+        "description": "Limited number of tasks can run in parallel",
+        "parallelism": 3
+      }
+    },
+    "teamSequencing": {
+      "BA": {
+        "mode": "sequential",
+        "description": "BA work is sequential across stories"
+      },
+      "Dev": {
+        "mode": "parallel",
+        "description": "Dev work can be parallel per team",
+        "maxParallelTasks": 2
+      },
+      "QA": {
+        "mode": "sequential",
+        "description": "QA work is sequential across stories"
+      }
+    },
+    "workTypeSequences": {
+      "PSME-FE": {
+        "executionOrder": [
+          {
+            "role": "BA",
+            "teamId": "team-ba",
+            "dependencies": [],
+            "canRunInParallel": false
+          },
+          {
+            "role": "Dev",
+            "teamId": "team-fe",
+            "dependencies": ["BA"],
+            "canRunInParallel": true
+          },
+          {
+            "role": "QA",
+            "teamId": "team-qa",
+            "dependencies": ["Dev"],
+            "canRunInParallel": false
+          }
+        ]
+      },
+      "PSME-BE": {
+        "executionOrder": [
+          {
+            "role": "BA",
+            "teamId": "team-ba",
+            "dependencies": [],
+            "canRunInParallel": false
+          },
+          {
+            "role": "Dev",
+            "teamId": "team-be",
+            "dependencies": ["BA"],
+            "canRunInParallel": true
+          },
+          {
+            "role": "QA",
+            "teamId": "team-qa",
+            "dependencies": ["Dev"],
+            "canRunInParallel": false
+          }
+        ]
+      },
+      "PSME-DATA": {
+        "executionOrder": [
+          {
+            "role": "BA",
+            "teamId": "team-ba",
+            "dependencies": [],
+            "canRunInParallel": false
+          },
+          {
+            "role": "Dev",
+            "teamId": "team-data",
+            "dependencies": ["BA"],
+            "canRunInParallel": true
+          },
+          {
+            "role": "QA",
+            "teamId": "team-qa",
+            "dependencies": ["Dev"],
+            "canRunInParallel": false
+          }
+        ]
+      }
+    },
+    "dependencyRules": {
+      "strict": {
+        "name": "Strict Dependencies",
+        "description": "Task cannot start until all dependencies are complete",
+        "enabled": true
+      },
+      "soft": {
+        "name": "Soft Dependencies",
+        "description": "Task can start when dependencies are partially complete",
+        "enabled": false,
+        "completionThreshold": 0.5
+      }
+    }
+  },
+
+  "uiSettings": {
+    "presetsVisible": true,
+    "allowCustomCoefficients": true,
+    "allowCustomSequencing": true,
+    "validation": {
+      "validateCoefficientSum": true,
+      "coefficientSumTolerance": 0.05,
+      "warnOnOverEstimation": true,
+      "overEstimationThreshold": 1.2
+    },
+    "displayOptions": {
+      "showEstimateBreakdown": true,
+      "showCalculationMethod": true,
+      "showSequencingDiagram": true,
+      "showTeamTimeline": true
+    }
+  }
+}

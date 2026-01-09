@@ -14,7 +14,13 @@
     "test:watch": "vitest",
     "start": "node dist/index.js",
     "gantt:generate": "node dist/index.js --generate-gantt",
-    "gantt:view": "node dist/index.js --generate-gantt --open"
+    "gantt:view": "node dist/index.js --generate-gantt --open",
+    "stop:servers": "powershell -ExecutionPolicy Bypass -File ./scripts/stop-servers.ps1",
+    "ui:server": "ts-node src/ui-server/server.ts",
+    "ui:server:clean": "npm run stop:servers && npm run ui:server",
+    "ui:dev": "npm run stop:servers && concurrently \"npm run ui:server\" \"cd ui && npm run dev\"",
+    "ui:build": "cd ui && npm run build",
+    "ui:start": "npm run ui:server:clean"
   },
   "repository": {
     "type": "git",
@@ -29,14 +35,22 @@
   },
   "homepage": "https://github.com/kidblendapp/autocoding#readme",
   "dependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/multer": "^2.0.0",
+    "@xyflow/react": "^12.10.0",
+    "cors": "^2.8.5",
     "csv-parse": "^5.5.6",
     "exceljs": "^4.4.0",
+    "express": "^5.2.1",
+    "multer": "^2.0.2",
     "vis-timeline": "^7.7.3"
   },
   "devDependencies": {
     "@types/node": "^24.10.2",
     "@typescript-eslint/eslint-plugin": "^7.0.0",
     "@typescript-eslint/parser": "^7.0.0",
+    "concurrently": "^9.2.1",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3",
     "vitest": "^1.6.0"

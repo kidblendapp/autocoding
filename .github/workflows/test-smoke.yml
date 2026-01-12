@@ -1,0 +1,37 @@
+name: API Smoke Tests
+
+on:
+  workflow_dispatch:
+  release:
+    types: [created]
+  push:
+    branches: [main]
+    paths:
+      - 'src/ui-server/**'
+      - 'package.json'
+
+jobs:
+  smoke-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run build
+      - name: Start server
+        run: |
+          npm run ui:server &
+          sleep 5
+        env:
+          PORT: 3001
+      - run: npm run test:smoke
+        env:
+          API_URL: http://localhost:3001
+      - name: Test Summary
+        if: always()
+        run: |
+          echo "## Smoke Tests" >> $GITHUB_STEP_SUMMARY
+          echo "- Status: ${{ job.status }}" >> $GITHUB_STEP_SUMMARY

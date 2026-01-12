@@ -12,6 +12,12 @@
     "copy:html": "node -e \"const fs=require('fs');const path=require('path');const src=path.join('src','visualization','gantt-viewer.html');const dst=path.join('dist','visualization','gantt-viewer.html');if(fs.existsSync(src)){fs.mkdirSync(path.dirname(dst),{recursive:true});fs.copyFileSync(src,dst);}\"",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:unit": "vitest run src/ui-server/routes/__tests__/config.unit.test.ts",
+    "test:integration": "vitest run src/ui-server/routes/__tests__/config.integration.test.ts src/ui-server/routes/__tests__/jira.integration.test.ts",
+    "test:smoke": "vitest run tests/smoke/",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:all": "npm run test:unit && npm run test:integration && npm run test:smoke",
     "start": "node dist/index.js",
     "gantt:generate": "node dist/index.js --generate-gantt",
     "gantt:view": "node dist/index.js --generate-gantt --open",
@@ -47,12 +53,15 @@
     "vis-timeline": "^7.7.3"
   },
   "devDependencies": {
+    "@playwright/test": "^1.57.0",
     "@types/node": "^24.10.2",
+    "@types/supertest": "^6.0.3",
     "@typescript-eslint/eslint-plugin": "^7.0.0",
     "@typescript-eslint/parser": "^7.0.0",
     "concurrently": "^9.2.1",
+    "supertest": "^7.2.2",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3",
-    "vitest": "^1.6.0"
+    "vitest": "^4.0.16"
   }
 }

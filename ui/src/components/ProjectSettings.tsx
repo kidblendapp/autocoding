@@ -36,6 +36,7 @@ export default function ProjectSettings() {
   const [newPlanningIssueType, setNewPlanningIssueType] = useState('');
   const [newPlanningFixVersion, setNewPlanningFixVersion] = useState('');
   const [jql, setJql] = useState('');
+  const [jqlError, setJqlError] = useState<string | null>(null);
   const [predecessorLinkTypes, setPredecessorLinkTypes] = useState<string[]>([]);
   const [estimateType, setEstimateType] = useState<'storyPoints' | 'hours'>('storyPoints');
   const [nonWorkingDays, setNonWorkingDays] = useState<string[]>([]);
@@ -91,22 +92,64 @@ export default function ProjectSettings() {
     }
   };
 
+  /**
+   * Validates if JQL ends with "ORDER BY key ASC" (case-insensitive)
+   */
+  const validateJqlOrderBy = (jqlValue: string): boolean => {
+    if (!jqlValue || jqlValue.trim().length === 0) {
+      return true; // Empty JQL is valid (will use default)
+    }
+    const trimmed = jqlValue.trim();
+    const orderByPattern = /ORDER\s+BY\s+key\s+ASC$/i;
+    return orderByPattern.test(trimmed);
+  };
+
+  /**
+   * Normalizes JQL by ensuring it ends with "ORDER BY key ASC"
+   */
+  const normalizeJql = (jqlValue: string): string => {
+    if (!jqlValue || jqlValue.trim().length === 0) {
+      return jqlValue; // Return as-is if empty
+    }
+    const trimmed = jqlValue.trim();
+    if (validateJqlOrderBy(trimmed)) {
+      return trimmed; // Already has ORDER BY clause
+    }
+    return `${trimmed} ORDER BY key ASC`;
+  };
+
   const saveConfig = async () => {
     setSaving(true);
     setMessage(null);
     try {
+      // Normalize JQL before saving
+      const normalizedJql = normalizeJql(jql);
+      const wasAutoFixed = normalizedJql !== jql;
+      
       // Load full config first, then update and save
       const fullConfig = await configApi.loadScheduleConfig();
       const updatedConfig = { 
         ...fullConfig, 
         ...config, 
-        jql, 
+        jql: normalizedJql, 
         predecessorLinkTypes,
         estimateType,
         nonWorkingDays
       };
       await configApi.saveScheduleConfig(updatedConfig);
-      setMessage({ type: 'success', text: 'Project settings saved successfully' });
+      
+      // Update local JQL state if it was auto-fixed
+      if (wasAutoFixed) {
+        setJql(normalizedJql);
+        setJqlError(null); // Clear error since it was fixed
+      }
+      
+      setMessage({ 
+        type: 'success', 
+        text: wasAutoFixed 
+          ? 'Project settings saved successfully. JQL was automatically updated to include "ORDER BY key ASC".'
+          : 'Project settings saved successfully' 
+      });
     } catch (error: any) {
       setMessage({ type: 'error', text: error.response?.data?.message || 'Failed to save config' });
     } finally {
@@ -288,12 +331,27 @@ export default function ProjectSettings() {
         <TextField
           label="JQL Query (Optional)"
           value={jql}
-          onChange={(e) => setJql(e.target.value)}
+          onChange={(e) => {
+            setJql(e.target.value);
+            // Clear error on change
+            if (jqlError) {
+              setJqlError(null);
+            }
+          }}
+          onBlur={() => {
+            // Validate on blur
+            if (jql && jql.trim().length > 0 && !validateJqlOrderBy(jql)) {
+              setJqlError("JQL must end with 'ORDER BY key ASC' for proper pagination");
+            } else {
+              setJqlError(null);
+            }
+          }}
           placeholder="project = PROJECT AND issueType = Story"
           fullWidth
           multiline
           rows={3}
-          helperText="Custom JQL query to limit extracted tickets"
+          error={!!jqlError}
+          helperText={jqlError || "JQL must end with 'ORDER BY key ASC' for proper pagination. It will be added automatically if missing."}
         />
         <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
           <Button

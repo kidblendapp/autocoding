@@ -29,6 +29,34 @@ export interface ExtractedValues {
 }
 
 /**
+ * Normalizes JQL by ensuring it ends with "ORDER BY key ASC" for proper pagination.
+ * @param jql - JQL query string (optional)
+ * @returns Normalized JQL with ORDER BY clause, or undefined if input was empty/undefined
+ */
+function normalizeJql(jql?: string): string | undefined {
+  // Return as-is if undefined, null, or empty
+  if (jql === undefined || jql === null) {
+    return jql;
+  }
+  
+  const trimmed = jql.trim();
+  if (trimmed.length === 0) {
+    return jql; // Return original (empty string)
+  }
+  
+  const orderByPattern = /ORDER\s+BY\s+key\s+ASC$/i;
+  
+  if (orderByPattern.test(trimmed)) {
+    return trimmed; // Already has ORDER BY clause
+  }
+  
+  // Append ORDER BY clause
+  const normalized = `${trimmed} ORDER BY key ASC`;
+  logger.info(`JQL normalized: added "ORDER BY key ASC" to query`);
+  return normalized;
+}
+
+/**
  * Converts old ganttGrouping format to new ganttGroupingLevels format.
  */
 function migrateGroupingConfig(config: any): any {
@@ -84,6 +112,15 @@ router.put('/schedule', (req, res) => {
     // Basic validation
     if (!config || typeof config !== 'object') {
       return res.status(400).json({ error: 'Invalid config data' });
+    }
+    
+    // Normalize JQL before saving
+    if (config.jql !== undefined) {
+      const originalJql = config.jql;
+      config.jql = normalizeJql(config.jql);
+      if (originalJql !== config.jql && config.jql) {
+        logger.info('JQL was automatically normalized to include "ORDER BY key ASC"');
+      }
     }
     
     writeFileSync(SCHEDULE_CONFIG_PATH, JSON.stringify(config, null, 2), 'utf-8');

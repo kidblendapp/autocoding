@@ -98,6 +98,12 @@ export interface ScheduleConfig {
   nonWorkingDays?: string[];
 
   /**
+   * Optional JQL query for filtering tickets during extraction.
+   * Example: "project = PSME ORDER BY key ASC"
+   */
+  jql?: string;
+
+  /**
    * Optional change history extraction configuration.
    * If provided, change history will be extracted and exported to CSV.
    */
@@ -114,6 +120,7 @@ export interface RawScheduleConfig {
   sprintDurationDays?: unknown;
   velocity?: unknown;
   nonWorkingDays?: unknown;
+  jql?: unknown;
   changeHistory?: {
     jql?: unknown;
     fieldMapping?: {

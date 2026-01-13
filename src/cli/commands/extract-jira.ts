@@ -9,6 +9,7 @@ import { promptJiraConfig } from '../../utils/prompts';
 import { extractJiraTickets, exportTicketsToCsv, exportSprintsToCsv, type JiraConfig } from '../../services/jira-extractor';
 import { logger } from '../../utils/logger';
 import { existsSync, readFileSync } from 'fs';
+import type { ScheduleConfig } from '../../config/types';
 
 export interface ExtractJiraOptions {
   /** Path to JIRA config file (optional) */
@@ -22,10 +23,6 @@ export interface ExtractJiraOptions {
   
   /** Whether to extract change history for Status, Sprint, Original Estimate, and Story Points */
   includeHistory?: boolean;
-}
-
-interface ScheduleConfig {
-  // Schedule config interface - fields not used in this command
 }
 
 /**

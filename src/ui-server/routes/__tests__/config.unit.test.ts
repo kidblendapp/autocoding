@@ -35,8 +35,8 @@ describe('Config Routes - Unit Tests', () => {
   let request: ReturnType<typeof getApiClientForApp>;
 
   beforeEach(() => {
-    // Reset mocks
-    vi.clearAllMocks();
+    // Reset mocks (resetAllMocks clears both calls and implementations)
+    vi.resetAllMocks();
     
     // Create fresh app instance
     app = express();
@@ -185,6 +185,79 @@ describe('Config Routes - Unit Tests', () => {
       expect(response.status).toBe(200);
       expect(response.body.success).toBe(true);
       expect(mockWriteFileSync).toHaveBeenCalled();
+    });
+
+    it('should normalize JQL by adding ORDER BY key ASC if missing', async () => {
+      const scheduleConfig = {
+        projectStartDate: '2024-02-01',
+        sprintDurationDays: 10,
+        jql: 'project = TEST AND issuetype = Story',
+      };
+
+      const response = await request.put('/api/config/schedule').send(scheduleConfig);
+
+      expect(response.status).toBe(200);
+      expect(response.body.success).toBe(true);
+      expect(mockWriteFileSync).toHaveBeenCalled();
+      
+      // Verify that JQL was normalized
+      const writeCall = mockWriteFileSync.mock.calls[0];
+      const savedConfig = JSON.parse(writeCall[1]);
+      expect(savedConfig.jql).toBe('project = TEST AND issuetype = Story ORDER BY key ASC');
+    });
+
+    it('should not modify JQL if it already has ORDER BY key ASC', async () => {
+      const scheduleConfig = {
+        projectStartDate: '2024-02-01',
+        sprintDurationDays: 10,
+        jql: 'project = TEST AND issuetype = Story ORDER BY key ASC',
+      };
+
+      const response = await request.put('/api/config/schedule').send(scheduleConfig);
+
+      expect(response.status).toBe(200);
+      expect(response.body.success).toBe(true);
+      
+      // Verify that JQL was not modified
+      const writeCall = mockWriteFileSync.mock.calls[0];
+      const savedConfig = JSON.parse(writeCall[1]);
+      expect(savedConfig.jql).toBe('project = TEST AND issuetype = Story ORDER BY key ASC');
+    });
+
+    it('should handle case-insensitive ORDER BY clause', async () => {
+      const scheduleConfig = {
+        projectStartDate: '2024-02-01',
+        sprintDurationDays: 10,
+        jql: 'project = TEST order by key asc',
+      };
+
+      const response = await request.put('/api/config/schedule').send(scheduleConfig);
+
+      expect(response.status).toBe(200);
+      expect(response.body.success).toBe(true);
+      
+      // Verify that JQL was not modified (already has ORDER BY)
+      const writeCall = mockWriteFileSync.mock.calls[0];
+      const savedConfig = JSON.parse(writeCall[1]);
+      expect(savedConfig.jql).toBe('project = TEST order by key asc');
+    });
+
+    it('should handle empty JQL', async () => {
+      const scheduleConfig = {
+        projectStartDate: '2024-02-01',
+        sprintDurationDays: 10,
+        jql: '',
+      };
+
+      const response = await request.put('/api/config/schedule').send(scheduleConfig);
+
+      expect(response.status).toBe(200);
+      expect(response.body.success).toBe(true);
+      
+      // Verify that empty JQL is preserved
+      const writeCall = mockWriteFileSync.mock.calls[0];
+      const savedConfig = JSON.parse(writeCall[1]);
+      expect(savedConfig.jql).toBe('');
     });
   });
 

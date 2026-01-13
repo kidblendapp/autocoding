@@ -9,8 +9,7 @@ import { logger } from './src/utils/logger';
 import { existsSync, readFileSync } from 'fs';
 
 interface ScheduleConfig {
-  fixVersions?: string[];
-  plannedIssueTypes?: string[];
+  // Schedule config interface - fields not used in this command
 }
 
 /**
@@ -79,9 +78,8 @@ async function main() {
     const configPath = 'jira-config.json';
     const jiraConfig = loadJiraConfig(configPath);
     
-    // Do not apply any filters from schedule_config.json during JIRA extraction
-    // Filters (fixVersions, issueTypes) should only be applied when generating schedule
-    // Extract all ticket types and all statuses without filtering
+    // Extract all ticket types and all statuses
+    // Filtering is done via JQL query in schedule_config.json if provided
     console.log('Extracting all ticket types and all statuses (no filters applied)');
     
     console.log(`Extracting all tickets from project: ${jiraConfig.projectName}`);

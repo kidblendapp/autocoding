@@ -39,6 +39,7 @@ interface TeamSegmentRow {
   storyPoints?: number;
   latestSprint?: string;
   epicLink?: string;
+  fixVersion?: string;
   start: string; // Local datetime string "YYYY-MM-DD HH:mm"
   end: string;   // Local datetime string "YYYY-MM-DD HH:mm"
 }
@@ -86,15 +87,15 @@ interface TeamsConfig {
   projectReschedulingDate?: string;
   sprintDurationDays?: number;
   /**
-   * Optional list of issue types that should be included in schedule planning.
+   * Issue types to use for planning operations (decomposition and schedule generation).
    * Example: ["Story"]
    */
-  plannedIssueTypes?: string[];
+  planningIssueTypes?: string[];
   /**
-   * List of Fix Versions that should be included in the schedule.
+   * Fix versions to use for planning operations (decomposition and schedule generation).
    * Example: ["PSME MVP 1.0"]
    */
-  fixVersions?: string[];
+  planningFixVersions?: string[];
   /**
    * Gantt chart grouping type. Determines how tasks are grouped in the Gantt visualization.
    * - "epicSprint": Group by Epic, then by Sprint (default)
@@ -324,7 +325,7 @@ const DEFAULT_WORK_SEQUENCE: RoleConfig[] = [
 ];
 
 // Input/Output paths
-const INPUT_CSV_PATH = 'outputs/jira-export.csv';
+const INPUT_CSV_PATH = process.env.INPUT_CSV_PATH || 'outputs/jira-export.csv';
 const OUTPUT_CSV_PATH = 'outputs/jira-team-schedule.csv';
 const SPRINTS_CSV_PATH = 'outputs/jira-export-sprints.csv';
 
@@ -1224,18 +1225,36 @@ async function main() {
     // Extract epic link
     const epicLink = extractField(row, 'Epic Link', ['EpicLink', 'epicLink', 'Epic']);
     
+    // Extract fix version (take first one if multiple)
+    const fixVersionsField = extractField(row, 'Fix Versions', ['FixVersions', 'fixVersions']);
+    const fixVersion = fixVersionsField ? fixVersionsField.split(',')[0].trim() : undefined;
+    
     if (!issueKey) {
       return;
     }
 
-    // Filter by planned issue types, if configured
+    // Filter by planning issue types, if configured
+    const planningIssueTypes = teamsConfig.planningIssueTypes;
     if (
-      teamsConfig.plannedIssueTypes &&
-      teamsConfig.plannedIssueTypes.length > 0 &&
+      planningIssueTypes &&
+      planningIssueTypes.length > 0 &&
       issueType &&
-      !teamsConfig.plannedIssueTypes.includes(issueType)
+      !planningIssueTypes.includes(issueType)
     ) {
       return;
+    }
+    
+    // Filter by planning fix versions, if configured
+    const planningFixVersions = teamsConfig.planningFixVersions;
+    if (planningFixVersions && planningFixVersions.length > 0) {
+      if (!fixVersionsField) {
+        return; // Skip tickets without fix versions if planning fix versions are required
+      }
+      const ticketFixVersions = fixVersionsField.split(',').map(v => v.trim());
+      const hasMatchingFixVersion = planningFixVersions.some(fv => ticketFixVersions.includes(fv));
+      if (!hasMatchingFixVersion) {
+        return; // Skip tickets that don't match any planning fix version
+      }
     }
 
     // Find matching team using Team, Component, Label, or Summary text
@@ -1386,6 +1405,7 @@ async function main() {
         storyPoints,
         latestSprint,
         epicLink,
+        fixVersion,
         start: formatDateTimeLocal(roleStart),
         end: formatDateTimeLocal(roleEnd),
       });
@@ -1408,6 +1428,7 @@ async function main() {
     'Story Points',
     'Latest Sprint',
     'Epic Link',
+    'Fix Version',
     'Start',
     'End',
   ];
@@ -1433,6 +1454,7 @@ async function main() {
       r.storyPoints !== undefined ? escape(r.storyPoints) : '',
       r.latestSprint !== undefined ? escape(r.latestSprint) : '',
       r.epicLink !== undefined ? escape(r.epicLink) : '',
+      r.fixVersion !== undefined ? escape(r.fixVersion) : '',
       escape(r.start),
       escape(r.end),
     ].join(',');

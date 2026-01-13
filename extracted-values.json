@@ -1,0 +1,45 @@
+{
+  "issueTypes": [
+    "Action Item",
+    "EXD Task",
+    "Task"
+  ],
+  "fixVersions": [
+    "PSME MVP 1.0",
+    "PSME MVP 2.0",
+    "PSME MVP 3.0"
+  ],
+  "linkTypes": [
+    "Clarifies",
+    "Is clarified by",
+    "Is specified by",
+    "Specifies",
+    "added to idea",
+    "blocks",
+    "causes",
+    "clones",
+    "duplicates",
+    "implements",
+    "is blocked by",
+    "is caused by",
+    "is cloned by",
+    "is duplicated by",
+    "is idea for",
+    "is implemented by",
+    "is preceded by",
+    "merged from",
+    "merged into",
+    "relates to",
+    "split from",
+    "split to",
+    "successors"
+  ],
+  "teams": [],
+  "components": [],
+  "statuses": [
+    "CANCELLED",
+    "Done"
+  ],
+  "lastExtracted": "2026-01-12T13:37:32.651Z",
+  "projectName": "PSME"
+}

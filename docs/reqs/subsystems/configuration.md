@@ -9,6 +9,11 @@ The Configuration Management subsystem provides a centralized way to configure t
 *   **US-1:** As a PM, I want to define my teams (Backend, Frontend, QA) and their average velocities (e.g., "30 points/sprint" or "20 hours/day").
 *   **US-2:** As a PM, I want to define the "Start Date" for the project so all calculations anchor to a real point in time.
 *   **US-2.1:** As a PM, I want to configure non-working days (holidays) so the schedule accounts for team availability.
+*   **US-3:** As a PM, I want to extract issue types, fix versions, link types, teams, components, and statuses from JIRA with a single action, so I don't have to extract each field separately.
+*   **US-4:** As a PM, I want to see only issue types that are actually used in my project (filtered by JQL or project), not all system-wide issue types.
+*   **US-5:** As a PM, I want to select multiple predecessor link types, so I can capture different types of dependencies (e.g., "Blocks", "Successors").
+*   **US-6:** As a PM, I want to specify whether estimates are based on story points or hours (original/remaining estimates), so the system uses the correct calculation method.
+*   **US-7:** As a PM, I want to use extracted teams, components, and statuses in team matching rules via dropdowns, so I don't have to type them manually.
 
 ## Business Rules
 
@@ -18,8 +23,24 @@ The Configuration Management subsystem provides a centralized way to configure t
 *   **velocity:** Must be a positive number (> 0, supports decimals)
 
 ### Optional Configuration Fields
-*   **nonWorkingDays:** Array of ISO date strings (YYYY-MM-DD) representing holidays
+*   **nonWorkingDays:** Array of ISO date strings (YYYY-MM-DD) representing holidays (supports individual dates and date ranges)
+*   **jql:** Custom JQL query to filter tickets during extraction from JIRA (defaults to `project = {projectName} ORDER BY key ASC` if not provided)
+*   **predecessorLinkTypes:** Array of link type names (changed from single string, supports multiple selections)
+*   **estimateType:** Type of estimate to use: 'storyPoints' or 'hours' (default: 'storyPoints')
+*   **planningIssueTypes:** Array of issue types to use for planning operations (decomposition, schedule generation). Does not affect extraction filtering.
+*   **planningFixVersions:** Array of fix versions to use for planning operations (decomposition, schedule generation). Does not affect extraction filtering.
+*   **ganttGrouping:** Gantt chart grouping method
 *   **changeHistory:** Optional configuration for change history extraction
+
+### Extracted Values (stored in extracted-values.json)
+*   **issueTypes:** Unique issue types from actual tickets (filtered by project/JQL)
+*   **fixVersions:** Fix versions from project
+*   **linkTypes:** Link types available in JIRA
+*   **teams:** Teams extracted from Team field in tickets
+*   **components:** Components from ticket components
+*   **statuses:** Statuses from ticket statuses
+*   **lastExtracted:** ISO timestamp of last extraction
+*   **projectName:** Project name for change detection
 
 ### Configuration File
 *   Default location: `config.json` in current working directory

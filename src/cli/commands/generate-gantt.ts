@@ -8,7 +8,7 @@ import { readFileSync, writeFileSync, existsSync } from 'fs';
 import { join } from 'path';
 import { exec } from 'child_process';
 import { promisify } from 'util';
-import { transformScheduleToGanttData } from '../../visualization/gantt-generator';
+import { transformScheduleToGanttData, convertGroupingTypeToLevels, type GroupingLevel } from '../../visualization/gantt-generator';
 import { logger } from '../../utils/logger';
 
 const execAsync = promisify(exec);
@@ -22,6 +22,9 @@ export interface GenerateGanttOptions {
   
   /** Open in browser after generation */
   open?: boolean;
+  
+  /** Grouping levels array (e.g., ['fixVersion', 'epic', 'sprint']) */
+  groupingLevels?: GroupingLevel[];
 }
 
 /**
@@ -76,24 +79,34 @@ export async function generateGantt(options: GenerateGanttOptions = {}): Promise
 
     logger.info(`Reading schedule data from ${inputPath}`);
 
-    // Load grouping type from schedule_config.json if available
-    let groupingType: 'epicSprint' | 'sprintTeam' = 'epicSprint'; // Default
-    try {
-      const configPath = 'schedule_config.json';
-      if (existsSync(configPath)) {
-        const configContent = readFileSync(configPath, 'utf-8');
-        const config = JSON.parse(configContent) as { ganttGrouping?: 'epicSprint' | 'sprintTeam' };
-        if (config.ganttGrouping) {
-          groupingType = config.ganttGrouping;
-          logger.info(`Using Gantt grouping from config: ${groupingType}`);
+    // Load grouping levels from options, config, or use default
+    let groupingLevels: GroupingLevel[] = options.groupingLevels || ['epic', 'sprint'];
+    
+    if (!options.groupingLevels) {
+      try {
+        const configPath = 'schedule_config.json';
+        if (existsSync(configPath)) {
+          const configContent = readFileSync(configPath, 'utf-8');
+          const config = JSON.parse(configContent) as { 
+            ganttGroupingLevels?: GroupingLevel[];
+            ganttGrouping?: 'epicSprint' | 'sprintTeam' | 'sprintEpic' | 'epicTeam' | 'teamSprint' | 'teamEpic';
+          };
+          if (config.ganttGroupingLevels) {
+            groupingLevels = config.ganttGroupingLevels;
+            logger.info(`Using Gantt grouping levels from config: ${groupingLevels.join(' → ')}`);
+          } else if (config.ganttGrouping) {
+            // Migrate old format
+            groupingLevels = convertGroupingTypeToLevels(config.ganttGrouping);
+            logger.info(`Migrated Gantt grouping "${config.ganttGrouping}" to levels: ${groupingLevels.join(' → ')}`);
+          }
         }
+      } catch (error) {
+        logger.warn(`Could not load Gantt grouping from config, using default: ${error instanceof Error ? error.message : String(error)}`);
       }
-    } catch (error) {
-      logger.warn(`Could not load Gantt grouping from config, using default: ${error instanceof Error ? error.message : String(error)}`);
     }
 
     // Transform CSV to Gantt data
-    const ganttData = transformScheduleToGanttData(inputPath, groupingType);
+    const ganttData = transformScheduleToGanttData(inputPath, groupingLevels);
 
     if (ganttData.items.length === 0) {
       logger.warn('No schedule items found in CSV file');

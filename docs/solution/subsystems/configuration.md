@@ -47,8 +47,30 @@ interface ScheduleConfig {
   sprintDurationDays: number;     // Positive integer
   velocity: number;               // Positive number (supports decimals)
   nonWorkingDays?: string[];      // Optional: Array of ISO dates
+  jql?: string;                   // Optional: JQL query for filtering tickets during extraction
+  predecessorLinkTypes?: string[]; // Optional: Array of link type names (changed from single string)
+  estimateType?: 'storyPoints' | 'hours'; // Optional: Type of estimate to use
+  planningIssueTypes?: string[];  // Optional: Issue types for planning operations (decomposition, schedule generation)
+  planningFixVersions?: string[]; // Optional: Fix versions for planning operations (decomposition, schedule generation)
+  ganttGrouping?: string;         // Optional: Gantt chart grouping method
+  teams?: Record<string, TeamConfig>; // Team configurations
+  workTypes?: Record<string, { name: string }>; // Work type definitions
+  workTypeSequences?: Record<string, WorkTypeSequence[]>; // Work type sequences
+}
+
+interface ExtractedValues {
+  issueTypes?: string[];          // Extracted from JIRA tickets
+  fixVersions?: string[];         // Extracted from project
+  linkTypes?: string[];           // Extracted from JIRA link types
+  teams?: string[];               // Extracted from Team field in tickets
+  components?: string[];          // Extracted from ticket components
+  statuses?: string[];            // Extracted from ticket statuses
+  lastExtracted?: string;         // ISO timestamp of last extraction
+  projectName?: string;           // Project name for change detection
 }
 ```
+
+**Note:** `ExtractedValues` is stored in a separate `extracted-values.json` file, not in `schedule_config.json`.
 
 ### Validation Rules
 
@@ -69,11 +91,43 @@ interface ScheduleConfig {
    - Supports decimals
    - Examples: 20 ✓, 30.5 ✓, 0 ✗, -10 ✗
 
-4. **nonWorkingDays (optional):**
+4. **jql (optional):**
+   - Custom JQL query for filtering tickets during extraction from JIRA
+   - If not provided, defaults to `project = PROJECTNAME ORDER BY key ASC`
+   - Examples: 
+     - `project = PSME AND issuetype = Story`
+     - `project = PSME AND fixVersion in ("MVP 1.0", "MVP 2.0")`
+     - `project = PSME AND status != Done`
+
+5. **planningIssueTypes and planningFixVersions (optional):**
+   - Used for filtering during planning operations (decomposition, schedule generation)
+   - These are separate from extraction filtering and do not affect which tickets are extracted from JIRA
+   - If not specified, all extracted tickets are used for planning
+
+6. **nonWorkingDays (optional):**
    - Must be an array if provided
    - Each element must be a string in ISO format (YYYY-MM-DD)
    - Each date must be a valid calendar date
-   - Examples: ["2024-12-25", "2024-01-01"] ✓
+   - Supports individual dates and date ranges (expanded automatically)
+   - Past dates are allowed (for historical analysis)
+   - Examples: ["2024-12-25", "2024-01-01"] ✓, ["2024-01-01:2024-01-05"] ✓ (expanded to 5 dates)
+
+5. **jql (optional):**
+   - Custom JQL query to filter tickets for extraction
+   - If not provided, defaults to `project = {projectName}`
+   - Used for issue types, teams, components, and statuses extraction
+
+6. **predecessorLinkTypes (optional):**
+   - Array of link type names (changed from single string)
+   - Default link types are auto-selected if present: ["Blocks", "blocks", "Successors", "Has to be done before"]
+   - Users can unselect default link types
+
+7. **estimateType (optional):**
+   - Type of estimate to use: 'storyPoints' or 'hours'
+   - Default: 'storyPoints'
+   - When 'hours': Uses originalEstimate or remainingEstimate directly
+   - When 'hours' and hours missing: Falls back to average hours from tickets with same story points
+   - Affects story decomposition only (CSV will have all estimates after decomposition)
 
 ### Error Handling
 

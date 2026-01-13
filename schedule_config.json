@@ -2,23 +2,37 @@
   "projectStartDate": "2025-07-01",
   "projectReschedulingDate": "2025-12-22",
   "sprintDurationDays": 10,
-  "plannedIssueTypes": ["Story"],
-  "fixVersions": ["PSME MVP 1.0"],
-  "ganttGrouping": "epicSprint",
+  "plannedIssueTypes": [
+    "Story"
+  ],
+  "fixVersions": [
+    "PSME MVP 1.0"
+  ],
+  "ganttGrouping": "Epic, Sprint",
   "teams": {
     "team-ba": {
       "name": "BA Team",
       "includeInSchedule": false,
       "velocity": 30,
       "velocityPeriod": "sprint",
-      "members": ["BA User 1", "BA User 2"],
+      "members": [
+        "BA User 1",
+        "BA User 2"
+      ],
       "matchRules": {
-        "issueTypes": ["Story"],
+        "issueTypes": [
+          "Story"
+        ],
         "jiraTeam": [],
         "components": [],
         "labels": [],
         "summaryText": [],
-        "statuses": ["To Do", "IN ANALYSIS", "On Hold / Blocked", "Review In Progress"]
+        "statuses": [
+          "To Do",
+          "IN ANALYSIS",
+          "On Hold / Blocked",
+          "Review In Progress"
+        ]
       }
     },
     "team-fe": {
@@ -26,13 +40,22 @@
       "includeInSchedule": true,
       "velocity": 12,
       "velocityPeriod": "sprint",
-      "members": ["FE Dev 1", "FE Dev 2"],
+      "members": [
+        "FE Dev 1",
+        "FE Dev 2"
+      ],
       "matchRules": {
-        "issueTypes": ["Story"],
-        "jiraTeam": ["PSME-FE"],
+        "issueTypes": [
+          "Story"
+        ],
+        "jiraTeam": [
+          "PSME-FE"
+        ],
         "components": [],
         "labels": [],
-        "summaryText": ["[FE]"],
+        "summaryText": [
+          "[FE]"
+        ],
         "statuses": [
           "READY FOR DEV",
           "In Progress",
@@ -52,13 +75,23 @@
       "includeInSchedule": true,
       "velocity": 10,
       "velocityPeriod": "sprint",
-      "members": ["BE Dev 1", "BE Dev 2"],
+      "members": [
+        "BE Dev 1",
+        "BE Dev 2"
+      ],
       "matchRules": {
-        "issueTypes": ["Story"],
-        "jiraTeam": ["PSME-BE"],
+        "issueTypes": [
+          "Story"
+        ],
+        "jiraTeam": [
+          "PSME-BE"
+        ],
         "components": [],
         "labels": [],
-        "summaryText": ["[BE]", "[Backend]"],
+        "summaryText": [
+          "[BE]",
+          "[Backend]"
+        ],
         "statuses": [
           "READY FOR DEV",
           "In Progress",
@@ -78,13 +111,25 @@
       "includeInSchedule": true,
       "velocity": 42,
       "velocityPeriod": "sprint",
-      "members": ["CRM Dev 1", "CRM Dev 2"],
+      "members": [
+        "CRM Dev 1",
+        "CRM Dev 2"
+      ],
       "matchRules": {
-        "issueTypes": ["Story"],
-        "jiraTeam": ["PSME-CRM"],
-        "components": ["CRM"],
+        "issueTypes": [
+          "Story"
+        ],
+        "jiraTeam": [
+          "PSME-CRM"
+        ],
+        "components": [
+          "CRM"
+        ],
         "labels": [],
-        "summaryText": ["CRM", "[D365]"],
+        "summaryText": [
+          "CRM",
+          "[D365]"
+        ],
         "statuses": [
           "READY FOR DEV",
           "In Progress",
@@ -104,13 +149,24 @@
       "includeInSchedule": true,
       "velocity": 5,
       "velocityPeriod": "sprint",
-      "members": ["Data Dev 1", "Data Dev 2"],
+      "members": [
+        "Data Dev 1",
+        "Data Dev 2"
+      ],
       "matchRules": {
-        "issueTypes": ["Story"],
-        "jiraTeam": ["PSME-Data"],
-        "components": ["Data"],
+        "issueTypes": [
+          "Story"
+        ],
+        "jiraTeam": [
+          "PSME-Data"
+        ],
+        "components": [
+          "Data"
+        ],
         "labels": [],
-        "summaryText": ["[Data]"],
+        "summaryText": [
+          "[Data]"
+        ],
         "statuses": [
           "READY FOR DEV",
           "In Progress",
@@ -130,13 +186,23 @@
       "includeInSchedule": true,
       "velocity": 8,
       "velocityPeriod": "sprint",
-      "members": ["SFMC Dev 1", "SFMC Dev 2"],
+      "members": [
+        "SFMC Dev 1",
+        "SFMC Dev 2"
+      ],
       "matchRules": {
-        "issueTypes": ["Story"],
-        "jiraTeam": ["PSME-SFMC"],
+        "issueTypes": [
+          "Story"
+        ],
+        "jiraTeam": [
+          "PSME-SFMC"
+        ],
         "components": [],
         "labels": [],
-        "summaryText": ["SFMC", "[Martketing]"],
+        "summaryText": [
+          "SFMC",
+          "[Martketing]"
+        ],
         "statuses": [
           "READY FOR DEV",
           "In Progress",
@@ -156,9 +222,14 @@
       "includeInSchedule": false,
       "velocity": 30,
       "velocityPeriod": "sprint",
-      "members": ["QA User 1", "QA User 2"],
+      "members": [
+        "QA User 1",
+        "QA User 2"
+      ],
       "matchRules": {
-        "issueTypes": ["Story"],
+        "issueTypes": [
+          "Story"
+        ],
         "jiraTeam": [],
         "components": [],
         "labels": [],
@@ -205,7 +276,7 @@
       {
         "role": "Dev",
         "estimateMethod": "percentage",
-        "percentage": 1.0,
+        "percentage": 1,
         "statuses": [
           "READY FOR DEV",
           "In Progress",
@@ -225,7 +296,7 @@
       {
         "role": "Dev",
         "estimateMethod": "percentage",
-        "percentage": 1.0,
+        "percentage": 1,
         "statuses": [
           "READY FOR DEV",
           "In Progress",
@@ -245,7 +316,7 @@
       {
         "role": "Dev",
         "estimateMethod": "percentage",
-        "percentage": 1.0,
+        "percentage": 1,
         "statuses": [
           "READY FOR DEV",
           "In Progress",
@@ -265,7 +336,7 @@
       {
         "role": "Dev",
         "estimateMethod": "percentage",
-        "percentage": 1.0,
+        "percentage": 1,
         "statuses": [
           "READY FOR DEV",
           "In Progress",
@@ -285,7 +356,7 @@
       {
         "role": "Dev",
         "estimateMethod": "percentage",
-        "percentage": 1.0,
+        "percentage": 1,
         "statuses": [
           "READY FOR DEV",
           "In Progress",
@@ -301,5 +372,18 @@
         "executionTeam": "PSME-SFMC Dev Team"
       }
     ]
-  }
+  },
+  "jql": "project = PSME ORDER BY key ASC",
+  "predecessorLinkTypes": [
+    "blocks",
+    "successors"
+  ],
+  "estimateType": "storyPoints",
+  "nonWorkingDays": [],
+  "planningIssueTypes": [
+    "Story"
+  ],
+  "planningFixVersions": [
+    "PSME MVP 1.0"
+  ]
 }

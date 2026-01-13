@@ -19,13 +19,15 @@ import { applySequencingRules } from '../services/task-sequencer';
  * @param allTickets - All tickets from JIRA/CSV
  * @param config - Team estimate configuration
  * @param hoursPerStoryPoint - Conversion factor for story points to hours (default: 8)
+ * @param estimateType - Type of estimate to use: 'storyPoints' or 'hours' (default: 'storyPoints')
  * @returns Story estimate result
  */
 export function processStoryEstimates(
   story: JiraTicket,
   allTickets: JiraTicket[],
   config: TeamEstimateConfiguration,
-  hoursPerStoryPoint: number = 8
+  hoursPerStoryPoint: number = 8,
+  estimateType: 'storyPoints' | 'hours' = 'storyPoints'
 ): StoryEstimateResult {
   // Extract subtasks
   const subtasks = extractSubtasks(story, allTickets);
@@ -54,7 +56,7 @@ export function processStoryEstimates(
   const sequencedEstimates = applySequencingRules(teamEstimates, config);
 
   // Get story estimate info
-  const storyEstimateHours = getStoryEstimateInHours(story, hoursPerStoryPoint);
+  const storyEstimateHours = getStoryEstimateInHours(story, hoursPerStoryPoint, estimateType, allTickets);
   const storyEstimate = storyEstimateHours ? {
     storyPoints: story.storyPoints,
     hours: storyEstimateHours,

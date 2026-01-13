@@ -6,22 +6,37 @@
 
 import { logger } from '../utils/logger';
 import { writeFileSync } from 'fs';
+import { getCustomFieldId, mergeCustomFieldMapping } from '../config/custom-field-defaults';
+
+/**
+ * Custom field mapping configuration for JIRA fields.
+ */
+export interface CustomFieldMapping {
+  /** Custom field ID for Team (e.g., "customfield_10001") */
+  team?: string;
+  /** Custom field ID for Story Points (e.g., "customfield_10052") */
+  storyPoints?: string;
+  /** Custom field ID for Original Estimate (e.g., "customfield_10410") */
+  originalEstimate?: string;
+  /** Custom field ID for Epic Link (e.g., "customfield_10008") */
+  epicLink?: string;
+  /** Custom field ID for Sprint (e.g., "customfield_10010") */
+  sprint?: string;
+  /** Custom field ID for Date field (e.g., "customfield_10098") */
+  dateField?: string;
+  /** Custom field ID for DateTime field (e.g., "customfield_10012") */
+  dateTimeField?: string;
+}
 
 export interface JiraConfig {
   jiraPath: string;
   jiraEmail: string;
   jiraApiToken: string;
   projectName: string;
-  /**
-   * Optional list of Fix Versions to filter tickets.
-   * If provided, only tickets with these fix versions will be included.
-   */
-  fixVersions?: string[];
-  /**
-   * Optional list of Issue Types to filter tickets.
-   * If provided, only tickets with these issue types will be included.
-   */
-  issueTypes?: string[];
+  /** Custom field ID mapping for JIRA fields */
+  customFieldMapping?: CustomFieldMapping;
+  /** Display names for custom fields (maps field ID to human-readable name) */
+  customFieldNames?: Record<string, string>;
 }
 
 export interface FieldHistory {
@@ -98,7 +113,8 @@ function createAuthHeader(email: string, apiToken: string): string {
 async function getTicketHistory(
   baseUrl: string,
   authHeader: string,
-  ticketKey: string
+  ticketKey: string,
+  config: JiraConfig
 ): Promise<{
   statusHistory: FieldHistory[];
   sprintHistory: FieldHistory[];
@@ -109,6 +125,11 @@ async function getTicketHistory(
   const sprintHistory: FieldHistory[] = [];
   const originalEstimateHistory: FieldHistory[] = [];
   const storyPointsHistory: FieldHistory[] = [];
+  
+  // Get custom field IDs from config
+  const sprintFieldId = getCustomFieldId('sprint', config);
+  const storyPointsFieldId = getCustomFieldId('storyPoints', config);
+  const originalEstimateFieldId = getCustomFieldId('originalEstimate', config);
 
   try {
     // Get ticket with changelog
@@ -154,22 +175,26 @@ async function getTicketHistory(
             statusHistory.push({ value, changedAt, changedBy });
           }
         }
-        // Sprint history (customfield_10010)
-        else if (fieldId === 'customfield_10010' || fieldName === 'Sprint') {
+        // Sprint history
+        const sprintFieldId = getCustomFieldId('sprint', config);
+        if (sprintFieldId && (fieldId === sprintFieldId || fieldName === 'Sprint')) {
           const value = item.toString || item.to || '';
           if (value) {
             sprintHistory.push({ value, changedAt, changedBy });
           }
         }
-        // Original Estimate history (timeoriginalestimate)
-        else if (fieldId === 'timeoriginalestimate' || fieldName === 'Original Estimate' || fieldName === 'timeoriginalestimate') {
+        // Original Estimate history (timeoriginalestimate or custom field)
+        const originalEstimateFieldId = getCustomFieldId('originalEstimate', config);
+        if (fieldId === 'timeoriginalestimate' || fieldName === 'Original Estimate' || fieldName === 'timeoriginalestimate' ||
+            (originalEstimateFieldId && fieldId === originalEstimateFieldId)) {
           const value = item.toString || item.to || '';
           if (value) {
             originalEstimateHistory.push({ value, changedAt, changedBy });
           }
         }
-        // Story Points history (customfield_10052)
-        else if (fieldId === 'customfield_10052' || fieldName === 'Story Points') {
+        // Story Points history
+        const storyPointsFieldId = getCustomFieldId('storyPoints', config);
+        if (storyPointsFieldId && (fieldId === storyPointsFieldId || fieldName === 'Story Points')) {
           const value = item.toString || item.to || '';
           if (value) {
             storyPointsHistory.push({ value, changedAt, changedBy });
@@ -185,29 +210,14 @@ async function getTicketHistory(
 }
 
 /**
- * Builds a base JQL query with filters for fix versions and issue types.
+ * Builds a base JQL query using only the project name.
+ * All filtering should be done via custom JQL in schedule_config.json.
  * 
  * @param config - JIRA configuration
  * @returns Base JQL query string
  */
 function buildBaseJql(config: JiraConfig): string {
-  let jql = `project = ${config.projectName}`;
-  
-  // Add fix version filter if specified
-  if (config.fixVersions && config.fixVersions.length > 0) {
-    const fixVersionList = config.fixVersions.map(v => `"${v}"`).join(', ');
-    jql += ` AND fixVersion in (${fixVersionList})`;
-  }
-  
-  // Add issue type filter if specified
-  if (config.issueTypes && config.issueTypes.length > 0) {
-    const issueTypeList = config.issueTypes.map(t => `"${t}"`).join(', ');
-    jql += ` AND issuetype in (${issueTypeList})`;
-  }
-  
-  jql += ` ORDER BY key ASC`;
-  
-  return jql;
+  return `project = ${config.projectName} ORDER BY key ASC`;
 }
 
 /**
@@ -215,25 +225,36 @@ function buildBaseJql(config: JiraConfig): string {
  * 
  * @param config - JIRA configuration
  * @param includeHistory - Whether to extract change history for Status, Sprint, Original Estimate, and Story Points
+ * @param customJql - Optional custom JQL query. If provided, this will be used instead of building from config filters
  * @returns Array of JIRA tickets
  * @throws Error if extraction fails
  */
-export async function extractJiraTickets(config: JiraConfig, includeHistory: boolean = false): Promise<JiraTicket[]> {
+export async function extractJiraTickets(config: JiraConfig, includeHistory: boolean = false, customJql?: string): Promise<JiraTicket[]> {
   logger.info(`Extracting tickets from project: ${config.projectName}`);
   
-  if (config.fixVersions && config.fixVersions.length > 0) {
-    logger.info(`Filtering by fix versions: ${config.fixVersions.join(', ')}`);
-  }
-  
-  if (config.issueTypes && config.issueTypes.length > 0) {
-    logger.info(`Filtering by issue types: ${config.issueTypes.join(', ')}`);
-  }
-  
   try {
-    // Build base JQL query with filters
-    const baseJql = buildBaseJql(config);
+    // Use custom JQL if provided, otherwise build base query from project name
+    const baseJql = customJql && customJql.trim() 
+      ? customJql.trim()
+      : buildBaseJql(config);
+    
+    if (customJql && customJql.trim()) {
+      logger.info(`Using custom JQL: ${baseJql}`);
+    } else {
+      logger.info(`Using base JQL for project: ${baseJql}`);
+    }
     
     logger.info(`Executing JQL query: ${baseJql}`);
+    
+    // Get custom field IDs from config or defaults
+    const fieldMapping = mergeCustomFieldMapping(config.customFieldMapping);
+    const teamFieldId = getCustomFieldId('team', config);
+    const storyPointsFieldId = getCustomFieldId('storyPoints', config);
+    const originalEstimateFieldId = getCustomFieldId('originalEstimate', config);
+    const epicLinkFieldId = getCustomFieldId('epicLink', config);
+    const sprintFieldId = getCustomFieldId('sprint', config);
+    const dateFieldId = getCustomFieldId('dateField', config);
+    const dateTimeFieldId = getCustomFieldId('dateTimeField', config);
     
     // Prepare fields to fetch - comprehensive list based on PSME-160 inspection
     const fields = [
@@ -242,7 +263,7 @@ export async function extractJiraTickets(config: JiraConfig, includeHistory: boo
       'issuetype',
       'status',
       'statusCategory',
-      'customfield_10001', // Team (e.g., PSME-Data)
+      teamFieldId, // Team
       'assignee',
       'reporter',
       'creator',
@@ -262,17 +283,13 @@ export async function extractJiraTickets(config: JiraConfig, includeHistory: boo
       'timeestimate',
       'timetracking',
       // Custom fields
-      'customfield_10052', // Story Points
-      'customfield_10410', // Original Estimate
-      'customfield_10016',
-      'customfield_10002',
-      'customfield_10014', // Epic Link (legacy, may be null)
-      'customfield_10008', // Epic Link (actual field used in PSME project)
-      'customfield_10011',
-      'customfield_10010', // Sprint
-      'customfield_10098', // Date field
-      'customfield_10012', // DateTime field
-    ];
+      storyPointsFieldId, // Story Points
+      originalEstimateFieldId, // Original Estimate
+      epicLinkFieldId, // Epic Link
+      sprintFieldId, // Sprint
+      dateFieldId, // Date field
+      dateTimeFieldId, // DateTime field
+    ].filter(Boolean) as string[]; // Remove undefined values
     
     // Build API URL - using /rest/api/3/search/jql (new endpoint, but limited pagination)
     const baseUrl = config.jiraPath.replace(/\/$/, ''); // Remove trailing slash
@@ -304,15 +321,8 @@ export async function extractJiraTickets(config: JiraConfig, includeHistory: boo
         }
         
         // Build base query without ORDER BY for combining
-        let baseQuery = `project = ${config.projectName}`;
-        if (config.fixVersions && config.fixVersions.length > 0) {
-          const fixVersionList = config.fixVersions.map(v => `"${v}"`).join(', ');
-          baseQuery += ` AND fixVersion in (${fixVersionList})`;
-        }
-        if (config.issueTypes && config.issueTypes.length > 0) {
-          const issueTypeList = config.issueTypes.map(t => `"${t}"`).join(', ');
-          baseQuery += ` AND issuetype in (${issueTypeList})`;
-        }
+        // All filtering should be done via custom JQL in schedule_config.json
+        const baseQuery = `project = ${config.projectName}`;
         
         // Use last key to continue pagination past gaps
         batchJql = `${baseQuery} AND issueKey > "${lastKey}" ORDER BY key ASC`;
@@ -406,39 +416,43 @@ export async function extractJiraTickets(config: JiraConfig, includeHistory: boo
         component = fields.components.map((c: any) => c.name).join(', ');
       }
       
-      // Extract Team (customfield_10001)
+      // Extract Team
       let team: string | undefined;
-      const teamField = (fields as any).customfield_10001;
-      if (teamField) {
-        if (Array.isArray(teamField)) {
-          if (teamField.length > 0) {
-            team = teamField
-              .map((t: any) => t?.title || t?.name || t?.displayName || String(t))
-              .join(', ');
+      const teamFieldId = getCustomFieldId('team', config);
+      if (teamFieldId) {
+        const teamField = (fields as any)[teamFieldId];
+        if (teamField) {
+          if (Array.isArray(teamField)) {
+            if (teamField.length > 0) {
+              team = teamField
+                .map((t: any) => t?.title || t?.name || t?.displayName || String(t))
+                .join(', ');
+            }
+          } else if (typeof teamField === 'object') {
+            team = teamField.title || teamField.name || teamField.displayName;
+          } else {
+            team = String(teamField);
           }
-        } else if (typeof teamField === 'object') {
-          team = teamField.title || teamField.name || teamField.displayName;
-        } else {
-          team = String(teamField);
         }
       }
       
       // Extract story points
       let storyPoints: number | undefined;
-      if (fields.customfield_10052 !== null && fields.customfield_10052 !== undefined) {
-        storyPoints = Number(fields.customfield_10052);
+      const storyPointsFieldId = getCustomFieldId('storyPoints', config);
+      if (storyPointsFieldId && fields[storyPointsFieldId] !== null && fields[storyPointsFieldId] !== undefined) {
+        storyPoints = Number(fields[storyPointsFieldId]);
       }
       
       // Extract original estimate (numeric value, no conversion)
-      // Try customfield_10410 first (this is where Original Estimate is stored)
       let originalEstimate: number | undefined;
-      if (fields.customfield_10410 !== null && fields.customfield_10410 !== undefined) {
-        const value = Number(fields.customfield_10410);
+      const originalEstimateFieldId = getCustomFieldId('originalEstimate', config);
+      if (originalEstimateFieldId && fields[originalEstimateFieldId] !== null && fields[originalEstimateFieldId] !== undefined) {
+        const value = Number(fields[originalEstimateFieldId]);
         if (!isNaN(value) && value > 0) {
           originalEstimate = value;
         }
       }
-      // Fallback to timeoriginalestimate if customfield_10410 is not available
+      // Fallback to timeoriginalestimate if custom field is not available
       else if (fields.timeoriginalestimate !== null && fields.timeoriginalestimate !== undefined) {
         const value = Number(fields.timeoriginalestimate);
         if (!isNaN(value) && value > 0) {
@@ -469,25 +483,16 @@ export async function extractJiraTickets(config: JiraConfig, includeHistory: boo
       }
       
       // Extract epic link
-      // Try customfield_10008 first (used in PSME project), then fallback to customfield_10014
       let epicLink: string | undefined;
-      
-      // Primary: customfield_10008 (Epic Link field used in PSME)
-      if (fields.customfield_10008) {
-        if (typeof fields.customfield_10008 === 'string') {
-          epicLink = fields.customfield_10008;
-        } else if (fields.customfield_10008.key) {
-          epicLink = fields.customfield_10008.key;
-        }
-      }
-      // Fallback: customfield_10014 (legacy Epic Link field)
-      else if (fields.customfield_10014) {
-        if (typeof fields.customfield_10014 === 'string') {
-          epicLink = fields.customfield_10014;
-        } else if (fields.customfield_10014.key) {
-          epicLink = fields.customfield_10014.key;
-        } else if (fields.customfield_10014.toString) {
-          epicLink = fields.customfield_10014.toString();
+      const epicLinkFieldId = getCustomFieldId('epicLink', config);
+      if (epicLinkFieldId && fields[epicLinkFieldId]) {
+        const epicField = fields[epicLinkFieldId];
+        if (typeof epicField === 'string') {
+          epicLink = epicField;
+        } else if (epicField.key) {
+          epicLink = epicField.key;
+        } else if (epicField.toString) {
+          epicLink = epicField.toString();
         }
       }
       
@@ -537,10 +542,12 @@ export async function extractJiraTickets(config: JiraConfig, includeHistory: boo
       // Extract sprint (legacy: comma-separated names)
       let sprint: string | undefined;
       let sprints: Sprint[] | undefined;
-      if (fields.customfield_10010 && Array.isArray(fields.customfield_10010) && fields.customfield_10010.length > 0) {
-        sprint = fields.customfield_10010.map((s: any) => s.name).join(', ');
+      const sprintFieldId = getCustomFieldId('sprint', config);
+      if (sprintFieldId && fields[sprintFieldId] && Array.isArray(fields[sprintFieldId]) && fields[sprintFieldId].length > 0) {
+        const sprintField = fields[sprintFieldId] as any[];
+        sprint = sprintField.map((s: any) => s.name).join(', ');
         // Extract full sprint objects
-        sprints = fields.customfield_10010.map((s: any) => ({
+        sprints = sprintField.map((s: any) => ({
           id: s.id,
           name: s.name || '',
           startDate: s.startDate,
@@ -593,7 +600,7 @@ export async function extractJiraTickets(config: JiraConfig, includeHistory: boo
         logger.info(`Fetching history for tickets ${i + 1}-${Math.min(i + batchSize, tickets.length)} of ${tickets.length}...`);
         
         const batchPromises = batch.map(async (ticket) => {
-          const history = await getTicketHistory(baseUrl, authHeader, ticket.key);
+          const history = await getTicketHistory(baseUrl, authHeader, ticket.key, config);
           return {
             ...ticket,
             statusHistory: history.statusHistory,

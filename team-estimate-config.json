@@ -2,7 +2,6 @@
   "$schema": "./schemas/team-estimate-config.schema.json",
   "version": "1.0.0",
   "description": "Configuration for multi-team estimate generation supporting three estimation cases",
-  
   "presets": {
     "standard-agile": {
       "name": "Standard Agile Team",
@@ -15,7 +14,7 @@
         },
         "Dev": {
           "method": "percentage",
-          "value": 0.50,
+          "value": 0.5,
           "description": "50% of story estimate"
         },
         "QA": {
@@ -31,17 +30,17 @@
       "teamCoefficients": {
         "BA": {
           "method": "hoursPerPoint",
-          "value": 2.0,
+          "value": 2,
           "description": "2 hours per story point"
         },
         "Dev": {
           "method": "hoursPerPoint",
-          "value": 4.0,
+          "value": 4,
           "description": "4 hours per story point"
         },
         "QA": {
           "method": "hoursPerPoint",
-          "value": 2.0,
+          "value": 2,
           "description": "2 hours per story point"
         }
       }
@@ -52,30 +51,28 @@
       "teamCoefficients": {
         "BA": {
           "method": "percentage",
-          "value": 0.20,
+          "value": 0.2,
           "description": "20% of story estimate"
         },
         "FE": {
           "method": "percentage",
-          "value": 0.30,
+          "value": 0.3,
           "description": "30% of story estimate"
         },
         "BE": {
           "method": "percentage",
-          "value": 0.30,
+          "value": 0.3,
           "description": "30% of story estimate"
         },
         "QA": {
           "method": "percentage",
-          "value": 0.20,
+          "value": 0.2,
           "description": "20% of story estimate"
         }
       }
     }
   },
-
   "defaultPreset": "standard-agile",
-
   "teams": {
     "team-ba": {
       "id": "team-ba",
@@ -98,7 +95,7 @@
       "includeInSchedule": true,
       "defaultCoefficient": {
         "method": "percentage",
-        "value": 0.50
+        "value": 1
       }
     },
     "team-be": {
@@ -110,7 +107,7 @@
       "includeInSchedule": true,
       "defaultCoefficient": {
         "method": "percentage",
-        "value": 0.50
+        "value": 1
       }
     },
     "team-data": {
@@ -122,7 +119,7 @@
       "includeInSchedule": true,
       "defaultCoefficient": {
         "method": "percentage",
-        "value": 0.30
+        "value": 1
       }
     },
     "team-qa": {
@@ -134,11 +131,10 @@
       "includeInSchedule": false,
       "defaultCoefficient": {
         "method": "percentage",
-        "value": 0.25
+        "value": 0.3
       }
     }
   },
-
   "estimationRules": {
     "case1_storyOnly": {
       "name": "Case 1: Story-Level Estimate Only",
@@ -153,7 +149,7 @@
         },
         "Dev": {
           "method": "percentage",
-          "value": 0.50,
+          "value": 0.5,
           "overrideDefault": false
         },
         "QA": {
@@ -172,9 +168,18 @@
         "BA": {
           "matchCriteria": {
             "components": [],
-            "labels": ["BA", "Analysis"],
-            "summaryTags": ["[BA]", "[Analysis]"],
-            "issueTypes": ["Sub-task", "Task"]
+            "labels": [
+              "BA",
+              "Analysis"
+            ],
+            "summaryTags": [
+              "[BA]",
+              "[Analysis]"
+            ],
+            "issueTypes": [
+              "Sub-task",
+              "Task"
+            ]
           },
           "fallbackToCoefficient": true,
           "fallbackCoefficient": {
@@ -184,23 +189,46 @@
         },
         "Dev": {
           "matchCriteria": {
-            "components": ["FE", "BE", "Data"],
-            "labels": ["Dev", "Development"],
-            "summaryTags": ["[FE]", "[BE]", "[Dev]"],
-            "issueTypes": ["Sub-task", "Task"]
+            "components": [
+              "FE",
+              "BE",
+              "Data"
+            ],
+            "labels": [
+              "Dev",
+              "Development"
+            ],
+            "summaryTags": [
+              "[FE]",
+              "[BE]",
+              "[Dev]"
+            ],
+            "issueTypes": [
+              "Sub-task",
+              "Task"
+            ]
           },
           "fallbackToCoefficient": true,
           "fallbackCoefficient": {
             "method": "percentage",
-            "value": 0.50
+            "value": 0.5
           }
         },
         "QA": {
           "matchCriteria": {
             "components": [],
-            "labels": ["QA", "Testing"],
-            "summaryTags": ["[QA]", "[Test]"],
-            "issueTypes": ["Sub-task", "Task"]
+            "labels": [
+              "QA",
+              "Testing"
+            ],
+            "summaryTags": [
+              "[QA]",
+              "[Test]"
+            ],
+            "issueTypes": [
+              "Sub-task",
+              "Task"
+            ]
           },
           "fallbackToCoefficient": true,
           "fallbackCoefficient": {
@@ -212,7 +240,7 @@
       "storyEstimateUsage": {
         "applyToTeamsWithoutSubtasks": true,
         "applyAsValidation": false,
-        "validationTolerance": 0.20
+        "validationTolerance": 0.2
       }
     },
     "case3_subtasksOnly": {
@@ -224,25 +252,57 @@
         "BA": {
           "matchCriteria": {
             "components": [],
-            "labels": ["BA", "Analysis"],
-            "summaryTags": ["[BA]", "[Analysis]"],
-            "issueTypes": ["Sub-task", "Task"]
+            "labels": [
+              "BA",
+              "Analysis"
+            ],
+            "summaryTags": [
+              "[BA]",
+              "[Analysis]"
+            ],
+            "issueTypes": [
+              "Sub-task",
+              "Task"
+            ]
           }
         },
         "Dev": {
           "matchCriteria": {
-            "components": ["FE", "BE", "Data"],
-            "labels": ["Dev", "Development"],
-            "summaryTags": ["[FE]", "[BE]", "[Dev]"],
-            "issueTypes": ["Sub-task", "Task"]
+            "components": [
+              "FE",
+              "BE",
+              "Data"
+            ],
+            "labels": [
+              "Dev",
+              "Development"
+            ],
+            "summaryTags": [
+              "[FE]",
+              "[BE]",
+              "[Dev]"
+            ],
+            "issueTypes": [
+              "Sub-task",
+              "Task"
+            ]
           }
         },
         "QA": {
           "matchCriteria": {
             "components": [],
-            "labels": ["QA", "Testing"],
-            "summaryTags": ["[QA]", "[Test]"],
-            "issueTypes": ["Sub-task", "Task"]
+            "labels": [
+              "QA",
+              "Testing"
+            ],
+            "summaryTags": [
+              "[QA]",
+              "[Test]"
+            ],
+            "issueTypes": [
+              "Sub-task",
+              "Task"
+            ]
           }
         }
       },
@@ -253,7 +313,6 @@
       }
     }
   },
-
   "taskSequencing": {
     "defaultMode": "sequential",
     "executionModes": {
@@ -300,13 +359,17 @@
           {
             "role": "Dev",
             "teamId": "team-fe",
-            "dependencies": ["BA"],
+            "dependencies": [
+              "BA"
+            ],
             "canRunInParallel": true
           },
           {
             "role": "QA",
             "teamId": "team-qa",
-            "dependencies": ["Dev"],
+            "dependencies": [
+              "Dev"
+            ],
             "canRunInParallel": false
           }
         ]
@@ -322,13 +385,17 @@
           {
             "role": "Dev",
             "teamId": "team-be",
-            "dependencies": ["BA"],
+            "dependencies": [
+              "BA"
+            ],
             "canRunInParallel": true
           },
           {
             "role": "QA",
             "teamId": "team-qa",
-            "dependencies": ["Dev"],
+            "dependencies": [
+              "Dev"
+            ],
             "canRunInParallel": false
           }
         ]
@@ -344,13 +411,17 @@
           {
             "role": "Dev",
             "teamId": "team-data",
-            "dependencies": ["BA"],
+            "dependencies": [
+              "BA"
+            ],
             "canRunInParallel": true
           },
           {
             "role": "QA",
             "teamId": "team-qa",
-            "dependencies": ["Dev"],
+            "dependencies": [
+              "Dev"
+            ],
             "canRunInParallel": false
           }
         ]
@@ -370,7 +441,6 @@
       }
     }
   },
-
   "uiSettings": {
     "presetsVisible": true,
     "allowCustomCoefficients": true,

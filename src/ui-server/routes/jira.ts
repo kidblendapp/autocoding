@@ -4,10 +4,10 @@
  */
 
 import express from 'express';
-import { readFileSync, writeFileSync, existsSync } from 'fs';
+import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs';
 import { join } from 'path';
 import { logger } from '../../utils/logger';
-import { extractJiraTickets, type JiraConfig } from '../../services/jira-extractor';
+import { extractJiraTickets, exportTicketsToCsv, exportSprintsToCsv, type JiraConfig } from '../../services/jira-extractor';
 
 const router = express.Router();
 
@@ -67,17 +67,37 @@ router.post('/extract', async (req, res) => {
     const { includeHistory = false } = req.body;
     
     const config = loadJiraConfig();
+    const scheduleConfig = loadScheduleConfig();
+    const customJql = scheduleConfig.jql;
     
     logger.info('Starting JIRA ticket extraction...');
-    const tickets = await extractJiraTickets(config, includeHistory);
+    const tickets = await extractJiraTickets(config, includeHistory, customJql);
     
     logger.info(`Extracted ${tickets.length} tickets`);
+    
+    // Save to CSV file
+    const outputPath = join(process.cwd(), 'outputs', 'jira-export.csv');
+    const sprintsOutputPath = join(process.cwd(), 'outputs', 'jira-export-sprints.csv');
+    
+    // Ensure outputs directory exists
+    const outputsDir = join(process.cwd(), 'outputs');
+    try {
+      mkdirSync(outputsDir, { recursive: true });
+    } catch (err) {
+      // Directory might already exist, ignore
+    }
+    
+    exportTicketsToCsv(tickets, outputPath, includeHistory);
+    exportSprintsToCsv(tickets, sprintsOutputPath);
+    
+    logger.info(`Saved ${tickets.length} tickets to ${outputPath}`);
     
     res.json({
       success: true,
       ticketCount: tickets.length,
       tickets: tickets.slice(0, 100), // Return first 100 for preview
-      message: `Successfully extracted ${tickets.length} tickets`
+      message: `Successfully extracted ${tickets.length} tickets`,
+      outputPath: 'outputs/jira-export.csv'
     });
   } catch (error) {
     logger.error(`Error extracting JIRA tickets: ${error instanceof Error ? error.message : String(error)}`);
@@ -282,8 +302,10 @@ router.get('/field-values/:field', async (req, res) => {
       const scheduleConfig = loadScheduleConfig();
       const jql = buildJql(config, scheduleConfig.jql);
       
+      // Get configured Team field ID
+      const teamFieldId = config.customFieldMapping?.team || 'customfield_10001';
       const fieldsToFetch = field === 'teams' 
-        ? ['customfield_10001'] 
+        ? [teamFieldId] 
         : field === 'components' 
         ? ['components'] 
         : ['status'];
@@ -313,8 +335,8 @@ router.get('/field-values/:field', async (req, res) => {
       if (searchResult.issues) {
         searchResult.issues.forEach((issue: any) => {
           if (field === 'teams') {
-            // Extract from Team field - check customfield_10001 first (the actual field ID)
-            const teamValue = issue.fields?.customfield_10001 || issue.fields?.Team || issue.fields?.customfield_Team || issue.fields?.team;
+            // Extract from Team field - check configured field ID first
+            const teamValue = issue.fields?.[teamFieldId] || issue.fields?.Team || issue.fields?.customfield_Team || issue.fields?.team;
             if (teamValue) {
               if (typeof teamValue === 'string') {
                 valueSet.add(teamValue);
@@ -388,6 +410,9 @@ router.post('/extract-all-fields', async (req, res) => {
     
     const baseUrl = config.jiraPath.replace(/\/$/, '');
     
+    // Get configured Team field ID (default to customfield_10001)
+    const teamFieldId = config.customFieldMapping?.team || 'customfield_10001';
+    
     // Extract all values in parallel
     const [issueTypesResult, fixVersionsResult, linkTypesResult, ticketsResult] = await Promise.all([
       // Issue types from actual tickets
@@ -419,7 +444,6 @@ router.post('/extract-all-fields', async (req, res) => {
         }
       }),
       // All tickets for teams, components, statuses
-      // Use customfield_10001 for Team field (as used in jira-extractor.ts)
       fetch(`${baseUrl}/rest/api/3/search/jql`, {
         method: 'POST',
         headers: {
@@ -430,7 +454,7 @@ router.post('/extract-all-fields', async (req, res) => {
         body: JSON.stringify({
           jql: jql,
           maxResults: 1000,
-          fields: ['customfield_10001', 'components', 'status']
+          fields: [teamFieldId, 'components', 'status']
         })
       })
     ]);
@@ -493,8 +517,8 @@ router.post('/extract-all-fields', async (req, res) => {
     
     if (ticketsData.issues) {
       ticketsData.issues.forEach((issue: any) => {
-        // Teams - check customfield_10001 first (the actual field ID)
-        const teamValue = issue.fields?.customfield_10001 || issue.fields?.Team || issue.fields?.customfield_Team || issue.fields?.team;
+        // Teams - check configured field ID first
+        const teamValue = issue.fields?.[teamFieldId] || issue.fields?.Team || issue.fields?.customfield_Team || issue.fields?.team;
         if (teamValue) {
           if (typeof teamValue === 'string') {
             teamsSet.add(teamValue);
@@ -538,7 +562,7 @@ router.post('/extract-all-fields', async (req, res) => {
       projectName: config.projectName
     };
     
-    // Save to extracted-values.json (reuse path declared at top of function)
+    // Save to extracted-values.json (reuse path declared earlier)
     writeFileSync(extractedValuesPath, JSON.stringify(extractedValues, null, 2), 'utf-8');
     
     logger.info(`Extracted all field values for project ${config.projectName}`);

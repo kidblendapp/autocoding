@@ -27,14 +27,14 @@ export default function ProjectSettings() {
   const [config, setConfig] = useState<Partial<ScheduleConfig>>({
     projectStartDate: '',
     sprintDurationDays: 10,
-    plannedIssueTypes: [],
-    fixVersions: [],
+    planningIssueTypes: [],
+    planningFixVersions: [],
   });
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
-  const [newIssueType, setNewIssueType] = useState('');
-  const [newFixVersion, setNewFixVersion] = useState('');
+  const [newPlanningIssueType, setNewPlanningIssueType] = useState('');
+  const [newPlanningFixVersion, setNewPlanningFixVersion] = useState('');
   const [jql, setJql] = useState('');
   const [predecessorLinkTypes, setPredecessorLinkTypes] = useState<string[]>([]);
   const [estimateType, setEstimateType] = useState<'storyPoints' | 'hours'>('storyPoints');
@@ -81,6 +81,7 @@ export default function ProjectSettings() {
       setPredecessorLinkTypes((data as any).predecessorLinkTypes || []);
       setEstimateType((data as any).estimateType || 'storyPoints');
       setNonWorkingDays((data as any).nonWorkingDays || []);
+      
     } catch (error: any) {
       if (error.response?.status !== 404) {
         setMessage({ type: 'error', text: error.response?.data?.message || 'Failed to load config' });
@@ -124,37 +125,37 @@ export default function ProjectSettings() {
     }
   };
 
-  const addIssueType = () => {
-    if (newIssueType.trim()) {
+  const addPlanningIssueType = () => {
+    if (newPlanningIssueType.trim()) {
       setConfig(prev => ({
         ...prev,
-        plannedIssueTypes: [...(prev.plannedIssueTypes || []), newIssueType.trim()],
+        planningIssueTypes: [...(prev.planningIssueTypes || []), newPlanningIssueType.trim()],
       }));
-      setNewIssueType('');
+      setNewPlanningIssueType('');
     }
   };
 
-  const removeIssueType = (index: number) => {
+  const removePlanningIssueType = (index: number) => {
     setConfig(prev => ({
       ...prev,
-      plannedIssueTypes: prev.plannedIssueTypes?.filter((_, i) => i !== index) || [],
+      planningIssueTypes: prev.planningIssueTypes?.filter((_, i) => i !== index) || [],
     }));
   };
 
-  const addFixVersion = () => {
-    if (newFixVersion.trim()) {
+  const addPlanningFixVersion = () => {
+    if (newPlanningFixVersion.trim()) {
       setConfig(prev => ({
         ...prev,
-        fixVersions: [...(prev.fixVersions || []), newFixVersion.trim()],
+        planningFixVersions: [...(prev.planningFixVersions || []), newPlanningFixVersion.trim()],
       }));
-      setNewFixVersion('');
+      setNewPlanningFixVersion('');
     }
   };
 
-  const removeFixVersion = (index: number) => {
+  const removePlanningFixVersion = (index: number) => {
     setConfig(prev => ({
       ...prev,
-      fixVersions: prev.fixVersions?.filter((_, i) => i !== index) || [],
+      planningFixVersions: prev.planningFixVersions?.filter((_, i) => i !== index) || [],
     }));
   };
 
@@ -304,82 +305,91 @@ export default function ProjectSettings() {
             {extractingAll ? <CircularProgress size={20} /> : 'Extract All Values'}
           </Button>
         </Box>
-        <Box>
-          <Typography variant="subtitle2" sx={{ mb: 1 }}>
-              Planned Issue Types
+        <Box sx={{ mt: 3, p: 2, bgcolor: 'background.default', borderRadius: 1 }}>
+          <Typography variant="h6" sx={{ mb: 2 }}>
+            Planning Settings
+          </Typography>
+          <Typography variant="body2" sx={{ mb: 2, color: 'text.secondary' }}>
+            These settings are used for decomposition and schedule generation operations. 
+            They filter the extracted tickets during planning, not during JIRA extraction.
+          </Typography>
+          <Box sx={{ mb: 2 }}>
+            <Typography variant="subtitle2" sx={{ mb: 1 }}>
+              Planning Issue Types
             </Typography>
-          <Stack direction="row" spacing={1} sx={{ mb: 1, flexWrap: 'wrap' }}>
-            {config.plannedIssueTypes?.map((type, index) => (
-              <Chip
-                key={index}
-                label={type}
-                onDelete={() => removeIssueType(index)}
-                size="small"
-              />
-            ))}
-          </Stack>
-          <Box sx={{ display: 'flex', gap: 1 }}>
-            <TextField
-              size="small"
-              placeholder="Add issue type"
-              value={newIssueType}
-              onChange={(e) => setNewIssueType(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addIssueType())}
-              select
-              SelectProps={{
-                native: true,
-              }}
-              sx={{ minWidth: 200 }}
-            >
-              <option value="">Select or type</option>
-              {(extractedValues.issueTypes || []).map((type) => (
-                <option key={type} value={type}>
-                  {type}
-                </option>
+            <Stack direction="row" spacing={1} sx={{ mb: 1, flexWrap: 'wrap' }}>
+              {config.planningIssueTypes?.map((type, index) => (
+                <Chip
+                  key={index}
+                  label={type}
+                  onDelete={() => removePlanningIssueType(index)}
+                  size="small"
+                />
               ))}
-            </TextField>
-            <Button size="small" variant="outlined" onClick={addIssueType}>
-              Add
-            </Button>
+            </Stack>
+            <Box sx={{ display: 'flex', gap: 1 }}>
+              <TextField
+                size="small"
+                placeholder="Add planning issue type"
+                value={newPlanningIssueType}
+                onChange={(e) => setNewPlanningIssueType(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addPlanningIssueType())}
+                select
+                SelectProps={{
+                  native: true,
+                }}
+                sx={{ minWidth: 200 }}
+              >
+                <option value="">Select or type</option>
+                {(extractedValues.issueTypes || []).map((type) => (
+                  <option key={type} value={type}>
+                    {type}
+                  </option>
+                ))}
+              </TextField>
+              <Button size="small" variant="outlined" onClick={addPlanningIssueType}>
+                Add
+              </Button>
+            </Box>
           </Box>
-        </Box>
-        <Box>
-          <Typography variant="subtitle2" sx={{ mb: 1 }}>
-              Fix Versions
+          <Box>
+            <Typography variant="subtitle2" sx={{ mb: 1 }}>
+              Planning Fix Versions
             </Typography>
-          <Stack direction="row" spacing={1} sx={{ mb: 1, flexWrap: 'wrap' }}>
-            {config.fixVersions?.map((version, index) => (
-              <Chip
-                key={index}
-                label={version}
-                onDelete={() => removeFixVersion(index)}
-                size="small"
-              />
-            ))}
-          </Stack>
-          <Box sx={{ display: 'flex', gap: 1 }}>
-            <TextField
-              size="small"
-              placeholder="Add fix version"
-              value={newFixVersion}
-              onChange={(e) => setNewFixVersion(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addFixVersion())}
-              select
-              SelectProps={{
-                native: true,
-              }}
-              sx={{ minWidth: 200 }}
-            >
-              <option value="">Select or type</option>
-              {(extractedValues.fixVersions || []).map((version) => (
-                <option key={version} value={version}>
-                  {version}
-                </option>
+            <Stack direction="row" spacing={1} sx={{ mb: 1, flexWrap: 'wrap' }}>
+              {config.planningFixVersions?.map((version, index) => (
+                <Chip
+                  key={index}
+                  label={version}
+                  onDelete={() => removePlanningFixVersion(index)}
+                  size="small"
+                />
               ))}
-            </TextField>
-            <Button size="small" variant="outlined" onClick={addFixVersion}>
-              Add
-            </Button>
+            </Stack>
+            <Box sx={{ display: 'flex', gap: 1 }}>
+              <TextField
+                size="small"
+                placeholder="Add planning fix version"
+                value={newPlanningFixVersion}
+                onChange={(e) => setNewPlanningFixVersion(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addPlanningFixVersion())}
+                select
+                SelectProps={{
+                  native: true,
+                }}
+                sx={{ minWidth: 200 }}
+              >
+                <option value="">Select or type</option>
+                {(extractedValues.fixVersions || []).map((version) => (
+                  <option key={version} value={version}>
+                    {version}
+                  </option>
+                ))}
+              </TextField>
+              <Button size="small" variant="outlined" onClick={addPlanningFixVersion}>
+                Add
+              </Button>
+            </Box>
           </Box>
         </Box>
         <FormControl fullWidth>
@@ -439,13 +449,6 @@ export default function ProjectSettings() {
             </Button>
           </Box>
         </Box>
-        <TextField
-          label="Gantt Grouping"
-          value={config.ganttGrouping || ''}
-          onChange={handleChange('ganttGrouping')}
-          placeholder="epicSprint"
-          fullWidth
-        />
         <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
           <Button
             variant="contained"

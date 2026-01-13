@@ -25,8 +25,7 @@ export interface ExtractJiraOptions {
 }
 
 interface ScheduleConfig {
-  fixVersions?: string[];
-  plannedIssueTypes?: string[];
+  // Schedule config interface - fields not used in this command
 }
 
 /**
@@ -101,22 +100,13 @@ export async function extractJira(options: ExtractJiraOptions = {}): Promise<voi
     jiraConfig = await promptJiraConfig();
   }
   
-  // Load schedule config to get fixVersions and issueTypes filters
+  // Load schedule config to get JQL (if any)
   const scheduleConfig = loadScheduleConfig();
-  if (scheduleConfig) {
-    if (scheduleConfig.fixVersions && scheduleConfig.fixVersions.length > 0) {
-      jiraConfig.fixVersions = scheduleConfig.fixVersions;
-      logger.info(`Filtering by fix versions: ${scheduleConfig.fixVersions.join(', ')}`);
-    }
-    if (scheduleConfig.plannedIssueTypes && scheduleConfig.plannedIssueTypes.length > 0) {
-      jiraConfig.issueTypes = scheduleConfig.plannedIssueTypes;
-      logger.info(`Filtering by issue types: ${scheduleConfig.plannedIssueTypes.join(', ')}`);
-    }
-  }
+  const customJql = scheduleConfig?.jql;
   
   try {
-    // Extract tickets from JIRA
-    const tickets = await extractJiraTickets(jiraConfig, options.includeHistory || false);
+    // Extract tickets from JIRA using JQL from schedule config if available
+    const tickets = await extractJiraTickets(jiraConfig, options.includeHistory || false, customJql);
     
     if (tickets.length === 0) {
       logger.warn('No tickets found in project');

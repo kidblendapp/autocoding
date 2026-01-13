@@ -24,7 +24,6 @@ export interface GenerateTeamEstimatesOptions {
     jiraEmail: string;
     jiraApiToken: string;
     projectName: string;
-    fixVersions?: string[];
     issueTypes?: string[];
   };
   

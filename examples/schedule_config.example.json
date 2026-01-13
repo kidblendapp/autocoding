@@ -2,8 +2,9 @@
   "projectStartDate": "2026-01-01",
   "projectReschedulingDate": "2026-12-22",
   "sprintDurationDays": 10,
-  "plannedIssueTypes": ["Story"],
-  "fixVersions": ["PSME MVP 1.0", "PSME MVP 2.0", "PSME Release 1.0"],
+  "jql": "project = PROJECT AND issuetype = Story AND fixVersion in (\"PSME MVP 1.0\", \"PSME MVP 2.0\")",
+  "planningIssueTypes": ["Story"],
+  "planningFixVersions": ["PSME MVP 1.0", "PSME MVP 2.0"],
   "ganttGrouping": "epicSprint",
   "teams": {
     "team-ba": {

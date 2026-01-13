@@ -116,23 +116,77 @@ export function hasSubtaskEstimatesValue(subtasks: JiraTicket[]): boolean {
  * 
  * @param story - Story ticket
  * @param hoursPerStoryPoint - Conversion factor for story points to hours (default: 8)
+ * @param estimateType - Type of estimate to use: 'storyPoints' or 'hours'
+ * @param allTickets - All tickets for fallback calculation (optional)
  * @returns Estimate in hours, or undefined if no estimate
  */
 export function getStoryEstimateInHours(
   story: JiraTicket,
-  hoursPerStoryPoint: number = 8
+  hoursPerStoryPoint: number = 8,
+  estimateType: 'storyPoints' | 'hours' = 'storyPoints',
+  allTickets?: JiraTicket[]
 ): number | undefined {
-  // Prefer original estimate (already in hours)
-  if (story.originalEstimate !== undefined && story.originalEstimate !== null && story.originalEstimate > 0) {
-    return story.originalEstimate;
+  if (estimateType === 'hours') {
+    // Prefer original estimate (already in hours)
+    if (story.originalEstimate !== undefined && story.originalEstimate !== null && story.originalEstimate > 0) {
+      return story.originalEstimate;
+    }
+    
+    // Check remaining estimate if available
+    if ((story as any).remainingEstimate !== undefined && (story as any).remainingEstimate !== null && (story as any).remainingEstimate > 0) {
+      return (story as any).remainingEstimate;
+    }
+    
+    // Fallback: if hours missing but story points exist, calculate average hours from other tickets with same story points
+    if (story.storyPoints !== undefined && story.storyPoints !== null && story.storyPoints > 0 && allTickets) {
+      const averageHours = calculateAverageHoursFromStoryPoints(story.storyPoints, allTickets);
+      if (averageHours !== undefined) {
+        return averageHours;
+      }
+    }
+    
+    return undefined;
+  } else {
+    // estimateType === 'storyPoints'
+    // Convert story points to hours
+    if (story.storyPoints !== undefined && story.storyPoints !== null && story.storyPoints > 0) {
+      return story.storyPoints * hoursPerStoryPoint;
+    }
+    
+    // Fallback to original estimate if story points not available
+    if (story.originalEstimate !== undefined && story.originalEstimate !== null && story.originalEstimate > 0) {
+      return story.originalEstimate;
+    }
+    
+    return undefined;
   }
+}
 
-  // Convert story points to hours
-  if (story.storyPoints !== undefined && story.storyPoints !== null && story.storyPoints > 0) {
-    return story.storyPoints * hoursPerStoryPoint;
+/**
+ * Calculates average hours from tickets with the same story points value.
+ * Used as fallback when estimateType is 'hours' but hours are missing.
+ * 
+ * @param storyPoints - Story points value to match
+ * @param allTickets - All tickets to search
+ * @returns Average hours, or undefined if no matching tickets found
+ */
+function calculateAverageHoursFromStoryPoints(
+  storyPoints: number,
+  allTickets: JiraTicket[]
+): number | undefined {
+  // Find all tickets with the same story points that have hours
+  const matchingTickets = allTickets.filter(ticket => 
+    ticket.storyPoints === storyPoints &&
+    (ticket.originalEstimate !== undefined && ticket.originalEstimate !== null && ticket.originalEstimate > 0)
+  );
+  
+  if (matchingTickets.length === 0) {
+    return undefined;
   }
-
-  return undefined;
+  
+  // Calculate average hours
+  const totalHours = matchingTickets.reduce((sum, ticket) => sum + (ticket.originalEstimate || 0), 0);
+  return totalHours / matchingTickets.length;
 }
 
 /**

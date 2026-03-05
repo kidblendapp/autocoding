@@ -464,7 +464,26 @@ function action(params) {
             attachmentResults = attachScreenshotsToTicket(ticketKey, screens);
         }
 
-        // Step 8: Add label to indicate AI processing
+        // Step 8: Update ticket description with design references (Append per config)
+        const operationType = params.operationType || 'Append';
+        const currentDescription = ticket.description || (ticket.fields && ticket.fields.description) || '';
+        const newDescription = operationType === 'Append'
+            ? (currentDescription + '\n\n' + markdown).trim()
+            : markdown;
+
+        if (markdown && newDescription) {
+            try {
+                jira_update_description({
+                    key: ticketKey,
+                    description: newDescription
+                });
+                console.log('Updated ticket description with design references for ' + ticketKey);
+            } catch (updateError) {
+                console.error('Failed to update description for ' + ticketKey + ':', updateError);
+            }
+        }
+
+        // Step 9: Add label to indicate AI processing
         try {
             jira_add_label({
                 key: ticketKey,

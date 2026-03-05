@@ -9,3 +9,5 @@ dist/
 *.tsbuildinfo
 *.tmp
 jira-config.json
+tmp/jira-dmtools-verify/config.env
+.dmtools/jira.cfg

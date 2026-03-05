@@ -1,0 +1,208 @@
+name: Deploy to GCP Cloud Run
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+        - production
+        - staging
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 23
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '23'
+
+      - name: Cache Gradle files
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      - name: Run tests
+        run: |
+          echo "Running server tests to ensure code quality before deployment..."
+          ./gradlew :dmtools-server:test --info
+          echo "✅ All server tests passed successfully!"
+        env:
+          GITHUB_USERNAME: ${{ github.actor }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build application JAR
+        run: |
+          ./gradlew clean :dmtools-server:bootJar -x test -x integrationTest
+          ls -la dmtools-appengine.jar
+        env:
+          GITHUB_USERNAME: ${{ github.actor }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Set up Google Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ vars.GCP_PROJECT_ID }}
+
+      - name: Configure Docker to use gcloud as credential helper
+        run: gcloud auth configure-docker us-central1-docker.pkg.dev
+
+      - name: Build Docker image
+        run: |
+          docker build -t us-central1-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/dmtools/dmtools:${{ github.run_number }}-${{ github.sha }} \
+            --build-arg GEMINI_API_KEY="${{ secrets.GEMINI_API_KEY }}" \
+            --build-arg GEMINI_DEFAULT_MODEL="${{ vars.GEMINI_DEFAULT_MODEL }}" \
+            .
+
+      - name: Push Docker image
+        run: docker push us-central1-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/dmtools/dmtools:${{ github.run_number }}-${{ github.sha }}
+
+      - name: Debug secrets (lengths only for security)
+        run: |
+          echo "GEMINI_API_KEY length: ${#GEMINI_API_KEY}"
+          echo "JWT_SECRET length: ${#JWT_SECRET}"
+          echo "GOOGLE_CLIENT_SECRET length: ${#GOOGLE_CLIENT_SECRET}"
+          echo "MICROSOFT_CLIENT_SECRET length: ${#MICROSOFT_CLIENT_SECRET}"
+          echo "OAUTH_GITHUB_CLIENT_SECRET length: ${#OAUTH_GITHUB_CLIENT_SECRET}"
+          echo "APPLE_PRIVATE_KEY length: ${#APPLE_PRIVATE_KEY}"
+          echo "ADMIN_EMAILS configured: $([ -n "$ADMIN_EMAILS" ] && echo "YES" || echo "NO")"
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+          MICROSOFT_CLIENT_SECRET: ${{ secrets.MICROSOFT_CLIENT_SECRET }}
+          OAUTH_GITHUB_CLIENT_SECRET: ${{ secrets.OAUTH_GITHUB_CLIENT_SECRET }}
+          APPLE_PRIVATE_KEY: ${{ secrets.APPLE_PRIVATE_KEY }}
+          ADMIN_EMAILS: ${{ secrets.ADMIN_EMAILS }}
+
+      - name: Create environment variables file
+        run: |
+          cat > env-vars.yaml << EOF
+          SPRING_PROFILES_ACTIVE: "gcp"
+          GEMINI_API_KEY: "${{ secrets.GEMINI_API_KEY }}"
+          GEMINI_DEFAULT_MODEL: "${{ vars.GEMINI_DEFAULT_MODEL }}"
+          JWT_SECRET: "${{ secrets.JWT_SECRET }}"
+          JWT_EXPIRATION: "86400000"
+          APP_BASE_URL: "https://ai-native.cloud"
+          APP_HOST: "ai-native.cloud"
+          APP_PORT: "443"
+          CLOUD_SQL_INSTANCE: ""
+          DB_HOST: "${{ secrets.DB_HOST }}"
+          DB_PORT: "${{ secrets.DB_PORT }}"
+          DB_NAME: "${{ secrets.DB_NAME }}"
+          DB_USER: "${{ secrets.DB_USER }}"
+          DB_PASSWORD: "${{ secrets.DB_PASSWORD }}"
+          GOOGLE_CLIENT_ID: "431977789017-sosq5gjk1itkc99v8d5hvvku9ptl0m91.apps.googleusercontent.com"
+          GOOGLE_CLIENT_SECRET: "${{ secrets.GOOGLE_CLIENT_SECRET }}"
+          MICROSOFT_CLIENT_ID: "db21d069-3fca-4d78-a09f-b690e6473a09"
+          MICROSOFT_CLIENT_SECRET: "${{ secrets.MICROSOFT_CLIENT_SECRET }}"
+          GITHUB_CLIENT_ID: "Ov23liHniCXneJfSANF3"
+          GITHUB_CLIENT_SECRET: "${{ secrets.OAUTH_GITHUB_CLIENT_SECRET }}"
+          APPLE_TEAM_ID: "YP9HC3USZ3"
+          APPLE_KEY_ID: "3HS4CZPDXB"
+          APPLE_CLIENT_ID: "cloud.ainative.web"
+          APPLE_BUNDLE_ID: "cloud.ainative.learnai"
+          APPLE_PRIVATE_KEY_CONTENT: "${{ secrets.APPLE_PRIVATE_KEY }}"
+          SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GOOGLE_CLIENT_ID: "431977789017-sosq5gjk1itkc99v8d5hvvku9ptl0m91.apps.googleusercontent.com"
+          SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GOOGLE_CLIENT_SECRET: "${{ secrets.GOOGLE_CLIENT_SECRET }}"
+          SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GOOGLE_SCOPE: "openid,profile,email"
+          SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GOOGLE_REDIRECT_URI: "https://ai-native.cloud/login/oauth2/code/google"
+          SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GOOGLE_AUTHORIZATION_GRANT_TYPE: "authorization_code"
+          SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GITHUB_CLIENT_ID: "Ov23libvcRAxN9bg5yhG"
+          SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GITHUB_CLIENT_SECRET: "${{ secrets.OAUTH_GITHUB_CLIENT_SECRET }}"
+          SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GITHUB_SCOPE: "user:email"
+          SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GITHUB_REDIRECT_URI: "https://ai-native.cloud/login/oauth2/code/github"
+          SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GITHUB_AUTHORIZATION_GRANT_TYPE: "authorization_code"
+          SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_MICROSOFT_CLIENT_ID: "db21d069-3fca-4d78-a09f-b690e6473a09"
+          SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_MICROSOFT_CLIENT_SECRET: "${{ secrets.MICROSOFT_CLIENT_SECRET }}"
+          SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_MICROSOFT_SCOPE: "openid,profile,email"
+          SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_MICROSOFT_AUTHORIZATION_GRANT_TYPE: "authorization_code"
+          SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_MICROSOFT_REDIRECT_URI: "https://ai-native.cloud/login/oauth2/code/microsoft"
+          SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_MICROSOFT_AUTHORIZATION_URI: "https://login.microsoftonline.com/common/oauth2/v2.0/authorize"
+          SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_MICROSOFT_TOKEN_URI: "https://login.microsoftonline.com/common/oauth2/v2.0/token"
+          SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_MICROSOFT_USER_INFO_URI: "https://graph.microsoft.com/oidc/userinfo"
+          SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_APPLE_CLIENT_ID: "cloud.ainative.web"
+          SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_APPLE_REDIRECT_URI: "https://ai-native.cloud/login/oauth2/code/apple"
+          SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_APPLE_AUTHORIZATION_GRANT_TYPE: "authorization_code"
+          SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_APPLE_SCOPE: "openid,email,name"
+          SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_APPLE_AUTHORIZATION_URI: "https://appleid.apple.com/auth/authorize"
+          SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_APPLE_TOKEN_URI: "https://appleid.apple.com/auth/token"
+          SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_APPLE_JWK_SET_URI: "https://appleid.apple.com/auth/keys"
+          SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_MICROSOFT_USER_NAME_ATTRIBUTE: "sub"
+          SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_MICROSOFT_JWK_SET_URI: "https://login.microsoftonline.com/common/discovery/v2.0/keys"
+          SERVER_FORWARD_HEADERS_STRATEGY: "FRAMEWORK"
+          SERVER_USE_FORWARD_HEADERS: "true"
+          MANAGEMENT_SERVER_PORT: "8080"
+          ADMIN_EMAILS: "${{ secrets.ADMIN_EMAILS }}"
+          AUTH_ENABLED_PROVIDERS: "google,microsoft,github,apple"
+          EOF
+
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy dmtools \
+            --image us-central1-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/dmtools/dmtools:${{ github.run_number }}-${{ github.sha }} \
+            --platform managed \
+            --region us-central1 \
+            --allow-unauthenticated \
+            --env-vars-file env-vars.yaml \
+            --memory=1Gi \
+            --cpu=1 \
+            --min-instances=1 \
+            --max-instances=5 \
+            --timeout=900 \
+            --revision-suffix=github-${{ github.run_number }} \
+            --project=${{ vars.GCP_PROJECT_ID }}
+
+      - name: Clean up old revisions
+        run: |
+          # Keep only 2 newest revisions
+          OLD_REVISIONS=$(gcloud run revisions list --service=dmtools --region=us-central1 --project=${{ vars.GCP_PROJECT_ID }} --format="value(metadata.name)" --sort-by="~metadata.creationTimestamp" | tail -n +3)
+          
+          # Delete old revisions
+          for revision in $OLD_REVISIONS; do
+            if [ ! -z "$revision" ]; then
+              echo "Deleting old revision: $revision"
+              gcloud run revisions delete $revision --region=us-central1 --project=${{ vars.GCP_PROJECT_ID }} --quiet || echo "Failed to delete $revision"
+            fi
+          done
+
+      - name: Clean up old Docker images
+        run: |
+          # Keep only 2 newest Docker images to save storage costs
+          echo "Cleaning old Docker images (keeping last 2)..."
+          OLD_IMAGES=$(gcloud artifacts docker images list us-central1-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/dmtools/dmtools --format="value(version)" --sort-by="~createTime" | tail -n +3)
+          
+          for digest in $OLD_IMAGES; do
+            if [ ! -z "$digest" ]; then
+              echo "Deleting old image: $digest"
+              gcloud artifacts docker images delete "us-central1-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/dmtools/dmtools@$digest" --quiet --delete-tags || echo "Failed to delete $digest"
+            fi
+          done
+          echo "Docker image cleanup complete!"
+
+      - name: Get deployment URL
+        run: |
+          echo "Application deployed to: https://ai-native.cloud"
+          echo "Cloud Run URL: $(gcloud run services describe dmtools --region=us-central1 --project=${{ vars.GCP_PROJECT_ID }} --format='value(status.url)')" 

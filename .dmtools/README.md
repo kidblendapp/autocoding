@@ -2,6 +2,8 @@
 
 **AI Teammate** is a powerful automation pattern that combines DMTools, Cursor AI, and GitHub Actions to create intelligent development workflows.
 
+**JIRA connection:** Run `python .cursor/skills/jira-dmtools/scripts/verify_jira_connection.py` from repo root to validate JIRA connection and generate `.dmtools/jira.cfg`; use `--verify` to only check that jira.cfg is present and valid.
+
 ## What is AI Teammate?
 
 AI Teammate is a workflow automation system that:

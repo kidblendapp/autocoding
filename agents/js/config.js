@@ -28,18 +28,40 @@ const PRIORITIES = {
     LOWEST: 'Lowest'
 };
 
-// Labels
+// Jira Labels
 const LABELS = {
     AI_GENERATED: 'ai_generated',
     AI_QUESTIONS_ASKED: 'ai_questions_asked',
     AI_SOLUTION_DESIGN_CREATED: 'ai_solution_design_created',
     AI_DEVELOPED: 'ai_developed',
-    AI_REQUIREMENTS_UPDATED: 'ai_requirements_updated',
+    SD_CORE: 'sd_core',
+    SD_API: 'sd_api',
+    SD_UI: 'sd_ui',
+    NEEDS_API_IMPLEMENTATION: 'needs_api_implementation',
+    NEEDS_CORE_IMPLEMENTATION: 'needs_core_implementation',
+    FIGMA_DESIGN_LINKED: 'figma_design_linked'
+};
+
+// ADO Labels (Tags) - same values as Jira for consistency
+const ADO_LABELS = {
+    AI_GENERATED: 'ai_generated',
+    AI_QUESTIONS_ASKED: 'ai_questions_asked',
+    AI_SOLUTION_DESIGN_CREATED: 'ai_solution_design_created',
+    AI_DEVELOPED: 'ai_developed',
     SD_CORE: 'sd_core',
     SD_API: 'sd_api',
     SD_UI: 'sd_ui',
     NEEDS_API_IMPLEMENTATION: 'needs_api_implementation',
     NEEDS_CORE_IMPLEMENTATION: 'needs_core_implementation'
+};
+
+// ADO Statuses - specific statuses for Azure DevOps
+const ADO_STATUSES = {
+    NEW: 'New',
+    ACTIVE: 'Active',
+    RESOLVED: 'Resolved',
+    CLOSED: 'Closed',
+    IN_REVIEW: 'Active' // Mapping 'In Review' to 'Active' for ADO User Story
 };
 
 // Git Configuration
@@ -50,36 +72,14 @@ const GIT_CONFIG = {
     DEFAULT_ISSUE_TYPE_PREFIX: 'feature'
 };
 
-// Solution Design Component Prefixes (based on technical boundaries)
+// Solution Design Module Prefixes
 const MODULE_PREFIXES = {
-    DATA_INGESTION: '[SD Data Ingestion]',
-    SCHEDULING_ENGINE: '[SD Scheduling Engine]',
-    OUTPUT_LAYER: '[SD Output Layer]',
-    SCENARIO_1: '[SD Scenario 1]',
-    SCENARIO_2: '[SD Scenario 2]',
-    SCENARIO_3: '[SD Scenario 3]',
-    // Legacy support (deprecated, but kept for backward compatibility)
     CORE: '[SD CORE]',
     API: '[SD API]',
     UI: '[SD UI]'
 };
 
-// Technical Component Configuration for Solution Design
-// Based on logical boundaries from technical requirements
-const SOLUTION_DESIGN_COMPONENTS = [
-    { flag: 'dataIngestion', prefix: MODULE_PREFIXES.DATA_INGESTION, label: 'sd_data_ingestion', description: 'Data Ingestion Layer: Parsers (CSV/XLSX), normalization, team assignment resolution' },
-    { flag: 'schedulingEngine', prefix: MODULE_PREFIXES.SCHEDULING_ENGINE, label: 'sd_scheduling_engine', description: 'Core Scheduling Engine: Models, queue management, allocation logic, calendar awareness' },
-    { flag: 'outputLayer', prefix: MODULE_PREFIXES.OUTPUT_LAYER, label: 'sd_output_layer', description: 'Output Layer: JSON timeline format, visualization support' }
-];
-
-// Scenario-based Configuration (alternative decomposition approach)
-const SOLUTION_DESIGN_SCENARIOS = [
-    { flag: 'scenario1', prefix: MODULE_PREFIXES.SCENARIO_1, label: 'sd_scenario_1', description: 'Scenario 1: High-level estimates per team (Completed/Remaining)' },
-    { flag: 'scenario2', prefix: MODULE_PREFIXES.SCENARIO_2, label: 'sd_scenario_2', description: 'Scenario 2: Partial team estimates with subtasks' },
-    { flag: 'scenario3', prefix: MODULE_PREFIXES.SCENARIO_3, label: 'sd_scenario_3', description: 'Scenario 3: All estimates in subtasks' }
-];
-
-// Legacy module configuration (deprecated - kept for backward compatibility)
+// Module Configuration for Solution Design
 const SOLUTION_DESIGN_MODULES = [
     { flag: 'core', prefix: MODULE_PREFIXES.CORE, label: LABELS.SD_CORE },
     { flag: 'api', prefix: MODULE_PREFIXES.API, label: LABELS.SD_API },
@@ -114,12 +114,12 @@ module.exports = {
     LABELS,
     GIT_CONFIG,
     MODULE_PREFIXES,
-    SOLUTION_DESIGN_COMPONENTS,
-    SOLUTION_DESIGN_SCENARIOS,
-    SOLUTION_DESIGN_MODULES, // Legacy, deprecated
+    SOLUTION_DESIGN_MODULES,
     DIAGRAM_DEFAULTS,
     DIAGRAM_FORMAT,
     JIRA_FIELDS,
-    SUMMARY_MAX_LENGTH
+    SUMMARY_MAX_LENGTH,
+    ADO_STATUSES,
+    ADO_LABELS
 };
 

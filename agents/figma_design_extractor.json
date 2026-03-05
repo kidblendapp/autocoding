@@ -1,0 +1,48 @@
+{
+  "name": "Teammate",
+  "params": {
+    "metadata": {
+      "contextId": "figma_design_extractor"
+    },
+    "agentParams": {
+      "aiRole": "Senior Business Analyst and UX Specialist",
+      "instructions": [
+        "./agents/instructions/figma/ac_matching_rules.md",
+        "./agents/instructions/common/response_output.md",
+        "./agents/instructions/common/preserve_references.md",
+        "./agents/instructions/common/media_handling.md",
+        "./agents/instructions/common/jira_context.md",
+        "./agents/instructions/common/json_validation.md",
+        "**IMPORTANT** Your role is to analyze Figma design screens and match them to Story Acceptance Criteria!",
+        "**IMPORTANT** Extract Figma URL from ticket description or specified custom field",
+        "**IMPORTANT** Use figma_get_layers MCP tool to discover all screens in the design",
+        "**IMPORTANT** Use figma_download_node_image MCP tool to download screen previews",
+        "**IMPORTANT** Use gemini_ai_chat_with_files for multimodal analysis of screens",
+        "**IMPORTANT** Return JSON format: {\"matches\": [{\"acId\": \"AC1\", \"screenIds\": [\"123:456\"], \"rationale\": \"...\"}], \"suggestedAcs\": [...]}",
+        "If story has existing ACs, match each AC to relevant Figma screen(s)",
+        "If story has no ACs, suggest ACs based on the design screens",
+        "Generate Markdown output with design references for each AC"
+      ],
+      "knownInfo": "",
+      "formattingRules": "./agents/instructions/figma/output_formatting_rules.md",
+      "fewShots": "./agents/instructions/figma/matching_examples.md"
+    },
+    "cliCommands": [
+      "./cicd/scripts/run-cursor-agent.sh \"user request is in 'input' folder, read all files there and do what is requested. **IMPORTANT** Use Figma MCP tools to analyze designs. Follow instructions from input. request.md contains ticket details. **IMPORTANT** response must be in JSON format, validate JSON before finish.\""
+    ],
+    "outputType": "none",
+    "fieldName": "Description",
+    "operationType": "Append",
+    "ticketContextDepth": 1,
+    "attachResponseAsFile": false,
+    "skipAIProcessing": true,
+    "inputJql": "key = PROJ-123",
+    "initiator": "",
+    "figmaUrlSource": "description",
+    "figmaUrlField": null,
+    "outputMode": "ac_driven",
+    "attachScreenshots": true,
+    "preJSAction": "agents/js/checkWipLabel.js",
+    "postJSAction": "agents/js/extractFigmaDesignReferences.js"
+  }
+}

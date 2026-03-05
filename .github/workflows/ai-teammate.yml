@@ -6,8 +6,11 @@ on:
       config_file:
         description: 'Path to config'
         required: true
+      ticket_key:
+        description: 'JIRA ticket key (e.g. AP-51). Used to build encoded config if encoded_config is empty.'
+        required: false
       encoded_config:
-        description: 'Encoded or JSON Agent Config'
+        description: 'Base64-encoded agent config JSON (e.g. {"params":{"inputJql":"key = AP-51"}}). Prefer ticket_key for a single ticket.'
         required: false
 
 permissions:
@@ -107,7 +110,8 @@ jobs:
         FIGMA_TOKEN: ${{ secrets.FIGMA_TOKEN }}
         FIGMA_BASE_PATH: ${{ vars.FIGMA_BASE_PATH }}
         ENCODED_CONFIG: ${{ inputs.encoded_config }}
-        
+        TICKET_KEY: ${{ inputs.ticket_key }}
+
         # GitHub Authentication for PR creation
         PAT_TOKEN: ${{ secrets.PAT_TOKEN }}
         GH_TOKEN: ${{ secrets.PAT_TOKEN }}
@@ -117,11 +121,26 @@ jobs:
         CI_RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
         echo "CI run URL: ${CI_RUN_URL}"
 
+        # Build encoded config: prefer explicit encoded_config; else build from ticket_key to avoid JSON truncation in workflow inputs
         if [ -n "${ENCODED_CONFIG}" ]; then
-          echo "Encoded config received (raw):"
-          printf '%s\n' "${ENCODED_CONFIG}"
+          # If value looks like raw JSON (starts with {), base64-encode it so dmtools receives valid input
+          case "${ENCODED_CONFIG}" in
+            \{*)
+              echo "Encoded config looks like raw JSON; base64-encoding for dmtools..."
+              ENCODED_CONFIG="$(echo -n "${ENCODED_CONFIG}" | base64 -w 0)"
+              ;;
+          esac
+          echo "Encoded config received (base64 length): $(echo -n "${ENCODED_CONFIG}" | wc -c)"
+        fi
+        if [ -z "${ENCODED_CONFIG}" ] && [ -n "${TICKET_KEY}" ]; then
+          echo "Building encoded config from ticket_key: ${TICKET_KEY}"
+          JSON_CONFIG="{\"params\":{\"inputJql\":\"key = ${TICKET_KEY}\"}}"
+          ENCODED_CONFIG="$(echo -n "${JSON_CONFIG}" | base64 -w 0)"
+        fi
+
+        if [ -n "${ENCODED_CONFIG}" ]; then
           dmtools run "${{ inputs.config_file }}" "${ENCODED_CONFIG}" --ciRunUrl "${CI_RUN_URL}"
         else
-          echo "No encoded config provided."
+          echo "No encoded config or ticket_key provided."
           dmtools run "${{ inputs.config_file }}" --ciRunUrl "${CI_RUN_URL}"
         fi

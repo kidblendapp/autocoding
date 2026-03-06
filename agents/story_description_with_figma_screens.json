@@ -7,7 +7,6 @@
     "agentParams" : {
       "aiRole" : "Experienced Business Analyst",
       "instructions" : [
-        "https://dmtools.atlassian.net/wiki/spaces/AINA/pages/11665485/Template+Story",
         "./agents/instructions/common/response_output.md",
         "./agents/instructions/common/no_development.md",
         "./agents/instructions/common/error_handling.md",
@@ -15,7 +14,10 @@
         "./agents/instructions/common/media_handling.md",
         "./agents/instructions/common/jira_context.md",
         "./agents/instructions/enhancement/no_ticket_reference.md",
-        "**IMPORTANT** your role just write description of the story based on the confluence page template!"
+        "./agents/instructions/figma/ac_matching_rules.md",
+        "./agents/instructions/figma/matching_examples.md",
+        "./agents/instructions/figma/output_formatting_rules.md",
+        "**IMPORTANT** your role just write description of the story based on the confluence page template ali!"
       ],
       "knownInfo" : "",
       "formattingRules" : "https://dmtools.atlassian.net/wiki/spaces/AINA/pages/18186241/Template+Jira+Markdown",

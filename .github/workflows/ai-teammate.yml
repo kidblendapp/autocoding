@@ -82,7 +82,7 @@ jobs:
         JIRA_CLEAR_CACHE: ${{ vars.JIRA_CLEAR_CACHE }}
         JIRA_EXTRA_FIELDS: ${{ vars.JIRA_EXTRA_FIELDS }}
         JIRA_EXTRA_FIELDS_PROJECT: ${{ vars.JIRA_EXTRA_FIELDS_PROJECT }}
-        JIRA_LOGGING_ENABLED: ${{ vars.JIRA_LOGGING_ENABLED }}
+        JIRA_LOGGING_ENABLED: "true"
         JIRA_WAIT_BEFORE_PERFORM: ${{ vars.JIRA_WAIT_BEFORE_PERFORM }}
 
         # Confluence Configuration

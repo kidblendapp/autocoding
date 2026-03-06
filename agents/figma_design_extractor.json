@@ -10,6 +10,9 @@
     "ticketContextDepth": 1,
     "attachResponseAsFile": false,
     "skipAIProcessing": true,
+    "cliCommands": [
+      "echo 'CLI phase skipped — all work done in postJSAction'"
+    ],
     "inputJql": "key = PROJ-123",
     "initiator": "",
     "figmaUrlSource": "description",

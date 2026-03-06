@@ -24,11 +24,11 @@
       "fewShots" : ""
     },
     "cliCommands" : [
-      "./cicd/scripts/run-cursor-agent.sh \"**IMPORTANT** You are given a Figma design URL \"https://www.figma.com/design/9URa8Ip063kLnFHEcAsbt5/DEVREL?node-id=45-2\" in ticket description. Your task is to extract all screens (frames) from the design and download their screenshots.\n## Steps\n1. Run `dmtools figma_get_layers \"FIGMA_URL\"` where FIGMA_URL is the full URL including `?node-id=` parameter. This returns JSON with a `children` array of first-level frames (screens).\n2. For each child/screen returned, download a screenshot: `dmtools figma_download_node_image --data '{\"href\":\"BASE_FIGMA_URL\",\"nodeId\":\"CHILD_ID\",\"format\":\"png\",\"scale\":2}'`\n   - BASE_FIGMA_URL is the Figma URL without the node-id parameter\n   - CHILD_ID is the `id` field from each child (in colon format like \"173:10\")\n3. Append a summary to `outputs/response.md`\""
+      "./cicd/scripts/run-cursor-agent.sh \"**IMPORTANT** run \"dmtools figma_get_layers https://www.figma.com/design/9URa8Ip063kLnFHEcAsbt5/DEVREL?node-id=45-2\" and store in `outputs/response.md`\""
     ],
     "outputType" : "field",
     "fieldName" : "Description",
-    "operationType" : "Replace",
+    "operationType" : "Append",
     "ticketContextDepth" : 0,
     "attachResponseAsFile" : false,
     "skipAIProcessing" : true,

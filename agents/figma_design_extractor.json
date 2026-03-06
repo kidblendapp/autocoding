@@ -10,6 +10,12 @@
     "ticketContextDepth": 1,
     "attachResponseAsFile": false,
     "skipAIProcessing": true,
+    "agentParams": {
+      "aiRole": "Figma Design Extractor",
+      "instructions": [
+        "All work is handled by postJSAction. No cursor-agent processing needed."
+      ]
+    },
     "cliCommands": [
       "echo 'CLI phase skipped — all work done in postJSAction'"
     ],

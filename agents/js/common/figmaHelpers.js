@@ -129,7 +129,9 @@ function getBaseUrl(url) {
 function fetchFigmaLayers(figmaUrl) {
     try {
         console.log('Fetching Figma layers from: ' + figmaUrl);
-        const result = figma_get_layers({ href: figmaUrl });
+        var cmd = 'dmtools figma_get_layers "' + figmaUrl + '"';
+        console.log('CLI command: ' + cmd);
+        var result = cli_execute_command({ command: cmd });
 
         if (typeof result === 'string') {
             return JSON.parse(result);
@@ -157,19 +159,26 @@ function downloadNodeScreenshot(figmaUrl, nodeId, format, scale) {
         scale = scale || 2;
 
         console.log('Downloading screenshot for node: ' + nodeId);
-        const result = figma_download_node_image({
+        var data = JSON.stringify({
             href: figmaUrl,
             nodeId: nodeId,
             format: format,
             scale: scale
         });
+        var cmd = "dmtools figma_download_node_image --data '" + data + "'";
+        console.log('CLI command: ' + cmd);
+        var result = cli_execute_command({ command: cmd });
 
-        // Result should be file path
+        // Result should be file path string
         if (typeof result === 'string') {
-            return result;
-        }
-        if (result && result.path) {
-            return result.path;
+            var trimmed = result.trim();
+            // If JSON, extract path
+            try {
+                var parsed = JSON.parse(trimmed);
+                return parsed.path || parsed;
+            } catch (e) {
+                return trimmed; // Already a path string
+            }
         }
         return result;
     } catch (error) {
@@ -322,6 +331,43 @@ function generateDesignReferencesMarkdown(screens, matches, mode) {
     return md;
 }
 
+/**
+ * Call Gemini AI via CLI for multimodal analysis with screen images
+ * Uses cli_execute_command to run dmtools gemini_ai_chat_with_files
+ *
+ * @param {string} prompt - Analysis prompt
+ * @param {string[]} imagePaths - Paths to screen screenshot images
+ * @returns {Object} Parsed AI response
+ */
+function analyzeWithGeminiCli(prompt, imagePaths) {
+    try {
+        console.log('Calling Gemini AI via CLI with ' + imagePaths.length + ' images...');
+        var data = JSON.stringify({
+            message: prompt,
+            filePaths: imagePaths
+        });
+        var cmd = "dmtools gemini_ai_chat_with_files --data '" + data + "'";
+        var response = cli_execute_command({ command: cmd });
+
+        console.log('Gemini response received');
+
+        // Parse JSON from response
+        var jsonStr = response;
+        if (typeof response === 'string') {
+            // Extract JSON from markdown code blocks if present
+            var jsonMatch = response.match(/```(?:json)?\s*([\s\S]*?)```/);
+            if (jsonMatch) {
+                jsonStr = jsonMatch[1].trim();
+            }
+        }
+
+        return JSON.parse(jsonStr);
+    } catch (error) {
+        console.error('Error in Gemini CLI analysis:', error);
+        return { matches: [], error: error.toString() };
+    }
+}
+
 // Export functions for use by other modules
 module.exports = {
     extractFigmaUrlFromText,
@@ -335,5 +381,6 @@ module.exports = {
     parseAcceptanceCriteria,
     buildScreenCatalog,
     formatScreenReference,
-    generateDesignReferencesMarkdown
+    generateDesignReferencesMarkdown,
+    analyzeWithGeminiCli
 };

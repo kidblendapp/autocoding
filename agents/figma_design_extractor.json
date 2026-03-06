@@ -4,38 +4,6 @@
     "metadata": {
       "contextId": "figma_design_extractor"
     },
-    "agentParams": {
-      "aiRole": "Senior Business Analyst and UX Specialist",
-      "instructions": [
-        "Read ticket details from input folder (automatically prepared)",
-        "Extract Figma URL from ticket description or specified custom field",
-        "Discover all screens in the Figma design using dmtools CLI:",
-        "  dmtools figma_get_layers \"FIGMA_URL_WITH_NODE_ID\"",
-        "Download screen previews for visual analysis:",
-        "  dmtools figma_download_node_image --data '{\"href\": \"FIGMA_URL\", \"nodeId\": \"123:456\", \"format\": \"png\", \"scale\": 2}'",
-        "Analyze screens with AI multimodal to match them to Acceptance Criteria:",
-        "  dmtools gemini_ai_chat_with_files --data '{\"message\": \"Analyze these screens\", \"filePaths\": [\"/path/to/screen.png\"]}'",
-        "Parse existing Acceptance Criteria from story description",
-        "If story has ACs: Match each AC to relevant Figma screen(s)",
-        "If story has NO ACs: Suggest ACs based on the design screens",
-        "Generate Markdown output with design references",
-        "Write JSON result to outputs/response.md following the format from formattingRules",
-        "IMPORTANT: Return valid JSON that can be parsed by postJSAction",
-        "IMPORTANT: Use screen IDs in colon format (123:456) in JSON output",
-        "./agents/instructions/figma/ac_matching_rules.md",
-        "./agents/instructions/common/response_output.md",
-        "./agents/instructions/common/preserve_references.md",
-        "./agents/instructions/common/media_handling.md",
-        "./agents/instructions/common/jira_context.md",
-        "./agents/instructions/common/json_validation.md"
-      ],
-      "knownInfo": "Figma MCP tools: figma_get_layers (get screens), figma_download_node_image (download screenshots), figma_get_node_details (get properties). AI tools: gemini_ai_chat_with_files (multimodal analysis with images).",
-      "formattingRules": "./agents/instructions/figma/output_formatting_rules.md",
-      "fewShots": "./agents/instructions/figma/matching_examples.md"
-    },
-    "cliCommands": [
-      "./cicd/scripts/run-cursor-agent.sh \"Read input folder. Extract Figma URL from ticket. Use dmtools figma_get_layers to discover screens. Download screen images with figma_download_node_image. Analyze with gemini_ai_chat_with_files. Match screens to ACs. Write JSON output to outputs/response.md. Validate JSON before finish.\""
-    ],
     "outputType": "none",
     "fieldName": "Description",
     "operationType": "Append",
@@ -52,10 +20,10 @@
     "postJSAction": "agents/js/extractFigmaDesignReferences.js"
   },
   "metadata": {
-    "version": "1.0",
-    "description": "Extract Figma design screens and match them to Story Acceptance Criteria. Generates Markdown with design references for ticket descriptions.",
+    "version": "2.0",
+    "description": "Extract Figma design screens and match them to Story Acceptance Criteria. Generates Markdown with design references for ticket descriptions. Uses CLI commands for Figma/Gemini to work around job framework client injection limitations.",
     "author": "dmtools",
-    "lastModified": "2024-12-01",
+    "lastModified": "2026-03-06",
     "supportedModes": ["ac_driven", "screen_centric", "hybrid"],
     "requiredIntegrations": ["jira", "figma", "ai"]
   }

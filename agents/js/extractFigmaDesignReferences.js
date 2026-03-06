@@ -21,7 +21,8 @@ const {
     downloadNodeScreenshot,
     parseAcceptanceCriteria,
     buildScreenCatalog,
-    formatScreenReference
+    formatScreenReference,
+    analyzeWithGeminiCli
 } = require('./common/figmaHelpers.js');
 
 const { LABELS } = require('./config.js');
@@ -114,50 +115,6 @@ ${storyContext.acs.length > 0
 - Return ONLY the JSON object, no additional text or formatting.
 - Use the exact screen IDs provided (in colon format like "123:456").
 - Be specific and accurate in your matching rationale.`;
-}
-
-/**
- * Call Gemini AI with screen images for multimodal analysis
- *
- * @param {string} prompt - Analysis prompt
- * @param {string[]} imagePaths - Paths to screen screenshot images
- * @returns {Object} Parsed AI response
- */
-function analyzeWithGemini(prompt, imagePaths) {
-    try {
-        console.log('Calling Gemini AI with ' + imagePaths.length + ' images...');
-
-        let response;
-        if (imagePaths && imagePaths.length > 0) {
-            // Use multimodal with images
-            response = gemini_ai_chat_with_files({
-                message: prompt,
-                filePaths: imagePaths
-            });
-        } else {
-            // Text-only fallback
-            response = gemini_ai_chat({
-                message: prompt
-            });
-        }
-
-        console.log('Gemini response received');
-
-        // Parse JSON from response
-        let jsonStr = response;
-        if (typeof response === 'string') {
-            // Extract JSON from markdown code blocks if present
-            const jsonMatch = response.match(/```(?:json)?\s*([\s\S]*?)```/);
-            if (jsonMatch) {
-                jsonStr = jsonMatch[1].trim();
-            }
-        }
-
-        return JSON.parse(jsonStr);
-    } catch (error) {
-        console.error('Error in Gemini analysis:', error);
-        return { matches: [], error: error.toString() };
-    }
 }
 
 /**
@@ -434,7 +391,7 @@ function action(params) {
         };
 
         const prompt = buildMatchingPrompt(storyContext, screens);
-        const matches = analyzeWithGemini(prompt, imagePaths);
+        const matches = analyzeWithGeminiCli(prompt, imagePaths);
 
         if (matches.error) {
             console.warn('AI analysis encountered an error: ' + matches.error);

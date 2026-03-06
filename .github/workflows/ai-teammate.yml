@@ -139,8 +139,10 @@ jobs:
         fi
 
         if [ -n "${ENCODED_CONFIG}" ]; then
-          dmtools run "${{ inputs.config_file }}" "${ENCODED_CONFIG}" --ciRunUrl "${CI_RUN_URL}"
+          echo "Encoded config (base64): ${ENCODED_CONFIG}"
+          echo "Decoded config: $(echo -n "${ENCODED_CONFIG}" | base64 -d)"
+          dmtools run "${{ inputs.config_file }}" "${ENCODED_CONFIG}" --ciRunUrl "${CI_RUN_URL}" 2>&1
         else
           echo "No encoded config or ticket_key provided."
-          dmtools run "${{ inputs.config_file }}" --ciRunUrl "${CI_RUN_URL}"
+          dmtools run "${{ inputs.config_file }}" --ciRunUrl "${CI_RUN_URL}" 2>&1
         fi
